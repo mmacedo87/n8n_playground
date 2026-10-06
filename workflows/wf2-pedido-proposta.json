@@ -1,0 +1,197 @@
+{
+  "name": "WF2 - Pedido de proposta",
+  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas.",
+  "nodes": [
+    {
+      "id": "3b60d028-511f-47b4-a364-82b1948c7c30",
+      "name": "Formulário de pedido de proposta",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [0, 0],
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Pedido de proposta",
+        "formDescription": "Preencha os dados do pedido. Todos os campos são obrigatórios.",
+        "responseMode": "onReceived",
+        "formFields": {
+          "values": [
+            { "fieldName": "cliente", "fieldLabel": "Cliente", "fieldType": "text", "placeholder": "Nome da empresa", "requiredField": true },
+            { "fieldName": "produto", "fieldLabel": "Produto", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "Granulado de cortiça" }, { "option": "Pó de cortiça" }, { "option": "Aglomerado de cortiça" }] } },
+            { "fieldName": "densidade", "fieldLabel": "Densidade", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "60-80 kg/m3" }, { "option": "80-100 kg/m3" }, { "option": "100-120 kg/m3" }, { "option": "120-150 kg/m3" }] } },
+            { "fieldName": "granulometria", "fieldLabel": "Granulometria", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "0-1 mm" }, { "option": "1-2 mm" }, { "option": "2-4 mm" }, { "option": "4-8 mm" }, { "option": "8-15 mm" }] } },
+            { "fieldName": "quantidade", "fieldLabel": "Quantidade (kg)", "fieldType": "number", "placeholder": "ex. 1000", "requiredField": true },
+            { "fieldName": "embalagem", "fieldLabel": "Embalagem", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "Sacos 25 kg em palete" }, { "option": "Big bag 1 m3" }, { "option": "A granel" }] } },
+            { "fieldName": "incoterm", "fieldLabel": "Incoterm", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "EXW" }, { "option": "FCA" }, { "option": "FAS" }, { "option": "FOB" }, { "option": "CFR" }, { "option": "CIF" }, { "option": "CPT" }, { "option": "CIP" }, { "option": "DAP" }, { "option": "DPU" }, { "option": "DDP" }] } },
+            { "fieldName": "destino", "fieldLabel": "Destino (país)", "fieldType": "dropdown", "requiredField": true, "fieldOptions": { "values": [{ "option": "ES - Espanha" }, { "option": "FR - França" }, { "option": "DE - Alemanha" }, { "option": "IT - Itália" }, { "option": "NL - Países Baixos" }, { "option": "BE - Bélgica" }, { "option": "GB - Reino Unido" }, { "option": "US - Estados Unidos" }, { "option": "BR - Brasil" }, { "option": "CN - China" }, { "option": "JP - Japão" }, { "option": "MA - Marrocos" }] } }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Registar pedido",
+          "respondWithOptions": { "values": { "respondWith": "text", "formSubmittedText": "Pedido registado. Vai receber um email de confirmação com o número da proposta." } }
+        }
+      }
+    },
+    {
+      "id": "5a150f3c-4254-415e-a780-98b7b1c926b0",
+      "name": "Normalizar pedido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 96],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            { "id": "n-cliente", "name": "cliente", "value": "={{ String($json.cliente ?? $json.Cliente ?? \"\").trim() }}", "type": "string" },
+            { "id": "n-produto", "name": "produto", "value": "={{ String($json.produto ?? $json.Produto ?? \"\").trim() }}", "type": "string" },
+            { "id": "n-densidade", "name": "densidade", "value": "={{ String($json.densidade ?? $json.Densidade ?? \"\").trim() }}", "type": "string" },
+            { "id": "n-granulometria", "name": "granulometria", "value": "={{ String($json.granulometria ?? $json.Granulometria ?? \"\").trim() }}", "type": "string" },
+            { "id": "n-quantidade", "name": "quantidade", "value": "={{ Number($json.quantidade ?? $json[\"Quantidade (kg)\"]) }}", "type": "number" },
+            { "id": "n-embalagem", "name": "embalagem", "value": "={{ String($json.embalagem ?? $json.Embalagem ?? \"\").trim() }}", "type": "string" },
+            { "id": "n-incoterm", "name": "incoterm", "value": "={{ String($json.incoterm ?? $json.Incoterm ?? \"\").trim().toUpperCase() }}", "type": "string" },
+            { "id": "n-destino", "name": "destino", "value": "={{ String($json.destino ?? $json[\"Destino (país)\"] ?? \"\").split(\" - \")[0].trim().toUpperCase() }}", "type": "string" },
+            { "id": "n-destinatario", "name": "destinatario_confirmacao", "value": "REDACTED@example.invalid", "type": "string" }
+          ]
+        }
+      },
+      "notes": "Junta os dois modos de entrada (formulário e chamada por outro workflow). destinatario_confirmacao é o email que recebe a confirmação."
+    },
+    {
+      "id": "52de7d69-761f-4f5a-9a40-0203a7e68ab3",
+      "name": "Dados válidos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [448, 96],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) }}",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "f39c41c9-4ddb-48df-b7c1-d56e230bce27",
+      "name": "Criar proposta no Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [672, 0],
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "propostas",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "cliente", "fieldValue": "={{ $json.cliente }}" },
+            { "fieldId": "produto", "fieldValue": "={{ $json.produto }}" },
+            { "fieldId": "densidade", "fieldValue": "={{ $json.densidade }}" },
+            { "fieldId": "granulometria", "fieldValue": "={{ $json.granulometria }}" },
+            { "fieldId": "quantidade", "fieldValue": "={{ $json.quantidade }}" },
+            { "fieldId": "embalagem", "fieldValue": "={{ $json.embalagem }}" },
+            { "fieldId": "incoterm", "fieldValue": "={{ $json.incoterm }}" },
+            { "fieldId": "destino_pais", "fieldValue": "={{ $json.destino }}" }
+          ]
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": { "supabaseApi": { "name": "Supabase account" } }
+    },
+    {
+      "id": "adc2b975-81ea-4426-a490-fe4cdc17e37e",
+      "name": "Enviar confirmação do pedido",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [896, 0],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $(\"Normalizar pedido\").item.json.destinatario_confirmacao }}",
+        "subject": "=[Proposta] Pedido registado: {{ $json.codigo }}",
+        "bodyContent": "=<p>Foi registado um pedido de proposta.</p><ul><li><b>Número:</b> {{ $json.codigo }}</li><li><b>Cliente:</b> {{ $json.cliente }}</li><li><b>Produto:</b> {{ $json.produto }}</li><li><b>Densidade:</b> {{ $json.densidade }}</li><li><b>Granulometria:</b> {{ $json.granulometria }}</li><li><b>Quantidade:</b> {{ $json.quantidade }} kg</li><li><b>Embalagem:</b> {{ $json.embalagem }}</li><li><b>Incoterm:</b> {{ $json.incoterm }}</li><li><b>Destino:</b> {{ $json.destino_pais }}</li></ul>",
+        "additionalFields": { "bodyContentType": "html" }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": { "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" } }
+    },
+    {
+      "id": "fe0dbbb9-3b8b-44ff-bacf-4a6d09bb349c",
+      "name": "Devolver proposta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 0],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            { "id": "r-ok", "name": "ok", "value": true, "type": "boolean" },
+            { "id": "r-codigo", "name": "codigo", "value": "={{ $(\"Criar proposta no Supabase\").item.json.codigo }}", "type": "string" },
+            { "id": "r-id", "name": "proposta_id", "value": "={{ $(\"Criar proposta no Supabase\").item.json.id }}", "type": "string" },
+            { "id": "r-estado", "name": "estado", "value": "={{ $(\"Criar proposta no Supabase\").item.json.estado }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "08aecf53-9b41-4c50-b31c-5d9803ee8aed",
+      "name": "Pedido inválido",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [672, 192],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Pedido de proposta inválido: cliente=\"{{ $json.cliente }}\", produto=\"{{ $json.produto }}\", quantidade={{ $json.quantidade }}, incoterm=\"{{ $json.incoterm }}\", destino=\"{{ $json.destino }}\""
+      }
+    },
+    {
+      "id": "c51c08bf-5c2d-454b-9b9f-9f0d9746e3bc",
+      "name": "Chamado pelo workflow principal",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 192],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            { "name": "cliente", "type": "string" },
+            { "name": "produto", "type": "string" },
+            { "name": "densidade", "type": "string" },
+            { "name": "granulometria", "type": "string" },
+            { "name": "quantidade", "type": "number" },
+            { "name": "embalagem", "type": "string" },
+            { "name": "incoterm", "type": "string" },
+            { "name": "destino", "type": "string" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Formulário de pedido de proposta": { "main": [[{ "node": "Normalizar pedido", "type": "main", "index": 0 }]] },
+    "Normalizar pedido": { "main": [[{ "node": "Dados válidos?", "type": "main", "index": 0 }]] },
+    "Dados válidos?": { "main": [[{ "node": "Criar proposta no Supabase", "type": "main", "index": 0 }], [{ "node": "Pedido inválido", "type": "main", "index": 0 }]] },
+    "Criar proposta no Supabase": { "main": [[{ "node": "Enviar confirmação do pedido", "type": "main", "index": 0 }]] },
+    "Enviar confirmação do pedido": { "main": [[{ "node": "Devolver proposta", "type": "main", "index": 0 }]] },
+    "Chamado pelo workflow principal": { "main": [[{ "node": "Normalizar pedido", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "availableInMCP": true, "errorWorkflow": "<ID do Mail Error Flow na instância de destino>", "callerPolicy": "workflowsFromSameOwner" },
+  "tags": ["subworkflow", "propostas"],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "8pRJJuN094Mp9iuu",
+    "sourceVersionId": "47364488-0f1c-4c05-9925-b31dbbd68f9e",
+    "exportedAt": "2026-10-06",
+    "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
+  }
+}

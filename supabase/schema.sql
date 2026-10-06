@@ -1,0 +1,234 @@
+-- ============================================================
+-- Automação de propostas (cortiça) v0.1 — esquema Supabase
+-- Executar no SQL Editor do Supabase (projeto na região UE).
+-- Tabelas: leads, transportadoras, propostas, cotacoes_frete,
+--          requisitos_pais, ai_log (+ contadores_proposta para o ID PRP).
+-- ============================================================
+
+-- ---------- Funções auxiliares ----------
+
+-- Mantém atualizado_em sempre que uma linha muda.
+create or replace function set_atualizado_em()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.atualizado_em := now();
+  return new;
+end;
+$$;
+
+-- Contador anual para o ID de proposta (PRP-2026-0001, PRP-2026-0002, ...).
+-- O upsert bloqueia a linha do ano, por isso duas submissões em simultâneo
+-- nunca recebem o mesmo número.
+create table contadores_proposta (
+  ano    int primary key,
+  ultimo int not null default 0
+);
+
+create or replace function proximo_codigo_proposta()
+returns text
+language plpgsql
+as $$
+declare
+  v_ano int := extract(year from (now() at time zone 'Europe/Lisbon'))::int;
+  v_n   int;
+begin
+  insert into contadores_proposta (ano, ultimo)
+  values (v_ano, 1)
+  on conflict (ano) do update set ultimo = contadores_proposta.ultimo + 1
+  returning ultimo into v_n;
+
+  return format('PRP-%s-%s', v_ano, lpad(v_n::text, 4, '0'));
+end;
+$$;
+
+-- ---------- leads (WF1) ----------
+create table leads (
+  id                 uuid primary key default gen_random_uuid(),
+  empresa            text not null,
+  contacto_nome      text,
+  contacto_email     text,
+  produto_interesse  text,
+  pais               text,
+  quantidade_texto   text,              -- como veio no email, antes de normalizar
+  origem_email_id    text unique,       -- ID da mensagem no Outlook (evita duplicados)
+  estado             text not null default 'novo'
+                     check (estado in ('novo','contactado','convertido','descartado')),
+  criado_em          timestamptz not null default now(),
+  atualizado_em      timestamptz not null default now()
+);
+
+create index leads_estado_idx on leads (estado);
+create index leads_criado_em_idx on leads (criado_em);
+
+-- ---------- transportadoras (WF3) ----------
+create table transportadoras (
+  id             uuid primary key default gen_random_uuid(),
+  nome           text not null,
+  email          text not null,
+  modos          text[] not null default '{}'
+                 check (modos <@ array['rodoviario','maritimo','aereo','ferroviario']),
+  rotas          text[] not null default '{}',   -- países de destino que servem (ex. 'DE','US')
+  ativa          boolean not null default true,
+  criado_em      timestamptz not null default now(),
+  atualizado_em  timestamptz not null default now()
+);
+
+-- ---------- propostas (WF2 em diante) ----------
+create table propostas (
+  id                   uuid primary key default gen_random_uuid(),
+  codigo               text not null unique default proximo_codigo_proposta(),  -- PRP-AAAA-NNNN
+  lead_id              uuid references leads (id) on delete set null,
+
+  -- pedido (formulário do WF2)
+  cliente              text not null,
+  contacto_email       text,
+  produto              text not null,
+  densidade            text not null,    -- texto até a Bárbara fechar as listas; depois pode passar a lista fixa
+  granulometria        text not null,
+  quantidade           numeric(12,2) not null check (quantidade > 0),
+  unidade              text not null default 'kg',
+  embalagem            text not null,
+  incoterm             text not null
+                       check (incoterm in ('EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP')),
+  destino_pais         text not null,
+  destino_local        text,
+
+  -- valores calculados em código (WF5), nunca pelo modelo
+  moeda                text not null default 'EUR',
+  preco_tabela         numeric(12,4),
+  desconto_pct         numeric(5,2) not null default 0 check (desconto_pct between 0 and 100),
+  frete_escolhido_id   uuid,             -- liga a cotacoes_frete (chave estrangeira adicionada abaixo)
+  preco_final          numeric(14,2),
+
+  -- ligação ao Moloni
+  moloni_orcamento_id  text,
+
+  -- percurso
+  estado               text not null default 'pedido'
+                       check (estado in ('pedido','a_cotar','cotado','em_validacao','aprovada',
+                                         'enviada','aceite','recusada','em_expedicao','concluida','cancelada')),
+  aprovada_por         text,
+  aprovada_em          timestamptz,
+  foi_editada          boolean not null default false,  -- métrica: % aprovadas sem edição
+  enviada_em           timestamptz,                      -- métrica: tempo pedido -> enviada
+
+  criado_em            timestamptz not null default now(),
+  atualizado_em        timestamptz not null default now()
+);
+
+create index propostas_estado_idx on propostas (estado);
+create index propostas_cliente_idx on propostas (cliente);
+create index propostas_lead_idx on propostas (lead_id);
+
+-- ---------- cotacoes_frete (WF3) ----------
+create table cotacoes_frete (
+  id                 uuid primary key default gen_random_uuid(),
+  proposta_id        uuid not null references propostas (id) on delete cascade,
+  transportadora_id  uuid references transportadoras (id) on delete set null,
+  modo               text check (modo in ('rodoviario','maritimo','aereo','ferroviario')),
+  preco              numeric(12,2),
+  moeda              text not null default 'EUR',
+  transito_dias      int check (transito_dias >= 0),
+  validade           date,
+  condicoes          text,
+  ficheiro_origem    text,                 -- nome do PDF/anexo de onde saiu a extração
+  email_origem_id    text,                 -- ID da mensagem de resposta no Outlook
+  confianca          numeric(3,2) check (confianca between 0 and 1),
+  revisao            text not null default 'automatica'
+                     check (revisao in ('automatica','a_rever','revista')),
+  corrigida_a_mao    boolean not null default false,  -- métrica: % extrações corrigidas
+  recebida_em        timestamptz not null default now()
+);
+
+create index cotacoes_frete_proposta_idx on cotacoes_frete (proposta_id);
+
+-- Fecha a ligação circular propostas -> cotacoes_frete.
+alter table propostas
+  add constraint propostas_frete_escolhido_fk
+  foreign key (frete_escolhido_id) references cotacoes_frete (id) on delete set null;
+
+-- ---------- requisitos_pais (WF4 simplificado) ----------
+create table requisitos_pais (
+  id                        uuid primary key default gen_random_uuid(),
+  pais_iso                  text not null,          -- código de 2 letras (ex. 'DE')
+  pais_nome                 text not null,
+  codigo_pautal             text not null default '4501.90',  -- validar com despachante
+  taxa_direitos_pct         numeric(5,2),
+  notas_taxas               text,
+  requisitos_fitossanitarios text,
+  fonte                     text not null,          -- de onde veio a informação
+  verificado_em             date not null,          -- data da última verificação
+  atualizado_em             timestamptz not null default now(),
+  unique (pais_iso, codigo_pautal)
+);
+
+-- ---------- ai_log (registo de uso de IA) ----------
+create table ai_log (
+  id              bigint generated always as identity primary key,
+  criado_em       timestamptz not null default now(),
+  workflow        text not null,                   -- ex. 'WF3 extracao frete'
+  execucao_n8n_id text,
+  proposta_id     uuid references propostas (id) on delete set null,
+  modelo          text not null,
+  versao_prompt   text,
+  input_resumo    text,                            -- resumo mínimo, sem dados desnecessários
+  output_resumo   text,
+  tokens_in       int,
+  tokens_out      int,
+  custo_eur       numeric(10,6),                   -- métrica: custo LLM por proposta
+  aprovado_por    text,
+  aprovado_em     timestamptz
+);
+
+create index ai_log_proposta_idx on ai_log (proposta_id);
+create index ai_log_criado_em_idx on ai_log (criado_em);
+
+-- ---------- Triggers de atualizado_em ----------
+create trigger leads_atualizado_em before update on leads
+  for each row execute function set_atualizado_em();
+create trigger transportadoras_atualizado_em before update on transportadoras
+  for each row execute function set_atualizado_em();
+create trigger propostas_atualizado_em before update on propostas
+  for each row execute function set_atualizado_em();
+create trigger requisitos_pais_atualizado_em before update on requisitos_pais
+  for each row execute function set_atualizado_em();
+
+-- ---------- Retenção (RGPD) ----------
+-- Apaga leads não convertidos com mais de N meses (por defeito, 12).
+-- Corre-se à mão ou a partir de um workflow agendado no n8n.
+create or replace function purgar_leads_antigos(meses int default 12)
+returns int
+language plpgsql
+as $$
+declare
+  v_apagados int;
+begin
+  delete from leads
+  where estado <> 'convertido'
+    and criado_em < now() - make_interval(months => meses);
+  get diagnostics v_apagados = row_count;
+  return v_apagados;
+end;
+$$;
+
+-- ---------- Segurança ----------
+-- RLS ativa e sem políticas: a chave anónima não lê nem escreve nada.
+-- O n8n usa a chave de serviço (service_role), que ignora o RLS.
+alter table contadores_proposta enable row level security;
+alter table leads               enable row level security;
+alter table transportadoras     enable row level security;
+alter table propostas           enable row level security;
+alter table cotacoes_frete      enable row level security;
+alter table requisitos_pais     enable row level security;
+alter table ai_log              enable row level security;
+
+-- ============================================================
+-- OPCIONAL: dados de teste (descomentar para usar).
+-- Nomes e emails são fictícios; trocar pelas transportadoras reais.
+-- ============================================================
+-- insert into transportadoras (nome, email, modos, rotas) values
+--   ('Transportadora Teste A', 'a@example.invalid', array['rodoviario'],  array['ES','FR','DE']),
+--   ('Transportadora Teste B', 'b@example.invalid', array['maritimo'],   array['US','BR']),
+--   ('Transportadora Teste C', 'c@example.invalid', array['rodoviario','maritimo'], array['DE','IT','US']);
