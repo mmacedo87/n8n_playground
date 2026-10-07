@@ -68,3 +68,9 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Passar o repositório a privado e ativar secret scanning e push protection.
 - [ ] Proteger `main` (Pull Request obrigatório, sem force-push) e etiquetar a versão de arranque (`v1.0.0`).
 - [ ] Confirmar que nada sensível está no histórico (`scripts/check_no_secrets.sh`).
+
+## 11. Entregabilidade do email (evitar spam)
+- [ ] Enviar a partir de uma caixa do domínio da empresa (por exemplo propostas@empresa.pt ou caixa partilhada), não de uma conta @outlook.com. Nos testes, os emails da conta pessoal foram para o spam do Gmail.
+- [ ] Configurar SPF, DKIM e DMARC do domínio no Microsoft 365 e verificar com uma ferramenta de teste (por exemplo mail-tester).
+- [ ] Manter os destinatários das confirmações dentro da organização; para clientes externos, subir o DMARC para quarentena/rejeitar e aumentar o volume gradualmente.
+- [ ] Rever assunto, texto e assinatura do email com a equipa comercial.

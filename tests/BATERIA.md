@@ -30,6 +30,7 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | D3-D4 | WF2 falha em "Pedido inválido" com Incoterm inexistente e com quantidade 0 |
 | D5 | Cliente com `<script>` e mais de 200 caracteres: fica truncado a 200 e o fluxo conclui |
 | D6 | Email de confirmação escapa HTML (verificação estrutural; o nó de email está fixado nos testes) |
+| D9 | Email de confirmação com assunto "Pedido de proposta registado – código – cliente", saudação, próximo passo e assinatura automática (estrutural + execução 29 sem erros) |
 | D7 | 'Criar proposta no Supabase' sem retry |
 | D8 | Saída de erro do email ligada a 'Email falhou depois de gravar' |
 | B7 | WF2 e Read Outlook não guardam execuções bem-sucedidas |

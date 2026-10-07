@@ -397,8 +397,8 @@
         "resource": "message",
         "operation": "send",
         "toRecipients": "={{ $(\"Normalizar pedido\").item.json.destinatario_confirmacao }}",
-        "subject": "=[Proposta] Pedido registado: {{ $json.codigo }}",
-        "bodyContent": "={{ ((e) => `<p>Foi registado um pedido de proposta.</p><ul><li><b>Número:</b> ${e($json.codigo)}</li><li><b>Cliente:</b> ${e($json.cliente)}</li><li><b>Produto:</b> ${e($json.produto)}</li><li><b>Densidade:</b> ${e($json.densidade)}</li><li><b>Granulometria:</b> ${e($json.granulometria)}</li><li><b>Quantidade:</b> ${e($json.quantidade)} kg</li><li><b>Embalagem:</b> ${e($json.embalagem)}</li><li><b>Incoterm:</b> ${e($json.incoterm)}</li><li><b>Destino:</b> ${e($json.destino_pais)}</li></ul>`)((s) => String(s ?? \"\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\")) }}",
+        "subject": "=Pedido de proposta registado – {{ $json.codigo }} – {{ String($json.cliente ?? \"\").slice(0, 60) }}",
+        "bodyContent": "={{ ((e) => `<p>Olá,</p><p>O pedido de proposta <b>${e($json.codigo)}</b> foi registado no sistema de propostas. Seguem os dados recebidos:</p><ul><li><b>Número:</b> ${e($json.codigo)}</li><li><b>Cliente:</b> ${e($json.cliente)}</li><li><b>Produto:</b> ${e($json.produto)}</li><li><b>Densidade:</b> ${e($json.densidade)}</li><li><b>Granulometria:</b> ${e($json.granulometria)}</li><li><b>Quantidade:</b> ${e($json.quantidade)} kg</li><li><b>Embalagem:</b> ${e($json.embalagem)}</li><li><b>Incoterm:</b> ${e($json.incoterm)}</li><li><b>Destino:</b> ${e($json.destino_pais)}</li></ul><p>Próximo passo: a equipa comercial revê o pedido antes de qualquer proposta ser enviada ao cliente.</p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática, não responda a este email)</p>`)((s) => String(s ?? \"\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\")) }}",
         "additionalFields": {
           "bodyContentType": "html"
         }
@@ -631,7 +631,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "c32e0139-fe9e-49c5-b109-cb1d5afe6ca2",
+    "sourceVersionId": "046c4bc8-283e-4cf6-9346-283b99da6921",
     "exportedAt": "2026-10-07",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
