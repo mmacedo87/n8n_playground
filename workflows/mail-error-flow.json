@@ -8,19 +8,57 @@
       "name": "Quando um workflow falha",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "cfg-destinatario", "name": "destinatario", "value": "REDACTED@example.invalid", "type": "string" },
-            { "id": "cfg-workflow", "name": "workflowNome", "value": "={{ $json.workflow?.name ?? \"(desconhecido)\" }}", "type": "string" },
-            { "id": "cfg-execucao", "name": "execucaoId", "value": "={{ $json.execution?.id ?? \"(sem id)\" }}", "type": "string" },
-            { "id": "cfg-url", "name": "execucaoUrl", "value": "={{ $json.execution?.url ?? \"\" }}", "type": "string" },
-            { "id": "cfg-no", "name": "ultimoNo", "value": "={{ $json.execution?.lastNodeExecuted ?? \"(desconhecido)\" }}", "type": "string" },
-            { "id": "cfg-erro", "name": "mensagemErro", "value": "={{ $json.execution?.error?.message ?? \"(sem mensagem)\" }}", "type": "string" },
-            { "id": "cfg-quando", "name": "quando", "value": "={{ $now.setZone(\"Europe/Lisbon\").toFormat(\"dd/MM/yyyy HH:mm\") }}", "type": "string" }
+            {
+              "id": "cfg-destinatario",
+              "name": "destinatario",
+              "value": "REDACTED@example.invalid",
+              "type": "string"
+            },
+            {
+              "id": "cfg-workflow",
+              "name": "workflowNome",
+              "value": "={{ $json.workflow?.name ?? \"(desconhecido)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-execucao",
+              "name": "execucaoId",
+              "value": "={{ $json.execution?.id ?? \"(sem id)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-url",
+              "name": "execucaoUrl",
+              "value": "={{ $json.execution?.url ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-no",
+              "name": "ultimoNo",
+              "value": "={{ $json.execution?.lastNodeExecuted ?? \"(desconhecido)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-erro",
+              "name": "mensagemErro",
+              "value": "={{ String($json.execution?.error?.message ?? \"(sem mensagem)\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-quando",
+              "name": "quando",
+              "value": "={{ $now.setZone(\"Europe/Lisbon\").toFormat(\"dd/MM/yyyy HH:mm\") }}",
+              "type": "string"
+            }
           ]
         },
         "includeOtherFields": true,
@@ -30,7 +68,10 @@
       "name": "Preparar aviso de erro",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [224, 0],
+      "position": [
+        224,
+        0
+      ],
       "notes": "Altere aqui o email que recebe os avisos (campo destinatario)."
     },
     {
@@ -38,32 +79,64 @@
         "toRecipients": "={{ $json.destinatario }}",
         "subject": "=[ERRO n8n] {{ $json.workflowNome }}",
         "bodyContent": "=<p>Um workflow falhou.</p><ul><li><b>Workflow:</b> {{ $json.workflowNome }}</li><li><b>Quando:</b> {{ $json.quando }}</li><li><b>Último nó executado:</b> {{ $json.ultimoNo }}</li><li><b>Execução:</b> {{ $json.execucaoId }}</li></ul><p><b>Erro:</b> {{ $json.mensagemErro }}</p><p><a href=\"{{ $json.execucaoUrl }}\">Abrir a execução no n8n</a></p>",
-        "additionalFields": { "bodyContentType": "html", "saveToSentItems": true }
+        "additionalFields": {
+          "bodyContentType": "html",
+          "saveToSentItems": true
+        }
       },
       "id": "a574e57a-85d0-42ae-84b7-476186d430fd",
       "name": "Enviar email de erro",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [448, 0],
+      "position": [
+        448,
+        0
+      ],
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "credentials": {
-        "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" }
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
       }
     }
   ],
   "connections": {
-    "Quando um workflow falha": { "main": [[{ "node": "Preparar aviso de erro", "type": "main", "index": 0 }]] },
-    "Preparar aviso de erro": { "main": [[{ "node": "Enviar email de erro", "type": "main", "index": 0 }]] }
+    "Quando um workflow falha": {
+      "main": [
+        [
+          {
+            "node": "Preparar aviso de erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar aviso de erro": {
+      "main": [
+        [
+          {
+            "node": "Enviar email de erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1", "availableInMCP": true, "binaryMode": "separate" },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
   "tags": [],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "fWXNAbhbQLuYeurE",
-    "sourceVersionId": "fd4da872-aa74-4095-9bd9-92ccdc465e80",
-    "exportedAt": "2026-10-06",
+    "sourceVersionId": "bbd7940f-d877-4265-8a5d-e404c5f8e334",
+    "exportedAt": "2026-10-07",
     "sanitized": "destinatario, ids de credenciais e webhookIds removidos"
   }
 }
