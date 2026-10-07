@@ -29,6 +29,7 @@ Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinat
 
 ## Regras de trabalho
 
+0. **Cada alteração a um workflow fica num commit em `dev`, com mensagem a dizer o que mudou** (um commit por workflow alterado).
 1. Alterar em DEV, correr a bateria de testes, exportar com `scripts/sanitize_workflow.py`, correr `scripts/check_no_secrets.sh`, commit em `dev`.
 2. Tudo o que é novo leva testes novos; correr sempre a bateria completa.
 3. Para `main` só por Pull Request.

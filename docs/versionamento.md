@@ -6,7 +6,7 @@ Estado: aprovado para arrancar (2026-10-06). Aplica-se a workflows n8n, SQL do S
 
 1. O n8n continua a ser a fonte de verdade do que está a correr; o Git é a fonte de verdade do histórico e da recuperação.
 2. Nada secreto no repositório: sem chaves, tokens, passwords, IDs de credenciais, emails reais nem o caminho (`webhookId`) de formulários públicos.
-3. Cada alteração relevante fica num commit pequeno, com a bateria de testes corrida antes.
+3. Cada alteração a um workflow fica num commit próprio em `dev`, com mensagem que diz o que mudou, e a bateria de testes corrida antes.
 4. Nada chega a `main` sem passar pelo `dev` e por um Pull Request.
 
 ## Branches
