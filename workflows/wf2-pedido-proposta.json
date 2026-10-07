@@ -631,7 +631,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "a4afeb50-56f9-4cb5-abc1-7a19427f94d0",
+    "sourceVersionId": "c32e0139-fe9e-49c5-b109-cb1d5afe6ca2",
     "exportedAt": "2026-10-07",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }

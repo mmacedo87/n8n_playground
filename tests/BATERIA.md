@@ -37,4 +37,4 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | E2 | 'Marcar original como lido' fica entre 'Mover draft' e a chamada ao WF2 |
 
 ## F. Pendentes (precisam de execução real)
-F1 envio real do email de confirmação · F2 escrita real no Supabase pelo n8n · F3 submissão real no URL público · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
+~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
