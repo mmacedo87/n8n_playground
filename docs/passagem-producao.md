@@ -74,3 +74,12 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Configurar SPF, DKIM e DMARC do domínio no Microsoft 365 e verificar com uma ferramenta de teste (por exemplo mail-tester).
 - [ ] Manter os destinatários das confirmações dentro da organização; para clientes externos, subir o DMARC para quarentena/rejeitar e aumentar o volume gradualmente.
 - [ ] Rever assunto, texto e assinatura do email com a equipa comercial.
+
+## 12. WF3 (pedido de cotações) e encadeamento com o WF2
+- [ ] No nó "Configuração" do WF3, **esvaziar `destinatario_teste`**. Enquanto estiver preenchido, nenhum email chega às transportadoras (vai tudo para o email de teste).
+- [ ] Carregar as transportadoras reais em `transportadoras` (email, modos, países em `rotas`) e apagar as `TESTE - Transportadora ...`. Para cada destino convém haver 4 a 5 transportadoras ativas; com menos, o WF3 envia a todas e assinala `abaixo_do_minimo_4`; sem nenhuma para o destino, falha e avisa.
+- [ ] Comprar créditos na OpenRouter e ativar zero data retention; sem créditos o WF3 usa a regra de reserva e o texto fixo (funciona, mas sem o LLM).
+- [ ] O WF2 arranca o WF3 no fim (nó "Pedir cotações de frete (WF3)"): confirmar o ID do WF3 nesse nó na instância de destino.
+- [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
+- [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
+- [ ] Apagar os dados de teste (propostas PRP-2026-0001 a 0009, pedidos_cotacao, ai_log) antes de começar.
