@@ -213,6 +213,27 @@ begin
 end;
 $$;
 
+-- ---------- Pedidos de cotação de frete (WF3) ----------
+create table pedidos_cotacao (
+  id uuid primary key default gen_random_uuid(),
+  proposta_id uuid not null references propostas(id) on delete cascade,
+  transportadora_id uuid not null references transportadoras(id) on delete cascade,
+  assunto text not null,
+  corpo_html text not null,
+  redirecionado_teste boolean not null default false,
+  estado text not null default 'a_enviar' check (estado in ('a_enviar','enviado','falhou','respondido')),
+  gerado_por text not null default 'llm' check (gerado_por in ('llm','modelo_fixo')),
+  modelo text,
+  criado_em timestamptz not null default now(),
+  enviado_em timestamptz,
+  atualizado_em timestamptz not null default now(),
+  unique (proposta_id, transportadora_id)
+);
+create index pedidos_cotacao_proposta_idx on pedidos_cotacao (proposta_id);
+alter table pedidos_cotacao enable row level security;
+create trigger pedidos_cotacao_atualizado_em before update on pedidos_cotacao
+  for each row execute function set_atualizado_em();
+
 -- ---------- Segurança ----------
 -- RLS ativa e sem políticas: a chave anónima não lê nem escreve nada.
 -- O n8n usa a chave de serviço (service_role), que ignora o RLS.
