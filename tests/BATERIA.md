@@ -3,13 +3,13 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução completa: 2026-10-07 18:10 (Lisboa): todos os testes anteriores continuam a passar; novos A19-A24 e G1-G12 passam (G9 revelou que a conta OpenRouter não tem créditos); F1-F6 pendentes.
+Última execução completa: 2026-10-07 18:35 (Lisboa): todos os testes anteriores continuam a passar; novos A19-A24 e G1-G12 e H1-H6 passam (G9 revelou que a conta OpenRouter não tem créditos); F1-F6 pendentes.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
 | --- | --- |
-| A1 | Existem as 7 tabelas |
-| A2 | RLS ativa nas 7 tabelas |
+| A1 | Existem as 8 tabelas |
+| A2 | RLS ativa nas 8 tabelas |
 | A3-A5 | Código `PRP-AAAA-NNNN`, sequência consecutiva, estado por omissão `pedido` |
 | A6-A8 | Rejeita Incoterm inválido, quantidade 0 e estado inválido |
 | A9 | Trigger atualiza `atualizado_em` |
@@ -56,6 +56,16 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | G11 | Escolha de reserva (LLM falha ou escolhe mal): mistura de modos, o marítimo entra mesmo sendo o último por nome (exec. 44) |
 | G12 | Nenhuma transportadora para o destino (JP) → erro "nada foi enviado" (exec. 47) |
 | G9 | Falha da OpenRouter (402 sem créditos): o fluxo usa o texto fixo e envia na mesma |
+
+## H. Encadeamento WF2 → WF3 e WF2 Error Flow
+| Id | Verifica |
+| --- | --- |
+| H1 | WF2 válido (dados fixados, WF3 fixado): conclui sem erro (exec. 56) |
+| H2 | WF2 inválido (Incoterm XYZ): falha em "Pedido inválido" e o nó do WF3 não corre (exec. 57) |
+| H3 | Real: pedido inválido em produção → WF2 falha, o WF2 Error Flow envia o aviso "falhou antes de gravar... WF3 NÃO foi chamado"; nenhuma proposta nova, nenhum pedido de cotação (exec. 48-49) |
+| H4 | Real: pedido válido (PRP-2026-0009, US) → WF2 conclui, o WF3 arranca sozinho: 5 pedidos enviados (marítimos e mistos), proposta a `a_cotar`, sem erros |
+| H5 | Real: com a OpenRouter sem créditos o WF3 não pára: usa a regra de reserva e o texto fixo (corrigido: 'Escolher melhores transportadoras (LLM)' passou a continuar em caso de erro) |
+| H6 | O WF2 usa o WF2 Error Flow como workflow de erro; o WF3 mantém o Mail Error Flow |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
