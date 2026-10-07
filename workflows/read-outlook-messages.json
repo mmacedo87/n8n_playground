@@ -6,93 +6,229 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [-752, -352],
+      "position": [
+        -752,
+        -352
+      ],
       "id": "2d11cfd3-aa8a-4787-b244-93a9006c0381",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
         "resource": "folderMessage",
-        "folderId": { "__rl": true, "value": "<ID da pasta Inbox/Folder 1 no Outlook de destino>", "mode": "list", "cachedResultName": "Inbox/Folder 1" },
+        "folderId": {
+          "__rl": true,
+          "value": "<ID da pasta Inbox/Folder 1 no Outlook de destino>",
+          "mode": "list",
+          "cachedResultName": "Inbox/Folder 1"
+        },
         "returnAll": true,
-        "filtersUI": { "values": { "filters": { "readStatus": "unread" } } },
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "readStatus": "unread"
+            }
+          }
+        },
         "options": {}
       },
       "id": "4460ec8c-75ec-4584-8e34-dc2f617262c1",
       "name": "Ler emails da Folder 1",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [-304, -128],
-      "credentials": { "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" } }
+      "position": [
+        -304,
+        -128
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "reply",
-        "messageId": { "__rl": true, "mode": "id", "value": "={{ $json.id }}" },
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
         "replyToSenderOnly": true,
         "message": "Olá,\n\nObrigado pela sua mensagem. Respondo assim que possível.\n\nCumprimentos",
         "additionalFields": {},
-        "options": { "saveAsDraft": true }
+        "options": {
+          "saveAsDraft": true
+        }
       },
       "id": "d0d7aab8-fcf8-4283-83ff-c2f1ea9a0c0b",
       "name": "Criar draft de resposta",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [-48, -128],
-      "credentials": { "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" } }
+      "position": [
+        -48,
+        -128
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "update",
-        "messageId": { "__rl": true, "mode": "id", "value": "={{ $json.id }}" },
-        "updateFields": { "isRead": false }
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "updateFields": {
+          "isRead": false
+        }
       },
       "id": "e4b30fc1-2b67-4e8b-9a0f-4ad7e1a47d91",
       "name": "Marcar draft como não lido",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [160, -304],
-      "credentials": { "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" } }
+      "position": [
+        160,
+        -304
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "move",
-        "messageId": { "__rl": true, "mode": "id", "value": "={{ $json.id }}" },
-        "folderId": { "__rl": true, "cachedResultName": "Inbox/To Check", "mode": "id", "value": "<ID da pasta Inbox/To Check no Outlook de destino>" }
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "folderId": {
+          "__rl": true,
+          "cachedResultName": "Inbox/To Check",
+          "mode": "id",
+          "value": "<ID da pasta Inbox/To Check no Outlook de destino>"
+        }
       },
       "id": "1babffca-414b-48a0-92f4-43bdc3a27446",
       "name": "Mover draft para To Check",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [336, -128],
-      "credentials": { "microsoftOutlookOAuth2Api": { "name": "Microsoft Outlook account" } }
+      "position": [
+        336,
+        -128
+      ],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     },
     {
       "id": "d0c8a256-e4bc-4e57-b972-a82b3e68101c",
       "name": "Chamar WF2 - Pedido de proposta",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.4,
-      "position": [560, -128],
+      "position": [
+        560,
+        -128
+      ],
       "disabled": true,
       "notes": "DESATIVADO: ainda não existe passo de extração (WF1) que preencha estes campos a partir do email. Valores abaixo são marcadores; ativar só quando vierem da extração.",
       "parameters": {
-        "options": { "waitForSubWorkflow": true },
+        "options": {
+          "waitForSubWorkflow": true
+        },
         "source": "database",
-        "workflowId": { "__rl": true, "mode": "id", "value": "<ID do WF2 na instância de destino>" },
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "<ID do WF2 na instância de destino>"
+        },
         "workflowInputs": {
           "attemptToConvertTypes": false,
           "convertFieldsToString": true,
           "mappingMode": "defineBelow",
           "matchingColumns": [],
           "schema": [
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "cliente", "id": "cliente", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "produto", "id": "produto", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "densidade", "id": "densidade", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "granulometria", "id": "granulometria", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "quantidade", "id": "quantidade", "required": false, "type": "number" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "embalagem", "id": "embalagem", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "incoterm", "id": "incoterm", "required": false, "type": "string" },
-            { "canBeUsedToMatch": true, "defaultMatch": false, "display": true, "displayName": "destino", "id": "destino", "required": false, "type": "string" }
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "cliente",
+              "id": "cliente",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "produto",
+              "id": "produto",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "densidade",
+              "id": "densidade",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "granulometria",
+              "id": "granulometria",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "quantidade",
+              "id": "quantidade",
+              "required": false,
+              "type": "number"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "embalagem",
+              "id": "embalagem",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "incoterm",
+              "id": "incoterm",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "destino",
+              "id": "destino",
+              "required": false,
+              "type": "string"
+            }
           ],
           "value": {
             "cliente": "A PREENCHER",
@@ -106,22 +242,119 @@
           }
         }
       }
+    },
+    {
+      "id": "1b477f81-9ea2-4505-863f-0c10f90a83c4",
+      "name": "Marcar original como lido",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -128
+      ],
+      "parameters": {
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Ler emails da Folder 1\").item.json.id }}"
+        },
+        "operation": "update",
+        "updateFields": {
+          "isRead": true
+        }
+      },
+      "notes": "Evita que a próxima execução volte a criar drafts do mesmo email. Fica no fim, para que uma falha a meio não perca o email.",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     }
   ],
   "connections": {
-    "When clicking ‘Execute workflow’": { "main": [[{ "node": "Ler emails da Folder 1", "type": "main", "index": 0 }]] },
-    "Ler emails da Folder 1": { "main": [[{ "node": "Criar draft de resposta", "type": "main", "index": 0 }]] },
-    "Criar draft de resposta": { "main": [[{ "node": "Marcar draft como não lido", "type": "main", "index": 0 }]] },
-    "Marcar draft como não lido": { "main": [[{ "node": "Mover draft para To Check", "type": "main", "index": 0 }]] },
-    "Mover draft para To Check": { "main": [[{ "node": "Chamar WF2 - Pedido de proposta", "type": "main", "index": 0 }]] }
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Ler emails da Folder 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler emails da Folder 1": {
+      "main": [
+        [
+          {
+            "node": "Criar draft de resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar draft de resposta": {
+      "main": [
+        [
+          {
+            "node": "Marcar draft como não lido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar draft como não lido": {
+      "main": [
+        [
+          {
+            "node": "Mover draft para To Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mover draft para To Check": {
+      "main": [
+        [
+          {
+            "node": "Marcar original como lido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar original como lido": {
+      "main": [
+        [
+          {
+            "node": "Chamar WF2 - Pedido de proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": { "executionOrder": "v1", "binaryMode": "separate", "availableInMCP": true, "timeSavedMode": "fixed", "errorWorkflow": "<ID do Mail Error Flow na instância de destino>", "callerPolicy": "workflowsFromSameOwner" },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "<ID do Mail Error Flow na instância de destino>",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all"
+  },
   "tags": [],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "39zlpRbdQvI7dHGe",
-    "sourceVersionId": "f504e7a3-abef-4c1a-8008-0dfc3c846ca0",
-    "exportedAt": "2026-10-06",
+    "sourceVersionId": "45675e7e-387d-4dd2-8b59-59f7319ff2e7",
+    "exportedAt": "2026-10-07",
     "sanitized": "ids de pastas do Outlook, ids de credenciais, ids de workflows e webhookIds substituídos por marcadores ou removidos"
   }
 }
