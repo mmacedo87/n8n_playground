@@ -11,3 +11,4 @@ exports-raw/
 
 # Sistema
 .DS_Store
+__pycache__/
