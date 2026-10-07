@@ -1004,7 +1004,8 @@
         "promptType": "define",
         "text": "=Proposta {{ $json.codigo }}: produto {{ $json.produto }}, quantidade {{ $json.quantidade }} {{ $json.unidade }}, incoterm {{ $json.incoterm }}, país de destino {{ $json.destino_pais }}. Escolhe {{ $json.alvo }} transportadoras (ou todas se houver menos). Candidatas (JSON): {{ JSON.stringify($json.candidatas) }}"
       },
-      "notes": "O LLM escolhe, entre as candidatas, as mais adequadas ao país de destino. O código valida: só aceita ids da lista; se falhar usa a regra de reserva."
+      "notes": "O LLM escolhe, entre as candidatas, as mais adequadas ao país de destino. O código valida: só aceita ids da lista; se falhar usa a regra de reserva.",
+      "onError": "continueRegularOutput"
     },
     {
       "id": "e4eb006c-b0b9-4cb7-ad69-f1cb56df2653",
@@ -1046,7 +1047,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "fd1d454e-a49d-4b09-8850-011a3133a2cd",
+    "sourceVersionId": "e1a681b4-ffc4-41cd-9f7d-ef457135ca50",
     "exportedAt": "2026-10-07",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
