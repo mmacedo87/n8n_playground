@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução completa: 2026-10-07 18:10 (Lisboa): todos os testes anteriores continuam a passar; novos A19-A24 e G1-G9 passam (G9 revelou que a conta OpenRouter não tem créditos); F1-F6 pendentes.
+Última execução completa: 2026-10-07 18:10 (Lisboa): todos os testes anteriores continuam a passar; novos A19-A24 e G1-G12 passam (G9 revelou que a conta OpenRouter não tem créditos); F1-F6 pendentes.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -47,11 +47,14 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | G1 | Caminho feliz: código normalizado (" prp-2026-0099 " → PRP-2026-0099), só transportadoras do país de destino, ordem por nome, assunto com o código PRP, destinatário desviado para o email de teste |
 | G2 | Texto do LLM válido → `gerado_por=llm`; texto com link → `modelo_fixo` |
 | G3 | O email não contém o nome do cliente final |
-| G4 | Menos de 4 transportadoras → `abaixo_do_minimo_4=true` |
+| G4 | Menos de 4 transportadoras (3 para US): envia a todas, `abaixo_do_minimo_4=true`, `escolha_por=todas` (exec. 46) |
 | G5 | Proposta em estado `cancelada` → Stop and Error com mensagem clara |
 | G6 | Todas as transportadoras já contactadas → erro (idempotência) |
 | G7 | Código inexistente → erro "proposta não encontrada" |
 | G8 | Corrida real (exec. 34 e 35): 9 pedidos gravados e enviados, propostas a `a_cotar`, `ai_log` preenchido |
+| G10 | Escolha pelo LLM (fixado): aceita só ids da lista (ignora id inventado), 5 de 6 candidatas, `escolha_por=llm` (exec. 45) |
+| G11 | Escolha de reserva (LLM falha ou escolhe mal): mistura de modos, o marítimo entra mesmo sendo o último por nome (exec. 44) |
+| G12 | Nenhuma transportadora para o destino (JP) → erro "nada foi enviado" (exec. 47) |
 | G9 | Falha da OpenRouter (402 sem créditos): o fluxo usa o texto fixo e envia na mesma |
 
 ## F. Pendentes (precisam de execução real)
