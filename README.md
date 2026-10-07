@@ -21,6 +21,7 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | --- | --- | --- |
 | `mail-error-flow.json` | Aviso por email quando outro workflow falha | Publicado |
 | `wf2-pedido-proposta.json` | Formulário e sub-workflow que regista o pedido no Supabase e confirma por email | Publicado |
+| `wf3-pedido-cotacao-frete.json` | Pede cotação de frete por email a até 5 transportadoras, com o código PRP no assunto; LLM redige só introdução e fecho | Publicado (modo de teste: emails desviados) |
 | `read-outlook-messages.json` | Workflow principal: lê emails, cria drafts, (futuro) chama o WF2 | Inativo, trigger manual |
 
 ## Antes de importar noutra instância
