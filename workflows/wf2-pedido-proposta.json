@@ -1,6 +1,6 @@
 {
   "name": "WF2 - Pedido de proposta",
-  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas.",
+  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas. Depois de gravar, confirmar e devolver, arranca o WF3 (pedido de cotações de frete) sem esperar por ele; se o WF2 falhar antes, o WF3 não é chamado e o WF2 Error Flow avisa.",
   "nodes": [
     {
       "id": "3b60d028-511f-47b4-a364-82b1948c7c30",
@@ -237,56 +237,56 @@
             {
               "id": "n-cliente",
               "name": "cliente",
-              "value": "={{ String($json.cliente ?? $json.Cliente ?? \"\").trim().slice(0, 200) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.cliente ?? $json.Cliente ?? \"\").trim().slice(0, 200) }}"
             },
             {
               "id": "n-produto",
               "name": "produto",
-              "value": "={{ String($json.produto ?? $json.Produto ?? \"\").trim().slice(0, 100) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.produto ?? $json.Produto ?? \"\").trim().slice(0, 100) }}"
             },
             {
               "id": "n-densidade",
               "name": "densidade",
-              "value": "={{ String($json.densidade ?? $json.Densidade ?? \"\").trim().slice(0, 100) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.densidade ?? $json.Densidade ?? \"\").trim().slice(0, 100) }}"
             },
             {
               "id": "n-granulometria",
               "name": "granulometria",
-              "value": "={{ String($json.granulometria ?? $json.Granulometria ?? \"\").trim().slice(0, 100) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.granulometria ?? $json.Granulometria ?? \"\").trim().slice(0, 100) }}"
             },
             {
               "id": "n-quantidade",
               "name": "quantidade",
-              "value": "={{ Number($json.quantidade ?? $json[\"Quantidade (kg)\"]) }}",
-              "type": "number"
+              "type": "number",
+              "value": "={{ Number($json.quantidade ?? $json[\"Quantidade (kg)\"]) }}"
             },
             {
               "id": "n-embalagem",
               "name": "embalagem",
-              "value": "={{ String($json.embalagem ?? $json.Embalagem ?? \"\").trim().slice(0, 100) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.embalagem ?? $json.Embalagem ?? \"\").trim().slice(0, 100) }}"
             },
             {
               "id": "n-incoterm",
               "name": "incoterm",
-              "value": "={{ String($json.incoterm ?? $json.Incoterm ?? \"\").trim().toUpperCase().slice(0, 10) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.incoterm ?? $json.Incoterm ?? \"\").trim().toUpperCase().slice(0, 10) }}"
             },
             {
               "id": "n-destino",
               "name": "destino",
-              "value": "={{ String($json.destino ?? $json[\"Destino (país)\"] ?? \"\").split(\" - \")[0].trim().toUpperCase().slice(0, 10) }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ String($json.destino ?? $json[\"Destino (país)\"] ?? \"\").split(\" - \")[0].trim().toUpperCase().slice(0, 10) }}"
             },
             {
               "id": "n-destinatario",
               "name": "destinatario_confirmacao",
-              "value": "REDACTED@example.invalid",
-              "type": "string"
+              "type": "string",
+              "value": "REDACTED@example.invalid"
             }
           ]
         }
@@ -406,12 +406,12 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "name": "Microsoft Outlook account"
         }
-      },
-      "onError": "continueErrorOutput"
+      }
     },
     {
       "id": "fe0dbbb9-3b8b-44ff-bacf-4a6d09bb349c",
@@ -532,6 +532,48 @@
         "errorType": "errorMessage"
       },
       "notes": "A proposta já foi gravada mas o email de confirmação falhou. A mensagem de erro indica o código para NÃO voltar a submeter o pedido."
+    },
+    {
+      "id": "c27caac1-0310-44e5-bb61-bc097c25655c",
+      "name": "Pedir cotações de frete (WF3)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "x9RhWxZfJ0apbhlc"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "codigo",
+              "id": "codigo",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "codigo": "={{ $json.codigo }}"
+          }
+        }
+      },
+      "notes": "Só corre quando tudo o resto do WF2 correu bem. Não espera pelo WF3: o resultado do WF2 não depende dele e os erros do WF3 têm o seu próprio aviso."
     }
   ],
   "connections": {
@@ -614,6 +656,17 @@
           }
         ]
       ]
+    },
+    "Devolver proposta": {
+      "main": [
+        [
+          {
+            "node": "Pedir cotações de frete (WF3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -631,7 +684,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "046c4bc8-283e-4cf6-9346-283b99da6921",
+    "sourceVersionId": "3aa4c0c4-1298-4565-b308-bd11f65ac032",
     "exportedAt": "2026-10-07",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
