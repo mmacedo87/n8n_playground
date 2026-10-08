@@ -20,14 +20,15 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | Ficheiro | Função | Estado em DEV |
 | --- | --- | --- |
 | `mail-error-flow.json` | Aviso por email quando outro workflow falha | Publicado |
-| `wf2-pedido-proposta.json` | Formulário e sub-workflow que regista o pedido no Supabase, confirma por email e, no fim, arranca o WF3 | Publicado |
+| `wf2-pedido-proposta.json` | Formulário e sub-workflow que regista o pedido no Supabase, confirma por email e, no fim, arranca o WF3 e o WF4 em paralelo | Publicado |
 | `wf2-error-flow.json` | Workflow de erro do WF2: avisa que o WF3 não foi chamado | Publicado |
 | `wf3-pedido-cotacao-frete.json` | Pede cotação de frete por email a até 5 transportadoras, com o código PRP no assunto; LLM redige só introdução e fecho | Publicado (modo de teste: emails desviados) |
+| `wf4-enriquecimento-proposta.json` | Enriquecimento: código pautal, taxa por destino (UE por regra, EUA via USITC, restantes manual) e notas fitossanitárias, gravados em `proposta_compliance`. Sem LLM | Publicado |
 | `read-outlook-messages.json` | Workflow principal: lê emails, cria drafts, (futuro) chama o WF2 | Inativo, trigger manual |
 
 ## Antes de importar noutra instância
 
-Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinatários (`REDACTED@example.invalid`), IDs de pastas Outlook, ID do Mail Error Flow como Error Workflow e ID do WF2 no nó de chamada. Ver `docs/versionamento.md`.
+Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinatários (`REDACTED@example.invalid`), IDs de pastas Outlook, ID do Mail Error Flow como Error Workflow e IDs do WF2, WF3 e WF4 nos nós de chamada. Ver `docs/versionamento.md`.
 
 ## Regras de trabalho
 

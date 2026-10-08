@@ -83,3 +83,12 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
 - [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
 - [ ] Apagar os dados de teste (propostas PRP-2026-0001 a 0009, pedidos_cotacao, ai_log) antes de começar.
+
+## 13. WF4 (enriquecimento) e compliance
+- [ ] Validar com o despachante o código pautal de cada produto em `produtos` (hoje `validado=false`) e marcar `validado`, `validado_por` e `validado_em`.
+- [ ] Rever as regras de `requisitos_pais`: confirmar a taxa e os requisitos fitossanitários do Reino Unido, Brasil, China, Japão e Marrocos (hoje `a_verificar_manualmente`) e os requisitos do USDA APHIS para os EUA.
+- [ ] EUA: o USITC devolve a taxa base (coluna geral); confirmar com o transitário os direitos adicionais em vigor para a origem antes de enviar propostas.
+- [ ] Decidir se o Reino Unido passa a consulta automática (UK Trade Tariff) depois de verificar a resposta da API.
+- [ ] Confirmar o ID do WF4 no nó "Enriquecer proposta (WF4)" do WF2 na instância de destino e o Mail Error Flow como Error Workflow do WF4.
+- [ ] Garantir que a Bárbara vê `proposta_compliance` (linhas `a_verificar_manualmente`) antes de validar a proposta (passo 6).
+- [ ] Apagar os dados de teste de `proposta_compliance` antes de começar; apagar o índice duplicado `requisitos_pais_pais_nc_uq`.

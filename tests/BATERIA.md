@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução completa: 2026-10-07 18:35 (Lisboa): todos os testes anteriores continuam a passar; novos A19-A24 e G1-G12 e H1-H6 passam (G9 revelou que a conta OpenRouter não tem créditos); F1-F6 pendentes.
+Última execução completa: 2026-10-08 18:15 (Lisboa): WF4 novo (I1-I8), WF2 com chamada ao WF4 (H7-H8) e regressão do WF2 e WF3 (testes equivalentes a D1, D3 e G1, exec. 65-67) passam; os restantes testes anteriores não foram re-corridos nesta data. G9 (a conta OpenRouter sem créditos) e F1-F6 (execução real) continuam como estavam.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -22,6 +22,9 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | A21 | Rejeita segundo pedido para a mesma proposta+transportadora (único) |
 | A22-A23 | Rejeita `estado` e `gerado_por` inválidos |
 | A24 | Rejeita proposta inexistente (FK); FK com `on delete cascade` e trigger de `atualizado_em` presentes (catálogo) |
+| A25 | `produtos` e `proposta_compliance` existem com RLS ativa; `produtos` tem os 3 produtos com `validado=false` |
+| A26 | `requisitos_pais` tem 12 regras com `codigo_pautal='*'` (6 `regra_ue`, 1 `api_usitc`, 5 `tabela_manual`) e a restrição `metodo` |
+| A27 | `proposta_compliance` aceita linha com taxa nula e `metodo=tabela_manual` (transação revertida; tabela fica a 0 linhas) |
 
 ## B-E. n8n (dados fixados em nós com credenciais; Set, If e Stop and Error correm a sério)
 | Id | Verifica |
@@ -66,6 +69,23 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | H4 | Real: pedido válido (PRP-2026-0009, US) → WF2 conclui, o WF3 arranca sozinho: 5 pedidos enviados (marítimos e mistos), proposta a `a_cotar`, sem erros |
 | H5 | Real: com a OpenRouter sem créditos o WF3 não pára: usa a regra de reserva e o texto fixo (corrigido: 'Escolher melhores transportadoras (LLM)' passou a continuar em caso de erro) |
 | H6 | O WF2 usa o WF2 Error Flow como workflow de erro; o WF3 mantém o Mail Error Flow |
+
+| H7 | WF2 válido (WF3 e WF4 fixados): chama o WF3 e o WF4 em paralelo a partir de "Devolver proposta" e conclui sem erro (exec. 65) |
+| H8 | WF2 inválido (cliente vazio, quantidade 0): falha em "Pedido inválido" e nem o WF3 nem o WF4 correm (exec. 66) |
+
+## I. WF4 Enriquecimento de proposta (dados fixados em nós com credenciais e no HTTP; Set, If e Code correm a sério)
+| Id | Verifica |
+| --- | --- |
+| I1 | EUA, Granulado (HTS 4501.90.40.00): lê "Free" no USITC → `taxa_direitos_pct=0`, `metodo=api_usitc`, `estado=automatico`; a nota diz que não inclui direitos adicionais (exec. 60) |
+| I2 | UE (ES): regra intra-UE, não chama o USITC → `taxa_direitos_pct=0`, `metodo=regra_ue`, `estado=automatico` (exec. 61) |
+| I3 | EUA com Aglomerado (sem HTS): não consulta o USITC → `metodo=tabela_manual`, `estado=a_verificar_manualmente`, nota "Produto sem código HTS" (exec. 62) |
+| I4 | Falha do USITC (resposta sem dados): o fluxo não pára; passa a `tabela_manual` / `a_verificar_manualmente` (exec. 63) |
+| I5 | Código inexistente → erro "proposta não encontrada" (exec. 64) |
+| I6 | Produto com código pautal não validado: a nota acrescenta "ainda não validado pelo despachante" (exec. 60-61) |
+| I7 | Estrutura: sem nós de IA; Error Workflow = Mail Error Flow; só chamado por outro workflow (`workflowsFromSameOwner`) |
+| I8 | Gravação na BD: o INSERT com o formato de saída de "Montar compliance" (valores nulos incluídos) respeita as restrições (A27) |
+
+Limite conhecido: o nó "Gravar compliance" e o trigger só correm a sério na primeira proposta real; o Execute Workflow Trigger não se executa pelo MCP.
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
