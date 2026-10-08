@@ -61,7 +61,7 @@
   }
 </style>
 <style>
-/* Tema cortiça (v0.3) */
+/* Tema cortiça (v0.4) */
 :root{
   --bg:#ead9bd; --card:#fbf5e9; --ink:#3a2817; --muted:#6e5a44; --line:#d6bf98;
   --green:#8a5a2b; --green-soft:#f3e4cb;
@@ -123,7 +123,7 @@ svg .ar{stroke:#6e5130}
 <header>
   <svg class="brand" viewBox="0 0 84 84" role="img" aria-label="Rolha de cortiça"><defs><radialGradient id="rl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#e6bf88"/><stop offset="1" stop-color="#b98a52"/></radialGradient></defs><circle cx="42" cy="42" r="38" fill="url(#rl)" stroke="#fbeccd" stroke-width="3"/><g fill="#7a4d22" opacity=".55"><circle cx="26" cy="28" r="2.4"/><circle cx="52" cy="22" r="1.8"/><circle cx="60" cy="46" r="2.6"/><circle cx="34" cy="54" r="2"/><circle cx="46" cy="64" r="1.6"/><circle cx="22" cy="46" r="1.5"/><circle cx="48" cy="40" r="1.4"/></g><g fill="#fff3d6" opacity=".6"><circle cx="38" cy="30" r="1.4"/><circle cx="56" cy="34" r="1.2"/><circle cx="30" cy="42" r="1.3"/><circle cx="44" cy="52" r="1.2"/></g></svg>
   <div class="txt">
-  <span class="tag">Versão 0.3 · Semana 1 (atualizado a 8 de outubro)</span>
+  <span class="tag">Versão 0.4 · Semana 1 (atualizado a 8 de outubro)</span>
   <h1>Automação de propostas comerciais</h1>
   <p>Resumo do que está construído · atualizado a 8 de outubro de 2026</p>
   </div>
@@ -132,13 +132,13 @@ svg .ar{stroke:#6e5130}
 <section>
   <h2>Em resumo</h2>
   <div class="grid">
-    <div class="kpi"><b>9</b><span>workflows construídos em n8n Cloud (6 de negócio, 3 de apoio: avisos de erro e Slack)</span></div>
-    <div class="kpi"><b>5 etapas</b><span>automatizadas: registo do pedido, pedido de cotação de frete, enriquecimento (compliance), leitura de cotações e resumo para validação</span></div>
+    <div class="kpi"><b>11</b><span>workflows construídos em n8n Cloud (8 de negócio, 3 de apoio: avisos de erro e Slack)</span></div>
+    <div class="kpi"><b>7 etapas</b><span>automatizadas: leitura de pedidos por email, registo do pedido, pedido de cotação de frete, enriquecimento (compliance), leitura de cotações, resumo para validação e aprovação por email</span></div>
     <div class="kpi"><b>1 email</b><span>único para 4 a 5 transportadoras (em cópia oculta), escolhidas por IA consoante o país de destino</span></div>
     <div class="kpi"><b>100% rastreável</b><span>cada pedido, envio e utilização de IA fica registado na base de dados</span></div>
   </div>
   <div class="card">
-    <p style="margin:0">Um pedido de proposta (por formulário ou, futuramente, extraído de um email) é validado, gravado com um número único (<b>PRP-AAAA-NNNN</b>), confirmado por email e, de seguida, o sistema pede automaticamente cotação de frete (num único email) a 4 ou 5 transportadoras adequadas ao destino, reúne os requisitos de compliance do país de destino e avisa a equipa no Slack. A IA apoia três tarefas bem delimitadas (escolher transportadoras, redigir o texto do email e extrair os dados das cotações recebidas); tudo o resto é regra fixa e verificável. <b>Nenhuma proposta é enviada ao cliente sem revisão da equipa comercial.</b></p>
+    <p style="margin:0">Um pedido de proposta (por formulário ou extraído de um email, sempre como rascunho para a equipa rever) é validado, gravado com um número único (<b>PRP-AAAA-NNNN</b>), confirmado por email e, de seguida, o sistema pede automaticamente cotação de frete (num único email) a 4 ou 5 transportadoras adequadas ao destino, reúne os requisitos de compliance do país de destino e avisa a equipa no Slack. A IA apoia quatro tarefas bem delimitadas (extrair os dados de um pedido por email, escolher transportadoras, redigir o texto do email e extrair os dados das cotações recebidas); tudo o resto é regra fixa e verificável. <b>Nenhuma proposta é enviada ao cliente sem revisão da equipa comercial.</b></p>
   </div>
 </section>
 
@@ -151,8 +151,8 @@ svg .ar{stroke:#6e5130}
     <!-- boxes -->
     <rect class="t" x="20" y="50" width="118" height="74" rx="9"/>
     <text x="79" y="82">Email do</text><text x="79" y="99">cliente</text>
-    <rect class="plan" x="162" y="50" width="118" height="74" rx="9"/>
-    <text x="221" y="76">Leitura de emails</text><text x="221" y="92">(rascunho,</text><text x="221" y="108">em pausa)</text>
+    <rect class="llm" x="162" y="50" width="118" height="74" rx="9"/>
+    <text x="221" y="70">Leitura de emails</text><text x="221" y="86" style="font-weight:600">WF1</text><text x="221" y="102">pedido em</text><text x="221" y="116" class="small">rascunho</text>
     <rect class="n" x="304" y="50" width="118" height="74" rx="9"/>
     <text x="363" y="76" style="font-weight:600">WF2</text><text x="363" y="92">Pedido de</text><text x="363" y="108">proposta</text>
     <rect class="n" x="446" y="50" width="118" height="74" rx="9"/>
@@ -162,7 +162,7 @@ svg .ar{stroke:#6e5130}
     <rect class="plan" x="730" y="50" width="118" height="74" rx="9"/>
     <text x="789" y="82">Proposta</text><text x="789" y="99">(Moloni)</text>
     <rect class="plan" x="872" y="50" width="118" height="74" rx="9"/>
-    <text x="931" y="76">Validação</text><text x="931" y="92">e envio</text><text x="931" y="108" class="small">(WF5 já avisa)</text>
+    <text x="931" y="76">Validação</text><text x="931" y="92">e envio</text><text x="931" y="108" class="small">(WF5 e WF8 feitos)</text>
     <!-- arrows -->
     <path class="ar" d="M138 87H160" marker-end="url(#a1)"/>
     <path class="ar" d="M280 87H302" marker-end="url(#a1)"/>
@@ -181,7 +181,7 @@ svg .ar{stroke:#6e5130}
     <path class="ar" d="M505 124V150" />
     <path class="ar" d="M647 124V150" />
     <text x="220" y="30" class="lab">Etapa 1</text>
-    <text x="505" y="30" class="lab">Etapas automatizadas (v0.3)</text>
+    <text x="505" y="30" class="lab">Etapas automatizadas (v0.4)</text>
     <text x="860" y="30" class="lab">Próximas etapas</text>
   </svg>
   </div>
@@ -202,12 +202,14 @@ svg .ar{stroke:#6e5130}
       <tr><td><b>WF2</b> · Pedido de proposta</td><td>Recebe o pedido (formulário ou outro workflow), valida os dados, grava a proposta com número único e envia email de confirmação. Chama o WF3, o WF4 e o aviso no Slack no fim, sem esperar por eles.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>WF3</b> · Pedido de cotação de frete</td><td>Escolhe 4 a 5 transportadoras para o país de destino, redige e envia UM único email (cópia oculta) e regista um pedido por transportadora. Se o envio falhar, repete até 5 vezes e à 6.ª avisa por email.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
       <tr><td><b>WF4</b> · Enriquecimento</td><td>Para cada proposta, junta o código pautal, a taxa de direitos por destino (UE por regra, EUA via USITC, restantes manual) e as notas fitossanitárias. Sem IA.</td><td><span class="pill p-ok">Ativo</span></td></tr>
-      <tr><td><b>WF5</b> · Resumo para validação</td><td>Envia à Bárbara um email com os dados da proposta, as cotações de frete e o compliance, e avisa no Slack. Nada vai ao cliente sem a sua validação.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
-      <tr><td><b>WF6</b> · Ler cotações</td><td>Lê as respostas das transportadoras (texto), extrai preço, modo, prazo e validade, valida em código e grava; marca «a rever» se houver dúvidas. PDFs ficam para revisão manual.</td><td><span class="pill p-test">Em teste</span></td></tr>
+      <tr><td><b>WF5</b> · Resumo para validação</td><td>Envia à Bárbara um email com os dados da proposta, as cotações de frete e o compliance, avisa no Slack e passa a proposta a «em validação». Nada vai ao cliente sem a sua validação.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
+      <tr><td><b>WF6</b> · Ler cotações</td><td>Lê as respostas das transportadoras (texto e PDFs anexos), extrai preço, modo, prazo e validade, valida em código e grava; marca «a rever» se houver dúvidas. Com cotações suficientes, envia o resumo à Bárbara (WF5).</td><td><span class="pill p-test">Em teste</span></td></tr>
+      <tr><td><b>WF8</b> · Aprovação da Bárbara</td><td>Lê a resposta da Bárbara ao email de validação. Só «OK» (ou «aprovo») na primeira linha, de uma pessoa autorizada e numa proposta em validação, aprova; qualquer outro texto é só um aviso no Slack e nunca aprova.</td><td><span class="pill p-test">Em teste · por publicar</span></td></tr>
+      <tr><td><b>WF1</b> · Extrair pedido do email</td><td>A IA lê o email e extrai os campos do pedido; o código valida cada campo, calcula o que falta e escreve o rascunho de resposta (em português ou inglês). Nunca cria a proposta.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>Notificar Slack</b></td><td>Publica avisos curtos nos canais de novas propostas e de pedidos de cotação. Uma falha do Slack nunca pára o resto.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>WF2 Error Flow</b></td><td>Se o WF2 falhar, avisa por email se a proposta chegou a ser gravada e que o WF3 não foi chamado.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>Mail Error Flow</b></td><td>Aviso de erro geral: quando outro workflow falha, envia email com o nó que falhou, a mensagem e a ligação à execução.</td><td><span class="pill p-ok">Ativo</span></td></tr>
-      <tr><td><b>Leitura de emails</b> (Outlook)</td><td>Lê emails não lidos de uma pasta, cria rascunho de resposta (sem enviar) e arruma-o numa pasta de revisão. Ainda sem extração de dados do email.</td><td><span class="pill p-todo">Em pausa</span></td></tr>
+      <tr><td><b>Leitura de emails</b> (Outlook)</td><td>Lê emails não lidos de uma pasta, pede ao WF1 para extrair o pedido, guarda-o como rascunho para a equipa rever, avisa no Slack e cria um rascunho de resposta (sem enviar) numa pasta de revisão.</td><td><span class="pill p-test">Em teste</span></td></tr>
     </tbody>
   </table>
 </section>
@@ -322,14 +324,16 @@ svg .ar{stroke:#6e5130}
 
 <section>
   <h2>Enriquecimento, receção de cotações e validação</h2>
-  <p class="lead">Três passos novos que ligam o pedido de cotação à proposta final.</p>
+  <p class="lead">Quatro passos que ligam o pedido de cotação à proposta final.</p>
   <div class="grid">
     <div class="card"><h3>WF4 · Compliance</h3>
       <p style="margin:0">Corre em paralelo ao pedido de cotação. Calcula taxa de direitos e requisitos fitossanitários por país: UE (0 %, mercado interno), EUA (consulta ao USITC), restantes países marcados «a verificar manualmente». Os códigos pautais aguardam validação do despachante.</p></div>
     <div class="card"><h3>WF6 · Cotações recebidas</h3>
-      <p style="margin:0">Associa a resposta ao número PRP e à transportadora (só aceita remetentes conhecidos). A IA extrai preço, modo, prazo e validade; o código valida tudo e não aceita valores inventados. Com dúvidas ou anexos, fica «a rever».</p></div>
+      <p style="margin:0">Associa a resposta ao número PRP e à transportadora (só aceita remetentes conhecidos). A IA extrai preço, modo, prazo e validade; o código valida tudo e não aceita valores inventados. Lê também o texto dos PDFs anexos. Com dúvidas, fica «a rever».</p></div>
     <div class="card"><h3>WF5 · Validação</h3>
       <p style="margin:0">Junta dados, cotações e compliance num só email para a Bárbara e avisa no Slack. É o ponto de revisão humana antes de qualquer proposta seguir para o cliente.</p></div>
+    <div class="card"><h3>WF8 · Aprovação</h3>
+      <p style="margin:0">A Bárbara responde ao email com «OK» na primeira linha para aprovar. Um comentário («OK mas muda o frete») ou uma resposta de outra pessoa nunca aprova: só gera um aviso no Slack. Fica registado quem aprovou e quando.</p></div>
   </div>
 </section>
 
@@ -372,25 +376,25 @@ svg .ar{stroke:#6e5130}
 </section>
 
 <section>
-  <h2>Leitura de emails (em pausa)</h2>
-  <p class="lead">Primeira peça da entrada automática de pedidos por email. Está construída mas desativada até existir o passo que extrai os dados do email.</p>
+  <h2>Leitura de emails e extração do pedido (WF1)</h2>
+  <p class="lead">O email do cliente é lido, a IA extrai os campos do pedido e a equipa recebe um rascunho para rever. Nada cria a proposta sozinho e nenhuma resposta é enviada.</p>
   <div class="diagram">
-  <svg viewBox="0 0 1000 170" role="img" aria-label="Fluxo de leitura de emails">
+  <svg viewBox="0 0 1000 170" role="img" aria-label="Fluxo de leitura de emails e extração do pedido">
     <defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#55645d"/></marker></defs>
     <rect class="t" x="20" y="50" width="118" height="72" rx="9"/>
     <text x="79" y="82">Início</text><text x="79" y="98">manual</text>
     <rect class="n" x="162" y="50" width="118" height="72" rx="9"/>
-    <text x="221" y="76">Ler emails</text><text x="221" y="92">não lidos</text><text x="221" y="108" class="small">(pasta de entrada)</text>
-    <rect class="n" x="304" y="50" width="118" height="72" rx="9"/>
-    <text x="363" y="76">Criar rascunho</text><text x="363" y="92">de resposta</text><text x="363" y="108" class="small">(não envia)</text>
+    <text x="221" y="76">Ler emails</text><text x="221" y="92">não lidos e</text><text x="221" y="108" class="small">limpar o texto</text>
+    <rect class="llm" x="304" y="50" width="118" height="72" rx="9"/>
+    <text x="363" y="76" style="font-weight:600">WF1</text><text x="363" y="92">Extrair o</text><text x="363" y="108" class="small">pedido (IA)</text>
     <rect class="n" x="446" y="50" width="118" height="72" rx="9"/>
-    <text x="505" y="82">Marcar rascunho</text><text x="505" y="98">como não lido</text>
+    <text x="505" y="70">Gravar o pedido</text><text x="505" y="86">como rascunho</text><text x="505" y="102" class="small">e avisar</text><text x="505" y="115" class="small">no Slack</text>
     <rect class="n" x="588" y="50" width="118" height="72" rx="9"/>
-    <text x="647" y="76">Mover para</text><text x="647" y="92">pasta de</text><text x="647" y="108">revisão</text>
+    <text x="647" y="76">Criar rascunho</text><text x="647" y="92">de resposta</text><text x="647" y="108" class="small">(não envia)</text>
     <rect class="n" x="730" y="50" width="118" height="72" rx="9"/>
-    <text x="789" y="76">Marcar email</text><text x="789" y="92">original</text><text x="789" y="108">como lido</text>
+    <text x="789" y="70">Mover para</text><text x="789" y="86">pasta de revisão</text><text x="789" y="102" class="small">e marcar o</text><text x="789" y="115" class="small">email como lido</text>
     <rect class="plan" x="872" y="50" width="118" height="72" rx="9"/>
-    <text x="931" y="76">Chamar WF2</text><text x="931" y="92" class="small">(desativado até</text><text x="931" y="108" class="small">haver extração)</text>
+    <text x="931" y="76">Criar proposta</text><text x="931" y="92" class="small">(só uma pessoa,</text><text x="931" y="108" class="small">por decisão)</text>
     <path class="ar" d="M138 86H160" marker-end="url(#a5)"/>
     <path class="ar" d="M280 86H302" marker-end="url(#a5)"/>
     <path class="ar" d="M422 86H444" marker-end="url(#a5)"/>
@@ -399,7 +403,14 @@ svg .ar{stroke:#6e5130}
     <path class="ar" d="M848 86H870" stroke-dasharray="4 3" marker-end="url(#a5)"/>
   </svg>
   </div>
-</section>
+  <div class="card">
+    <ul>
+      <li><b>O que a IA faz:</b> lê o texto e devolve empresa, produto, densidade, granulometria, quantidade, embalagem, Incoterm e destino. Usa «em falta» quando o email não diz, e nunca inventa.</li>
+      <li><b>O que o código faz:</b> valida cada campo (por exemplo, o Incoterm tem de ser um dos 11 oficiais), calcula o que falta e escreve o rascunho de resposta a pedir esses dados. Se a IA falhar, o email fica marcado para uma pessoa o ler.</li>
+      <li><b>Testado a sério:</b> um pedido em inglês foi extraído com confiança de 95 % e uma newsletter foi ignorada.</li>
+    </ul>
+  </div>
+  </section>
 
 <section>
   <h2>Dados e rastreabilidade</h2>
@@ -407,7 +418,8 @@ svg .ar{stroke:#6e5130}
   <table>
     <thead><tr><th>Tabela</th><th>O que guarda</th></tr></thead>
     <tbody>
-      <tr><td><b>Propostas</b></td><td>Dados do pedido, número PRP gerado pela base de dados e estado (<i>pedido</i> → <i>a cotar</i>).</td></tr>
+      <tr><td><b>Propostas</b></td><td>Dados do pedido, número PRP gerado pela base de dados e estado (<i>pedido</i> → <i>a cotar</i> → <i>em validação</i> → <i>aprovada</i>) e quem aprovou e quando.</td></tr>
+      <tr><td><b>Pedidos por email</b></td><td>Rascunho do pedido extraído do email (campos, o que falta e confiança), para a equipa rever. Apagado ao fim de 12 meses se não for convertido.</td></tr>
       <tr><td><b>Transportadoras</b></td><td>Nome, email, modos de transporte, países servidos e se está ativa.</td></tr>
       <tr><td><b>Pedidos de cotação</b></td><td>Um registo por proposta e transportadora: assunto, texto enviado, estado (<i>enviado</i> / <i>falhou</i>), se o texto veio da IA ou de modelo fixo.</td></tr>
       <tr><td><b>Cotações de frete</b></td><td>Preço, modo, prazo, validade e condições extraídos de cada resposta, com a confiança da extração e se foi revista.</td></tr>
@@ -421,7 +433,7 @@ svg .ar{stroke:#6e5130}
   <h2>Utilização de IA e conformidade (AI Act)</h2>
   <div class="card">
     <ul>
-      <li><b>Âmbito limitado:</b> a IA escolhe entre transportadoras já existentes, redige a introdução e o fecho de um email e extrai dados de cotações recebidas. Não decide preços, não fala com o cliente final e não envia propostas.</li>
+      <li><b>Âmbito limitado:</b> a IA escolhe entre transportadoras já existentes, redige a introdução e o fecho de um email e extrai dados de cotações recebidas e de pedidos por email (sempre como rascunho). Não decide preços, não fala com o cliente final e não envia propostas.</li>
       <li><b>Validação por código:</b> as respostas da IA são verificadas (ids válidos, sem ligações nem valores monetários, referência obrigatória; nas cotações, tipos e valores válidos e revisão humana quando há dúvidas) e existe sempre uma alternativa fixa se falharem.</li>
       <li><b>Supervisão humana:</b> a equipa comercial revê o pedido antes de qualquer proposta seguir para o cliente.</li>
       <li><b>Registo e transparência:</b> modelo e versão do prompt ficam registados em cada utilização.</li>
@@ -452,16 +464,16 @@ svg .ar{stroke:#6e5130}
   <table>
     <thead><tr><th>Etapa</th><th>Descrição</th><th>Estado</th></tr></thead>
     <tbody>
-      <tr><td>Extração de pedidos por email</td><td>Ler o email do cliente, extrair os campos do pedido e alimentar o WF2.</td><td><span class="pill p-todo">Planeado</span></td></tr>
-      <tr><td>Receção das cotações</td><td>Texto em email já funciona (em teste); falta ler PDFs e anexos e testar com uma resposta real de transportadora.</td><td><span class="pill p-test">Em teste</span></td></tr>
+      <tr><td>Extração de pedidos por email</td><td>Construída e testada com a IA a sério. Falta um teste com um email real na pasta de entrada e decidir como o rascunho passa a proposta.</td><td><span class="pill p-test">Em teste</span></td></tr>
+      <tr><td>Receção das cotações</td><td>Texto e PDFs já são lidos (testado com dados simulados); falta testar com uma resposta real de transportadora e confirmar quantas cotações bastam para avisar a Bárbara (hoje 3).</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td>Validação de códigos pautais</td><td>O despachante confirma os códigos e as regras dos países fora da UE e EUA.</td><td><span class="pill p-todo">Aguarda validação</span></td></tr>
       <tr><td>Proposta no Moloni</td><td>Gerar a proposta comercial com base nas cotações recebidas. Depende de acesso de programador ao Moloni.</td><td><span class="pill p-todo">Planeado</span></td></tr>
-      <tr><td>Aprovação e envio ao cliente</td><td>Mecanismo de aprovação pela Bárbara e envio da proposta, com a Bárbara em cópia.</td><td><span class="pill p-todo">Planeado</span></td></tr>
+      <tr><td>Aprovação e envio ao cliente</td><td>A aprovação pela Bárbara por email está construída (por publicar); falta o envio da proposta ao cliente, com a Bárbara em cópia.</td><td><span class="pill p-test">Aprovação em teste · envio planeado</span></td></tr>
     </tbody>
   </table>
 </section>
 
-<footer>Versão 0.3 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 8 de outubro de 2026.</footer>
+<footer>Versão 0.4 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 8 de outubro de 2026.</footer>
 
 </div>
 </body>
