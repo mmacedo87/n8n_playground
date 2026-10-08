@@ -574,6 +574,48 @@
         }
       },
       "notes": "Só corre quando tudo o resto do WF2 correu bem. Não espera pelo WF3: o resultado do WF2 não depende dele e os erros do WF3 têm o seu próprio aviso."
+    },
+    {
+      "id": "c8a4f7e2-6d1b-4a35-9f0e-3b7d2a1c5e90",
+      "name": "Enriquecer proposta (WF4)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ya6mCmn3qi4YE3CG"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "codigo",
+              "id": "codigo",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "codigo": "={{ $json.codigo }}"
+          }
+        }
+      },
+      "notes": "Corre em paralelo com o WF3. Não espera: o resultado do WF2 não depende dele e os erros do WF4 têm o seu próprio aviso."
     }
   ],
   "connections": {
@@ -664,6 +706,11 @@
             "node": "Pedir cotações de frete (WF3)",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Enriquecer proposta (WF4)",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -684,8 +731,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "3aa4c0c4-1298-4565-b308-bd11f65ac032",
-    "exportedAt": "2026-10-07",
+    "sourceVersionId": "a96328b6-9cae-46f5-a2eb-56378380a88c",
+    "exportedAt": "2026-10-08",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
 }
