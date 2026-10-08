@@ -1,6 +1,6 @@
 {
   "name": "WF3 - Pedido de cotação de frete",
-  "nodeCount": 29,
+  "nodeCount": 30,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -266,6 +266,11 @@
         [
           {
             "node": "Registar uso de IA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar Slack: cotação enviada",
             "type": "main",
             "index": 0
           }
@@ -1129,7 +1134,9 @@
         "supabaseApi": {
           "name": "Supabase account"
         }
-      }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
     },
     {
       "id": "bd9e2e88-0e3b-44e6-83dc-e47f9ed15764",
@@ -1146,12 +1153,65 @@
         "mode": "runOnceForAllItems"
       },
       "notes": "O nó de apagar devolve 0 ou 1 itens; repõe os itens do email (um por transportadora) para o registo."
+    },
+    {
+      "id": "11acf087-c860-4ae7-b04f-9198f7f42c2a",
+      "name": "Avisar Slack: cotação enviada",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3024,
+        -224
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "N7BZddGLl0WlSl9Q"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "cotacoes",
+            "texto": "={{ \"📦 Pedido de cotação enviado *\" + $(\"Montar email\").first().json.codigo + \"* · \" + $(\"Montar email\").first().json.produto + \" · destino \" + $(\"Montar email\").first().json.destino_pais + \" · \" + $(\"Montar email\").first().json.total_transportadoras + \" transportadoras\" + ($(\"Montar email\").first().json.tentativa > 1 ? \" · tentativa \" + $(\"Montar email\").first().json.tentativa : \"\") + ($(\"Montar email\").first().json.redirecionado_teste ? \" · (teste)\" : \"\") }}"
+          }
+        }
+      },
+      "notes": "Aviso curto no Slack (#pedidos-cotacao). Não espera: uma falha do Slack não pára o WF3.",
+      "executeOnce": true
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "b0106917-393f-4094-bdbc-020850db967a",
+    "sourceVersionId": "9278a232-2a8f-449d-8168-02a212a673d6",
     "exportedAt": "2026-10-08",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
