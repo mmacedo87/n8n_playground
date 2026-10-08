@@ -161,6 +161,8 @@ create table requisitos_pais (
   fonte                     text not null,          -- de onde veio a informação
   verificado_em             date not null,          -- data da última verificação
   atualizado_em             timestamptz not null default now(),
+  metodo                    text not null default 'tabela_manual'
+                            check (metodo in ('regra_ue','api_usitc','tabela_manual')),
   unique (pais_iso, codigo_pautal)
 );
 
@@ -233,6 +235,43 @@ create index pedidos_cotacao_proposta_idx on pedidos_cotacao (proposta_id);
 alter table pedidos_cotacao enable row level security;
 create trigger pedidos_cotacao_atualizado_em before update on pedidos_cotacao
   for each row execute function set_atualizado_em();
+
+-- ---------- Produtos e enriquecimento de proposta (WF4) ----------
+-- Códigos pautais por produto (a validar pelo despachante).
+create table produtos (
+  produto        text primary key,
+  codigo_nc      text not null,
+  hts_us         text,                    -- código HTS de 10 dígitos para os EUA
+  descricao      text,
+  validado       boolean not null default false,
+  validado_por   text,
+  validado_em    date,
+  atualizado_em  timestamptz not null default now()
+);
+alter table produtos enable row level security;
+
+-- Resultado do enriquecimento por proposta (histórico; vale a linha mais recente).
+create table proposta_compliance (
+  id                         uuid primary key default gen_random_uuid(),
+  proposta_id                uuid not null references propostas(id),
+  destino_pais               text not null,
+  codigo_nc                  text,
+  hts_us                     text,
+  taxa_direitos_pct          numeric,
+  taxa_texto                 text,
+  notas_taxas                text,
+  requisitos_fitossanitarios text,
+  custos_adicionais_nota     text not null default 'Custos de inland e taxas portuárias: constam das cotações das transportadoras (pedir discriminação).',
+  fonte                      text,
+  metodo                     text not null check (metodo in ('regra_ue','api_usitc','tabela_manual')),
+  estado                     text not null check (estado in ('automatico','a_verificar_manualmente')),
+  validado_por               text,
+  validado_em                timestamptz,
+  criado_em                  timestamptz not null default now()
+);
+create index proposta_compliance_proposta_idx on proposta_compliance (proposta_id, criado_em desc);
+alter table proposta_compliance enable row level security;
+-- Dados iniciais (produtos e regras por país): ver supabase/migrations/0003_wf4_enriquecimento.sql
 
 -- ---------- Segurança ----------
 -- RLS ativa e sem políticas: a chave anónima não lê nem escreve nada.
