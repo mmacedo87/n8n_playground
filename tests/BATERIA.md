@@ -141,5 +141,15 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | M4 | Proposta já `aprovada` → aprovação ignorada, aviso Slack (exec. 124) | Passa |
 | M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | Pendente: o workflow está por publicar; precisa de uma proposta real em `em_validacao` (W4) |
 
+## X. WF1 Extração do pedido e «Read Outlook Messages» (dados fixados; Code e If correm a sério)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| X1 | WF1: pedido completo → `e_pedido=true`, campos validados, sem campos em falta, rascunho PT «a preparar a proposta» (exec. 137) | Passa |
+| X2 | WF1: campos em falta e valores inválidos (incoterm/país/quantidade) → ficam a null e entram em `campos_em_falta`; rascunho lista o que falta (exec. 138) | Passa |
+| X3 | WF1: email que não é pedido → `e_pedido=false`, sem rascunho (exec. 139) | Passa |
+| X4 | WF1: falha do LLM → `falhou_llm=true`, confiança 0, sem inventar dados (exec. 140) | Passa |
+| X5 | Read Outlook Messages: HTML limpo (style, `&nbsp;`), remetente em minúsculas, pedido segue para o ramo «sim» e newsletter para o «não» (exec. 141) | Passa |
+| X6 | Real: email de teste na Folder 1 → lead gravado (jsonb `dados_extraidos`, `campos_em_falta`), draft em To Check, original lido, aviso Slack | Pendente: precisa de um email de teste na Folder 1 e créditos OpenRouter |
+
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
