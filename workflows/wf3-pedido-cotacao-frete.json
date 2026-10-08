@@ -697,7 +697,7 @@
         "bodyContent": "={{ $(\"Montar email\").first().json.corpo_html }}",
         "additionalFields": {
           "bodyContentType": "html",
-          "bccRecipients": "={{ $(\"Montar email\").first().json.destinatarios_bcc }}"
+          "bccRecipients": "={{ $(\"Montar email\").first().json.destinatarios_bcc || $(\"Montar email\").first().json.destinatario_to }}"
         }
       },
       "id": "766196ca-11fe-412e-a098-3133b4197545",
@@ -1072,7 +1072,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "2ecedae1-23b4-4543-85d9-70108b30ee5a",
+    "sourceVersionId": "da43bd61-39fa-4610-8fb2-38c64804f51b",
     "exportedAt": "2026-10-08",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }

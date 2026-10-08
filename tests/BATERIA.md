@@ -93,7 +93,8 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 
 | # | Teste | Resultado |
 |---|---|---|
-| R1 | WF2 real pelo formulário (cliente "TESTE REAL"): proposta gravada, email de confirmação, WF3 e WF4 arrancam | 2026-10-08, exec. 75: **FALHOU**. Proposta PRP-2026-0010 gravada, mas o envio pelo Outlook devolveu "Forbidden - perhaps check your credentials?"; o fluxo parou (WF3 e WF4 não correram) e o WF2 Error Flow disparou (exec. 76). Causa provável: credencial Outlook caducada ou sem permissão de envio. Repetir depois de a reautorizar |
+| R1 | WF2 real pelo formulário (cliente "TESTE REAL", ES): proposta gravada, email de confirmação, WF3 e WF4 arrancam | 2026-10-08. Exec. 75 e 77: falharam com "Forbidden" do Outlook (token a renovar; credencial OK à 3.ª tentativa). Exec. 79/80: o WF3 falhou porque o BCC ia vazio em modo de teste (bug corrigido, WF3 versão da43bd61). Exec. 85 (PRP-2026-0013): **passou**: proposta a `a_cotar`, 4 pedidos `enviado` com `redirecionado_teste`, 1 linha em `ai_log`, `proposta_compliance` automatico/regra_ue |
+| R2 | Repetir uma proposta cujo envio falhou | **Conhecido, por corrigir**: as linhas `falhou` contam como "já contactadas" e o WF3 recusa (exec. 83) |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
