@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução completa: 2026-10-08 18:15 (Lisboa): WF4 novo (I1-I8), WF2 com chamada ao WF4 (H7-H8) e regressão do WF2 e WF3 (testes equivalentes a D1, D3 e G1, exec. 65-67) passam; os restantes testes anteriores não foram re-corridos nesta data. G9 (a conta OpenRouter sem créditos) e F1-F6 (execução real) continuam como estavam.
+Última execução: 2026-10-08 (Lisboa), depois de o WF3 passar a enviar UM único email às transportadoras. Supabase (A1-A27) todos passam; n8n: B1-B3 (credenciais, Error Workflow, callerPolicy) verificados; WF3 testado com dados fixados em modo de teste e em modo de produção (exec. 70 e 71), WF2 (exec. 72, 73) e WF4 (exec. 74) passam. Não re-corridos nesta data: C, E, restantes G, H e I (o código dos respetivos workflows não mudou). G9 e F1-F6 (execução real) continuam pendentes.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -47,7 +47,8 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 ## G. WF3 Pedido de cotação de frete (dados fixados em nós com credenciais; Set, If e Code correm a sério)
 | Id | Verifica |
 | --- | --- |
-| G1 | Caminho feliz: código normalizado (" prp-2026-0099 " → PRP-2026-0099), só transportadoras do país de destino, ordem por nome, assunto com o código PRP, destinatário desviado para o email de teste |
+| G1 | Caminho feliz: código normalizado (" prp-2026-0099 " → PRP-2026-0099), só transportadoras do país de destino, ordem por nome, assunto com o código PRP, destinatário desviado para o email de teste. **UM único email** (o nó de envio corre uma vez), com um registo em `pedidos_cotacao` por transportadora (exec. 70) |
+| G13 | Modo de produção (`destinatario_teste` vazio): um só email com To = `destinatario_principal` e todas as transportadoras em BCC, sem prefixo [TESTE] (exec. 71) |
 | G2 | Texto do LLM válido → `gerado_por=llm`; texto com link → `modelo_fixo` |
 | G3 | O email não contém o nome do cliente final |
 | G4 | Menos de 4 transportadoras (3 para US): envia a todas, `abaixo_do_minimo_4=true`, `escolha_por=todas` (exec. 46) |
