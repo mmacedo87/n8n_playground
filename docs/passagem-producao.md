@@ -83,7 +83,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
 - [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
 - [ ] Reenvio após falha: o WF3 repete o envio até 5 tentativas (coluna `pedidos_cotacao.tentativas`, migração 0004) e à 6.ª não envia e avisa por email (via Mail Error Flow). Confirmar que o Mail Error Flow está definido como Error Workflow do WF3.
-- [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0013, pedidos_cotacao, ai_log) antes de começar.
+- [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0014, pedidos_cotacao, ai_log) antes de começar.
 
 ## 13. WF4 (enriquecimento) e compliance
 - [ ] Validar com o despachante o código pautal de cada produto em `produtos` (hoje `validado=false`) e marcar `validado`, `validado_por` e `validado_em`.
@@ -93,3 +93,11 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Confirmar o ID do WF4 no nó "Enriquecer proposta (WF4)" do WF2 na instância de destino e o Mail Error Flow como Error Workflow do WF4.
 - [ ] Garantir que a Bárbara vê `proposta_compliance` (linhas `a_verificar_manualmente`) antes de validar a proposta (passo 6).
 - [ ] Apagar os dados de teste de `proposta_compliance` antes de começar. (O índice duplicado `requisitos_pais_pais_nc_uq` já foi removido pela migração 0004; aplicar a 0004 também em produção.)
+
+## 14. Slack (avisos de propostas e cotações)
+- [ ] Criar (ou reutilizar) os canais de produção e **convidar a app do Slack** (`/invite @status_notifications`) para cada um; sem isso o aviso falha com `channel_not_found`.
+- [ ] Substituir os IDs dos canais no código do nó "Escolher canal e texto" do workflow "Notificar Slack" (`propostas`, `cotacoes`, `estado`).
+- [ ] Confirmar o ID do "Notificar Slack" nos nós "Avisar Slack: nova proposta" (WF2) e "Avisar Slack: cotação enviada" (WF3) na instância de destino.
+- [ ] Credencial "Slack API" criada na instância de destino com permissão `chat:write`; o Mail Error Flow é o Error Workflow do "Notificar Slack".
+- [ ] As mensagens só levam o essencial (código, cliente, produto, quantidade, destino); não incluir preços, moradas nem dados pessoais de contactos.
+- [ ] O workflow próprio do utilizador "Claude → Slack | Estado das tarefas" é independente e fica fora do repositório.
