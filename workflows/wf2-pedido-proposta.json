@@ -616,6 +616,58 @@
         }
       },
       "notes": "Corre em paralelo com o WF3. Não espera: o resultado do WF2 não depende dele e os erros do WF4 têm o seu próprio aviso."
+    },
+    {
+      "id": "471eac1b-d135-4fd0-9a9a-d9de056c8c27",
+      "name": "Avisar Slack: nova proposta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "N7BZddGLl0WlSl9Q"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ \"🆕 Nova proposta *\" + $(\"Criar proposta no Supabase\").item.json.codigo + \"* · \" + $(\"Criar proposta no Supabase\").item.json.cliente + \" · \" + $(\"Criar proposta no Supabase\").item.json.produto + \" · \" + $(\"Criar proposta no Supabase\").item.json.quantidade + \" kg · \" + $(\"Criar proposta no Supabase\").item.json.incoterm + \" · destino \" + $(\"Criar proposta no Supabase\").item.json.destino_pais }}"
+          }
+        }
+      },
+      "notes": "Aviso curto no Slack (#novas-propostas). Corre em paralelo e não espera: uma falha do Slack não pára o WF2."
     }
   ],
   "connections": {
@@ -711,6 +763,11 @@
             "node": "Enriquecer proposta (WF4)",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Avisar Slack: nova proposta",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -731,7 +788,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "a96328b6-9cae-46f5-a2eb-56378380a88c",
+    "sourceVersionId": "424506e2-1f0e-4a56-a4ce-38acc8b60614",
     "exportedAt": "2026-10-08",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
