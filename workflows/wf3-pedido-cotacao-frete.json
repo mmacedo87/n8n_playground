@@ -1,6 +1,6 @@
 {
   "name": "WF3 - Pedido de cotação de frete",
-  "nodeCount": 27,
+  "nodeCount": 29,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -155,17 +155,6 @@
         ]
       ]
     },
-    "Montar email": {
-      "main": [
-        [
-          {
-            "node": "Registar pedido de cotação",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Registar pedido de cotação": {
       "main": [
         [
@@ -288,6 +277,39 @@
         [
           {
             "node": "Envio falhou",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar email": {
+      "main": [
+        [
+          {
+            "node": "Limpar tentativas falhadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpar tentativas falhadas": {
+      "main": [
+        [
+          {
+            "node": "Repor itens do email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repor itens do email": {
+      "main": [
+        [
+          {
+            "node": "Registar pedido de cotação",
             "type": "main",
             "index": 0
           }
@@ -548,7 +570,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cfg = $('Configuração').first().json;\nconst base = $('Listar candidatas').first().json;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst p = $('Ler proposta').first().json;\nconst porId = Object.fromEntries(todas.map(t => [t.id, t]));\nconst candidatas = base.candidatas.map(c => porId[c.id]).filter(Boolean);\nconst min = Number(cfg.minimo_transportadoras) || 4;\nconst alvo = base.alvo;\nconst out = $json.output || {};\nconst ids = Array.isArray(out.ids) ? [...new Set(out.ids.filter(x => typeof x === 'string'))] : [];\nconst validos = ids.filter(id => candidatas.some(c => c.id === id));\nconst modosDe = (t) => (Array.isArray(t.modos) ? t.modos : []);\nlet sel; let por;\nif (candidatas.length <= alvo) { sel = candidatas; por = 'todas'; }\nelse if (validos.slice(0, alvo).length >= Math.min(min, alvo)) { sel = validos.slice(0, alvo).map(id => porId[id]); por = 'llm'; }\nelse {\n  por = 'regra';\n  sel = [];\n  for (const m of ['maritimo', 'rodoviario', 'aereo', 'ferroviario']) {\n    if (sel.length >= alvo) break;\n    if (sel.some(t => modosDe(t).includes(m))) continue;\n    const c = candidatas.find(t => !sel.includes(t) && modosDe(t).includes(m));\n    if (c) sel.push(c);\n  }\n  for (const t of candidatas) { if (sel.length >= alvo) break; if (!sel.includes(t)) sel.push(t); }\n}\nsel = sel.slice().sort((a, b) => a.nome.localeCompare(b.nome));\nconst total = base.ja_contactadas + sel.length;\nconst motivo = por === 'llm' ? String(out.motivo || '').slice(0, 300) : '';\nreturn sel.map(t => ({ json: {\n  proposta_id: p.id, codigo: p.codigo, produto: p.produto, densidade: p.densidade, granulometria: p.granulometria,\n  quantidade: p.quantidade, unidade: p.unidade, embalagem: p.embalagem, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  transportadora_id: t.id, transportadora_nome: t.nome, transportadora_email: t.email, modos: modosDe(t).join(', '),\n  abaixo_do_minimo: total < min, escolhido_por: por, motivo_escolha: motivo\n} }));",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst base = $('Listar candidatas').first().json;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst p = $('Ler proposta').first().json;\nconst porId = Object.fromEntries(todas.map(t => [t.id, t]));\nconst candidatas = base.candidatas.map(c => porId[c.id]).filter(Boolean);\nconst min = Number(cfg.minimo_transportadoras) || 4;\nconst alvo = base.alvo;\nconst out = $json.output || {};\nconst ids = Array.isArray(out.ids) ? [...new Set(out.ids.filter(x => typeof x === 'string'))] : [];\nconst validos = ids.filter(id => candidatas.some(c => c.id === id));\nconst modosDe = (t) => (Array.isArray(t.modos) ? t.modos : []);\nlet sel; let por;\nif (candidatas.length <= alvo) { sel = candidatas; por = 'todas'; }\nelse if (validos.slice(0, alvo).length >= Math.min(min, alvo)) { sel = validos.slice(0, alvo).map(id => porId[id]); por = 'llm'; }\nelse {\n  por = 'regra';\n  sel = [];\n  for (const m of ['maritimo', 'rodoviario', 'aereo', 'ferroviario']) {\n    if (sel.length >= alvo) break;\n    if (sel.some(t => modosDe(t).includes(m))) continue;\n    const c = candidatas.find(t => !sel.includes(t) && modosDe(t).includes(m));\n    if (c) sel.push(c);\n  }\n  for (const t of candidatas) { if (sel.length >= alvo) break; if (!sel.includes(t)) sel.push(t); }\n}\nsel = sel.slice().sort((a, b) => a.nome.localeCompare(b.nome));\nconst total = base.ja_contactadas + sel.length;\nconst motivo = por === 'llm' ? String(out.motivo || '').slice(0, 300) : '';\nreturn sel.map(t => ({ json: {\n  proposta_id: p.id, codigo: p.codigo, produto: p.produto, densidade: p.densidade, granulometria: p.granulometria,\n  quantidade: p.quantidade, unidade: p.unidade, embalagem: p.embalagem, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  transportadora_id: t.id, transportadora_nome: t.nome, transportadora_email: t.email, modos: modosDe(t).join(', '),\n  abaixo_do_minimo: total < min, escolhido_por: por, motivo_escolha: motivo, tentativa: base.tentativa || 1\n} }));",
         "language": "javaScript",
         "mode": "runOnceForAllItems"
       },
@@ -671,6 +693,10 @@
             {
               "fieldId": "modelo",
               "fieldValue": "={{ $json.modelo }}"
+            },
+            {
+              "fieldId": "tentativas",
+              "fieldValue": "={{ $json.tentativa }}"
             }
           ]
         }
@@ -1001,7 +1027,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const p = $('Ler proposta').first().json;\nconst cfg = $('Configuração').first().json;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst feitasIds = $('Ler pedidos já feitos').all().map(i => i.json.transportadora_id).filter(Boolean);\nconst max = Number(cfg.maximo_transportadoras) || 5;\nconst doPais = todas.filter(t => Array.isArray(t.rotas) && t.rotas.includes(p.destino_pais));\nif (doPais.length === 0) throw new Error('Não há transportadoras ativas para o destino ' + p.destino_pais + ' (proposta ' + p.codigo + '): nada foi enviado. Acrescente transportadoras ou rotas.');\nconst jaContactadas = doPais.filter(t => feitasIds.includes(t.id)).length;\nconst candidatas = doPais.filter(t => !feitasIds.includes(t.id)).sort((a, b) => a.nome.localeCompare(b.nome));\nconst vagas = max - jaContactadas;\nif (candidatas.length === 0 || vagas <= 0) throw new Error('Todas as transportadoras já foram contactadas para a proposta ' + p.codigo);\nreturn [{ json: {\n  codigo: p.codigo, produto: p.produto, quantidade: p.quantidade, unidade: p.unidade, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  alvo: Math.min(vagas, candidatas.length), vagas: vagas, ja_contactadas: jaContactadas,\n  candidatas: candidatas.map(t => ({ id: t.id, nome: t.nome, modos: t.modos || [], paises_servidos: t.rotas }))\n} }];",
+        "jsCode": "const p = $('Ler proposta').first().json;\nconst cfg = $('Configuração').first().json;\nconst MAX_TENTATIVAS = 5;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst pedidos = $('Ler pedidos já feitos').all().map(i => i.json).filter(r => r && r.transportadora_id);\n// 'falhou' não conta como contactada: pode ser repetida até MAX_TENTATIVAS\nconst feitasIds = pedidos.filter(r => r.estado !== 'falhou').map(r => r.transportadora_id);\nconst falhadas = pedidos.filter(r => r.estado === 'falhou');\nconst anteriores = falhadas.reduce((m, r) => Math.max(m, Number(r.tentativas) || 1), 0);\nconst max = Number(cfg.maximo_transportadoras) || 5;\nconst doPais = todas.filter(t => Array.isArray(t.rotas) && t.rotas.includes(p.destino_pais));\nif (doPais.length === 0) throw new Error('Não há transportadoras ativas para o destino ' + p.destino_pais + ' (proposta ' + p.codigo + '): nada foi enviado. Acrescente transportadoras ou rotas.');\nconst jaContactadas = doPais.filter(t => feitasIds.includes(t.id)).length;\nconst candidatas = doPais.filter(t => !feitasIds.includes(t.id)).sort((a, b) => a.nome.localeCompare(b.nome));\nconst vagas = max - jaContactadas;\nif (candidatas.length === 0 || vagas <= 0) throw new Error('Todas as transportadoras já foram contactadas para a proposta ' + p.codigo);\nif (anteriores >= MAX_TENTATIVAS) throw new Error('Proposta ' + p.codigo + ': o envio do pedido de cotação falhou ' + anteriores + ' vezes (máximo ' + MAX_TENTATIVAS + ') e NÃO foi tentado de novo. Verifique a ligação ao Outlook e envie o pedido manualmente.');\nreturn [{ json: {\n  codigo: p.codigo, produto: p.produto, quantidade: p.quantidade, unidade: p.unidade, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  alvo: Math.min(vagas, candidatas.length), vagas: vagas, ja_contactadas: jaContactadas, tentativa: anteriores + 1,\n  candidatas: candidatas.map(t => ({ id: t.id, nome: t.nome, modos: t.modos || [], paises_servidos: t.rotas }))\n} }];",
         "language": "javaScript",
         "mode": "runOnceForAllItems"
       },
@@ -1067,12 +1093,65 @@
         "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"ids\": { \"type\": \"array\", \"items\": { \"type\": \"string\" }, \"description\": \"Ids das transportadoras escolhidas, apenas da lista de candidatas\" },\n    \"motivo\": { \"type\": \"string\", \"description\": \"Uma frase curta com o motivo da escolha\" }\n  },\n  \"required\": [\"ids\", \"motivo\"]\n}",
         "schemaType": "manual"
       }
+    },
+    {
+      "id": "f4edabc3-f0c5-4656-bf34-ddab7ed1d599",
+      "name": "Limpar tentativas falhadas",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        0
+      ],
+      "parameters": {
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "proposta_id",
+              "keyValue": "={{ $(\"Montar email\").first().json.proposta_id }}"
+            },
+            {
+              "condition": "eq",
+              "keyName": "estado",
+              "keyValue": "falhou"
+            }
+          ]
+        },
+        "matchType": "allFilters",
+        "operation": "delete",
+        "resource": "row",
+        "tableId": "pedidos_cotacao"
+      },
+      "notes": "Apaga as linhas 'falhou' desta proposta antes de gravar a nova tentativa (a contagem fica em tentativas).",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "bd9e2e88-0e3b-44e6-83dc-e47f9ed15764",
+      "name": "Repor itens do email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return $('Montar email').all().map(i => ({ json: i.json }));",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "notes": "O nó de apagar devolve 0 ou 1 itens; repõe os itens do email (um por transportadora) para o registo."
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "da43bd61-39fa-4610-8fb2-38c64804f51b",
+    "sourceVersionId": "b0106917-393f-4094-bdbc-020850db967a",
     "exportedAt": "2026-10-08",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
