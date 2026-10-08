@@ -19,11 +19,11 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, ~2 pedidos
 Supabase com RLS (10 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (emails desviados), `ai_log` para uso de IA, Slack (Notificar Slack), repositório com export sanitizado e verificação de segredos, bateria de testes (`tests/BATERIA.md`).
 
 ## Pendentes
-1. Convidar a app do Slack para #novas-propostas e #pedidos-cotacao e repetir S1/S2 (bloqueio atual).
+1. ~~Convidar a app do Slack e repetir S1/S2~~ (feito, passam).
 2. Validar códigos pautais (despachante) e regras do Reino Unido, Brasil, China, Japão e Marrocos.
 3. Ler respostas das transportadoras (OCR/extração) e comparar cotações.
 4. Moloni (fase 5), validação da Bárbara (fase 6), envio e confirmação (fases 7-8), tabela de expedição (fase 9).
 5. WF1: extração de leads a partir de emails; ligar o "Read Outlook Messages" ao WF2.
 6. Testes reais por fazer: F5 (leitura real do Outlook), F6 (campos em falta no formulário), G9.
-7. Dados de teste (PRP-2026-0001 a 0014): decisão do utilizador, manter por agora (`supabase/limpar_dados_de_teste.sql` disponível).
+7. Dados de teste (PRP-2026-0001 a 0015): decisão do utilizador, manter por agora (`supabase/limpar_dados_de_teste.sql` disponível).
 8. Passagem a produção: ver `docs/passagem-producao.md` (destinatários, transportadoras reais, créditos OpenRouter, proteger o formulário manual do WF3).

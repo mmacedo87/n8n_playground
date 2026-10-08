@@ -23,7 +23,7 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | `wf2-pedido-proposta.json` | Formulário e sub-workflow que regista o pedido no Supabase, confirma por email e, no fim, arranca o WF3 e o WF4 em paralelo | Publicado |
 | `wf2-error-flow.json` | Workflow de erro do WF2: avisa que o WF3 não foi chamado | Publicado |
 | `wf3-pedido-cotacao-frete.json` | Pede cotação de frete com UM único email a até 5 transportadoras (em BCC), com o código PRP no assunto; LLM redige só introdução e fecho | Publicado (modo de teste: emails desviados) |
-| `notificar-slack.json` | Sub-workflow reutilizável: publica uma mensagem curta num canal do Slack (`propostas`, `cotacoes`, `estado`). Chamado pelo WF2 (nova proposta) e pelo WF3 (cotação enviada), sem esperar pelo resultado | Publicado (falta convidar a app para os canais) |
+| `notificar-slack.json` | Sub-workflow reutilizável: publica uma mensagem curta num canal do Slack (`propostas`, `cotacoes`, `estado`). Chamado pelo WF2 (nova proposta) e pelo WF3 (cotação enviada), sem esperar pelo resultado | Publicado |
 | `wf4-enriquecimento-proposta.json` | Enriquecimento: código pautal, taxa por destino (UE por regra, EUA via USITC, restantes manual) e notas fitossanitárias, gravados em `proposta_compliance`. Sem LLM | Publicado |
 | `read-outlook-messages.json` | Workflow principal: lê emails, cria drafts, (futuro) chama o WF2 | Inativo, trigger manual |
 

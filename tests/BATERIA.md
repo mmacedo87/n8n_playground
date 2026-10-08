@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução: 2026-10-08 (Lisboa, bateria completa depois da integração com o Slack). Supabase A1-A27 todos passam (transação revertida). n8n com dados fixados: WF3 (exec. 95), WF2 válido e inválido (exec. 96, 97) e WF4 (exec. 98) passam. Reais: WF2→WF3+WF4 (exec. 99, PRP-2026-0014), repetição do WF3 (exec. 105, passou depois de corrigir o bug do R5), Mail Error Flow (exec. 103, 107). Slack: S1/S2 **bloqueados** até a app do Slack ser convidada para os 2 canais novos. Pendentes: G9, F1-F6 (F5 leitura real do Outlook não corrida: o workflow está inativo e mexe na caixa de entrada).
+Última execução: 2026-10-08 (Lisboa, bateria completa depois da integração com o Slack). Supabase A1-A27 todos passam (transação revertida). n8n com dados fixados: WF3 (exec. 95), WF2 válido e inválido (exec. 96, 97) e WF4 (exec. 98) passam. Reais: WF2→WF3+WF4 (exec. 99, PRP-2026-0014), repetição do WF3 (exec. 105, passou depois de corrigir o bug do R5), Mail Error Flow (exec. 103, 107). Slack: S1/S2 passam (exec. 108, PRP-2026-0015) depois de convidar a app. Pendentes: G9, F1-F6 (F5 leitura real do Outlook não corrida: o workflow está inativo e mexe na caixa de entrada).
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -103,8 +103,8 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 ## S. Slack (Notificar Slack, WF2 e WF3)
 | Id | Verifica | Resultado |
 | --- | --- | --- |
-| S1 | Sub-workflow "Notificar Slack" real: canal desconhecido e texto vazio falham com mensagem clara; `&`, `<`, `>` são escapados; publica no canal certo | Estrutura e validações OK. Publicação **bloqueada**: `channel_not_found` (exec. 102 e 106) porque a app do Slack ainda não é membro dos canais privados novos |
-| S2 | WF2 chama o aviso "nova proposta" (#novas-propostas) e o WF3 o aviso "cotação enviada" (#pedidos-cotacao), em paralelo e sem esperar: uma falha do Slack não pára o fluxo | Ligação confirmada (exec. 99 e 105 concluem; o aviso falha só pelo motivo de S1). Repetir depois do convite |
+| S1 | Sub-workflow "Notificar Slack" real: publica no canal certo com o texto escapado | **Passa** (2026-10-08, exec. 108): mensagens publicadas em #novas-propostas e #pedidos-cotacao depois de a app ser convidada (antes falhava com `channel_not_found`, exec. 102 e 106) |
+| S2 | WF2 chama o aviso "nova proposta" e o WF3 o aviso "cotação enviada", em paralelo e sem esperar | **Passa** (exec. 108, PRP-2026-0015): "🆕 Nova proposta ..." às 19:56:39 e "📦 Pedido de cotação enviado ... 4 transportadoras · (teste)" às 19:56:40 |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.

@@ -83,7 +83,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
 - [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
 - [ ] Reenvio após falha: o WF3 repete o envio até 5 tentativas (coluna `pedidos_cotacao.tentativas`, migração 0004) e à 6.ª não envia e avisa por email (via Mail Error Flow). Confirmar que o Mail Error Flow está definido como Error Workflow do WF3.
-- [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0014, pedidos_cotacao, ai_log) antes de começar.
+- [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0015, pedidos_cotacao, ai_log) antes de começar.
 
 ## 13. WF4 (enriquecimento) e compliance
 - [ ] Validar com o despachante o código pautal de cada produto em `produtos` (hoje `validado=false`) e marcar `validado`, `validado_por` e `validado_em`.
