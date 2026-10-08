@@ -150,6 +150,7 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | X4 | WF1: falha do LLM → `falhou_llm=true`, confiança 0, sem inventar dados (exec. 140) | Passa |
 | X5 | Read Outlook Messages: HTML limpo (style, `&nbsp;`), remetente em minúsculas, pedido segue para o ramo «sim» e newsletter para o «não» (exec. 141) | Passa |
 | X6 | Real: email de teste na Folder 1 → lead gravado (jsonb `dados_extraidos`, `campos_em_falta`), draft em To Check, original lido, aviso Slack | Pendente: precisa de um email de teste na Folder 1 e créditos OpenRouter |
+| X7 | Real (LLM a sério, OpenRouter haiku 4.5): pedido em inglês → empresa, 4-8 mm, 60 kg/m3, 2 t, big bags, FOB, ES/Valencia, confiança 0.95, rascunho em inglês; newsletter → `e_pedido=false`, sem rascunho (exec. 164, sub-exec. 165-166; antes falhou com 402 por chave sem créditos, o fallback funcionou) | Passa |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
