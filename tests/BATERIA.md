@@ -114,5 +114,12 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | W3 | Código inexistente → erro claro "proposta ... não encontrada" (exec. 115) | Passa |
 | W4 | Execução real (email + Slack) | Pendente: o workflow só é chamado por outro workflow e ainda não há chamador |
 
+## L. WF6 Ler cotações das transportadoras (dados fixados; Code corre a sério)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| L1 | 3 emails: resposta de transportadora conhecida com PRP a_cotar é aceite; o nosso pedido (`[TESTE] ...`) e remetente desconhecido são ignorados; extração válida → `revisao=automatica`, moeda em maiúsculas (exec. 116) | Passa |
+| L2 | Validação do LLM: sem preço, modo ou prazo, confiança < 0,8 ou anexos → `a_rever` (verificação estrutural do código) | Passa (estrutural) |
+| L3 | Execução real (Outlook, OpenRouter, Supabase) | Pendente: precisa de uma resposta real de transportadora (os emails das transportadoras de teste são `@example.invalid`) |
+
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.

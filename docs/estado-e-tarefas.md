@@ -6,7 +6,7 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, ~2 pedidos
 | --- | --- | --- |
 | 1. Prospeção | Parcial | Tabela `leads` e "Read Outlook Messages" (inativo, não testado a sério com a caixa real). Falta a extração a partir dos emails (WF1) |
 | 2. Definição comercial | Feito | WF2: formulário e sub-workflow, grava em `propostas` (PRP-AAAA-NNNN) e confirma por email. Avisa no Slack (#novas-propostas) |
-| 3. Cotação de transporte | Parcial | WF3: 1 email único a até 5 transportadoras (BCC), reenvio até 5 tentativas, aviso Slack (#pedidos-cotacao). Falta ler as respostas (PDF/texto livre) e comparar cotações |
+| 3. Cotação de transporte | Parcial | WF3: 1 email único a até 5 transportadoras (BCC), reenvio até 5 tentativas, aviso Slack (#pedidos-cotacao). WF6 lê as respostas em texto e grava em `cotacoes_frete` (testado com dados fixados). Faltam PDFs/anexos (OCR) e o teste real |
 | 4. Enriquecimento | Feito (dados por validar) | WF4: código pautal, taxa (UE regra, EUA via USITC, resto manual) e notas fitossanitárias em `proposta_compliance`. Códigos pautais por validar pelo despachante |
 | 5. Geração de proposta (Moloni) | Por fazer | Depende de confirmar âmbito da API Moloni (OAuth, módulo Documentos) |
 | 6. Validação (Bárbara) | Parcial | WF5: email e aviso Slack com o resumo (proposta, cotações, compliance). Falta o chamador e o mecanismo de aprovação |
