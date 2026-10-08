@@ -88,5 +88,12 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 
 Limite conhecido: o nó "Gravar compliance" e o trigger só correm a sério na primeira proposta real; o Execute Workflow Trigger não se executa pelo MCP.
 
+## R. Testes reais (comedidos)
+Regra: no máximo 1 execução real do encadeamento completo por alteração relevante (WF2 → WF3 + WF4, destino ES, modo de teste: 1 email para o destinatário de teste, 1 chamada ao LLM de redação). Não repetir em cada bateria; os restantes testes usam dados fixados. Apagar a proposta de teste depois.
+
+| # | Teste | Resultado |
+|---|---|---|
+| R1 | WF2 real pelo formulário (cliente "TESTE REAL"): proposta gravada, email de confirmação, WF3 e WF4 arrancam | 2026-10-08, exec. 75: **FALHOU**. Proposta PRP-2026-0010 gravada, mas o envio pelo Outlook devolveu "Forbidden - perhaps check your credentials?"; o fluxo parou (WF3 e WF4 não correram) e o WF2 Error Flow disparou (exec. 76). Causa provável: credencial Outlook caducada ou sem permissão de envio. Repetir depois de a reautorizar |
+
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
