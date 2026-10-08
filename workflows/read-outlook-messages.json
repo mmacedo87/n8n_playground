@@ -1,6 +1,6 @@
 {
   "name": "Read Outlook Messages",
-  "description": "Lê os emails não lidos da pasta Folder 1 do Outlook, cria um draft de resposta para cada um (sem enviar), marca o draft como não lido e move-o para a pasta To Check. Trigger manual por agora; o corpo do draft é um texto fixo provisório.",
+  "description": "Lê os emails não lidos da Folder 1, pede ao WF1 (LLM + validação em código) para extrair o pedido, grava-o como lead rascunho no Supabase, avisa no Slack e cria um draft de resposta (nunca envia) em To Check. Não cria propostas.",
   "nodes": [
     {
       "parameters": {},
@@ -30,7 +30,16 @@
             }
           }
         },
-        "options": {}
+        "options": {},
+        "fields": [
+          "subject",
+          "from",
+          "body",
+          "bodyPreview",
+          "hasAttachments",
+          "receivedDateTime"
+        ],
+        "output": "fields"
       },
       "id": "4460ec8c-75ec-4584-8e34-dc2f617262c1",
       "name": "Ler emails da Folder 1",
@@ -52,10 +61,10 @@
         "messageId": {
           "__rl": true,
           "mode": "id",
-          "value": "={{ $json.id }}"
+          "value": "={{ $json.email_id }}"
         },
         "replyToSenderOnly": true,
-        "message": "Olá,\n\nObrigado pela sua mensagem. Respondo assim que possível.\n\nCumprimentos",
+        "message": "={{ $json.rascunho_resposta || \"Olá,\\n\\nObrigado pela sua mensagem. Respondo assim que possível.\\n\\nCumprimentos\" }}",
         "additionalFields": {},
         "options": {
           "saveAsDraft": true
@@ -140,7 +149,7 @@
         -128
       ],
       "disabled": true,
-      "notes": "DESATIVADO: ainda não existe passo de extração (WF1) que preencha estes campos a partir do email. Valores abaixo são marcadores; ativar só quando vierem da extração.",
+      "notes": "DESATIVADO: o pedido por email só é gravado como lead (rascunho a rever); a proposta só é criada por um humano. Ativar apenas quando houver decisão sobre ligar o lead ao WF2.",
       "parameters": {
         "options": {
           "waitForSubWorkflow": true
@@ -256,7 +265,7 @@
         "messageId": {
           "__rl": true,
           "mode": "id",
-          "value": "={{ $(\"Ler emails da Folder 1\").item.json.id }}"
+          "value": "={{ $(\"Extrair pedido (WF1)\").item.json.email_id }}"
         },
         "operation": "update",
         "updateFields": {
@@ -269,6 +278,302 @@
           "name": "Microsoft Outlook account"
         }
       }
+    },
+    {
+      "name": "Preparar texto do email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -400
+      ],
+      "notes": "Limpa o HTML do email e limita o texto a 6000 caracteres antes de o enviar ao WF1.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map(i => {\n  const m = i.json;\n  const html = String((m.body && m.body.content) || m.bodyPreview || '');\n  const texto = html.replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<br\\s*\\/?>|<\\/p>|<\\/div>/gi, '\\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim().slice(0, 6000);\n  const de = (m.from && m.from.emailAddress) || {};\n  return { json: { email_id: m.id, assunto: String(m.subject || '').slice(0, 200), remetente_email: String(de.address || '').toLowerCase(), remetente_nome: String(de.name || '').slice(0, 120), texto } };\n});"
+      },
+      "id": "b7b2d965-da78-4026-844f-e772a871b38e"
+    },
+    {
+      "name": "Extrair pedido (WF1)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -300,
+        -400
+      ],
+      "notes": "Sub-workflow WF1: o LLM extrai o pedido e o código valida. Espera pelo resultado.",
+      "parameters": {
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "t7cjKbq4VKfx44Fv"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "email_id",
+              "id": "email_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "assunto",
+              "id": "assunto",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "remetente_email",
+              "id": "remetente_email",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "remetente_nome",
+              "id": "remetente_nome",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "email_id": "={{ $json.email_id }}",
+            "assunto": "={{ $json.assunto }}",
+            "remetente_email": "={{ $json.remetente_email }}",
+            "remetente_nome": "={{ $json.remetente_nome }}",
+            "texto": "={{ $json.texto }}"
+          }
+        }
+      },
+      "id": "bc7c5a94-ab43-4b7e-85a3-3f41ebe384e2"
+    },
+    {
+      "name": "Registar uso de IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -560
+      ],
+      "notes": "Regista o uso do LLM em ai_log (sem conteúdo do email: só o domínio do remetente).",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "parameters": {
+        "tableId": "ai_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow",
+              "fieldValue": "WF1 - Read Outlook Messages"
+            },
+            {
+              "fieldId": "execucao_n8n_id",
+              "fieldValue": "={{ $execution.id }}"
+            },
+            {
+              "fieldId": "modelo",
+              "fieldValue": "anthropic/claude-haiku-4.5"
+            },
+            {
+              "fieldId": "versao_prompt",
+              "fieldValue": "wf1-v1"
+            },
+            {
+              "fieldId": "input_resumo",
+              "fieldValue": "={{ \"Email de \" + String($('Extrair pedido (WF1)').item.json.remetente_email).split(\"@\").pop() }}"
+            },
+            {
+              "fieldId": "output_resumo",
+              "fieldValue": "={{ \"pedido: \" + $('Extrair pedido (WF1)').item.json.e_pedido + \", campos em falta: \" + $('Extrair pedido (WF1)').item.json.campos_em_falta.length + \", confiança \" + $('Extrair pedido (WF1)').item.json.confianca }}"
+            }
+          ]
+        }
+      },
+      "id": "f1bc52e3-a87c-459c-a180-38e77076854f"
+    },
+    {
+      "name": "É um pedido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        180,
+        -560
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extrair pedido (WF1)').item.json.e_pedido }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              }
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          }
+        }
+      },
+      "id": "9e2df08f-39a9-49d5-b1c8-c54485d800c5"
+    },
+    {
+      "name": "Gravar lead (rascunho)",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -640
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Grava o pedido como lead 'novo' (rascunho a rever). Nunca cria a proposta. Se falhar (por exemplo email já registado), o fluxo segue e o aviso do Slack di-lo.",
+      "parameters": {
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "empresa",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.empresa }}"
+            },
+            {
+              "fieldId": "contacto_nome",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.contacto_nome }}"
+            },
+            {
+              "fieldId": "contacto_email",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.contacto_email }}"
+            },
+            {
+              "fieldId": "produto_interesse",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.produto }}"
+            },
+            {
+              "fieldId": "pais",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.destino_pais }}"
+            },
+            {
+              "fieldId": "quantidade_texto",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.quantidade_texto }}"
+            },
+            {
+              "fieldId": "origem_email_id",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.email_id }}"
+            },
+            {
+              "fieldId": "assunto",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.assunto }}"
+            },
+            {
+              "fieldId": "dados_extraidos",
+              "fieldValue": "={{ JSON.parse($('Extrair pedido (WF1)').item.json.dados_extraidos) }}"
+            },
+            {
+              "fieldId": "confianca",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.confianca }}"
+            },
+            {
+              "fieldId": "campos_em_falta",
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.campos_em_falta_texto }}"
+            }
+          ]
+        }
+      },
+      "id": "124627e6-e916-4f5a-87c1-1c0a9b2f985b"
+    },
+    {
+      "name": "Avisar Slack: pedido por email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        -640
+      ],
+      "notes": "Aviso no Slack (#novas-propostas). Não espera.",
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "N7BZddGLl0WlSl9Q"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $('Extrair pedido (WF1)').item.json.resumo_slack + ($json.id ? '' : ' · ⚠️ NÃO gravado em leads') }}"
+          }
+        }
+      },
+      "id": "8046eab7-187f-499f-b917-7fe602246d09"
     }
   ],
   "connections": {
@@ -287,7 +592,7 @@
       "main": [
         [
           {
-            "node": "Criar draft de resposta",
+            "node": "Preparar texto do email",
             "type": "main",
             "index": 0
           }
@@ -337,6 +642,66 @@
           }
         ]
       ]
+    },
+    "Preparar texto do email": {
+      "main": [
+        [
+          {
+            "node": "Extrair pedido (WF1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair pedido (WF1)": {
+      "main": [
+        [
+          {
+            "node": "Registar uso de IA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Criar draft de resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registar uso de IA": {
+      "main": [
+        [
+          {
+            "node": "É um pedido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É um pedido?": {
+      "main": [
+        [
+          {
+            "node": "Gravar lead (rascunho)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar lead (rascunho)": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: pedido por email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -353,8 +718,39 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "39zlpRbdQvI7dHGe",
-    "sourceVersionId": "45675e7e-387d-4dd2-8b59-59f7319ff2e7",
-    "exportedAt": "2026-10-07",
+    "sourceVersionId": "358f90ac-771f-47b1-b45b-e07cbdf86a02",
+    "exportedAt": "2026-10-08",
     "sanitized": "ids de pastas do Outlook, ids de credenciais, ids de workflows e webhookIds substituídos por marcadores ou removidos"
-  }
+  },
+  "nodeGroups": [
+    {
+      "name": "Ler e extrair o pedido",
+      "nodeNames": [
+        "Ler emails da Folder 1",
+        "Preparar texto do email",
+        "Extrair pedido (WF1)"
+      ],
+      "description": "Lê os emails não lidos e pede ao WF1 para extrair o pedido."
+    },
+    {
+      "name": "Guardar o rascunho do pedido",
+      "nodeNames": [
+        "Registar uso de IA",
+        "É um pedido?",
+        "Gravar lead (rascunho)",
+        "Avisar Slack: pedido por email"
+      ],
+      "description": "Regista o uso de IA, grava o lead como rascunho a rever e avisa no Slack."
+    },
+    {
+      "name": "Rascunho de resposta",
+      "nodeNames": [
+        "Criar draft de resposta",
+        "Marcar draft como não lido",
+        "Mover draft para To Check",
+        "Marcar original como lido"
+      ],
+      "description": "Cria o rascunho de resposta (não envia), move-o para To Check e marca o original como lido."
+    }
+  ]
 }
