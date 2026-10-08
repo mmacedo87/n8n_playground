@@ -159,7 +159,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const cfg = $('Normalizar código').first().json;\nconst p = $('Ler proposta').first().json;\nif (!p || !p.id) throw new Error('Resumo de validação: proposta ' + cfg.codigo + ' não encontrada.');\nconst comp = $('Ler compliance').first().json || {};\nconst cots = $('Ler cotações').all().map(i => i.json).filter(c => c && c.id);\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst teste = !!cfg.destinatario_teste;\nconst temComp = !!comp.id;\nconst compEstado = temComp ? (comp.estado === 'automatico' ? 'automático' : 'a verificar manualmente') : 'ainda não disponível';\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst linhasCot = cots.map(c => '<tr><td style=\"padding:2px 12px 2px 0\">' + esc(c.modo || '-') + '</td><td style=\"padding:2px 12px 2px 0\">' + esc(c.preco != null ? c.preco + ' ' + (c.moeda || '') : '-') + '</td><td style=\"padding:2px 12px 2px 0\">' + esc(c.transito_dias != null ? c.transito_dias + ' dias' : '-') + '</td><td>' + esc(c.validade || '-') + '</td></tr>').join('');\nconst cotHtml = cots.length ? '<table><tr><th align=\"left\">Modo</th><th align=\"left\">Preço</th><th align=\"left\">Trânsito</th><th align=\"left\">Validade</th></tr>' + linhasCot + '</table>' : '<p>Ainda não há cotações de frete registadas.</p>';\nconst compHtml = temComp ? '<table>' + linha('Código NC', comp.codigo_nc) + linha('Taxa de direitos', comp.taxa_direitos_pct != null ? comp.taxa_direitos_pct + ' %' : (comp.taxa_texto || 'por confirmar')) + linha('Estado', compEstado) + '</table>' + (comp.requisitos_fitossanitarios ? '<p><b>Requisitos fitossanitários:</b> ' + esc(comp.requisitos_fitossanitarios) + '</p>' : '') + (comp.notas_taxas ? '<p><b>Notas:</b> ' + esc(comp.notas_taxas) + '</p>' : '') : '<p>As notas de compliance ainda não estão disponíveis.</p>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Proposta para validação - ' + p.produto + ' - destino ' + p.destino_pais;\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>A proposta <b>' + esc(p.codigo) + '</b> está pronta para a sua revisão. Nada é enviado ao cliente sem a sua validação.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Densidade', p.densidade) + linha('Granulometria', p.granulometria) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><h3>Cotações de frete (' + cots.length + ')</h3>' + cotHtml + '<h3>Compliance</h3>' + compHtml + '<p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '📝 Proposta *' + p.codigo + '* para validação · ' + p.produto + ' · destino ' + p.destino_pais + ' · cotações: ' + cots.length + ' · compliance: ' + compEstado + (teste ? ' · (teste)' : '');\nreturn [{ json: { codigo: p.codigo, assunto, corpo_html: corpo, slack_texto: slack, para: teste ? cfg.destinatario_teste : cfg.destinatario_validacao, cotacoes: cots.length, compliance: compEstado } }];"
+        "jsCode": "const cfg = $('Normalizar código').first().json;\nconst p = $('Ler proposta').first().json;\nif (!p || !p.id) throw new Error('Resumo de validação: proposta ' + cfg.codigo + ' não encontrada.');\nif (!['pedido', 'a_cotar', 'cotado', 'em_validacao'].includes(p.estado)) throw new Error('Resumo de validação: a proposta ' + cfg.codigo + ' está no estado ' + p.estado + ' e não pode voltar a ser enviada para validação.');\nconst comp = $('Ler compliance').first().json || {};\nconst cots = $('Ler cotações').all().map(i => i.json).filter(c => c && c.id);\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst teste = !!cfg.destinatario_teste;\nconst temComp = !!comp.id;\nconst compEstado = temComp ? (comp.estado === 'automatico' ? 'automático' : 'a verificar manualmente') : 'ainda não disponível';\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst linhasCot = cots.map(c => '<tr><td style=\"padding:2px 12px 2px 0\">' + esc(c.modo || '-') + '</td><td style=\"padding:2px 12px 2px 0\">' + esc(c.preco != null ? c.preco + ' ' + (c.moeda || '') : '-') + '</td><td style=\"padding:2px 12px 2px 0\">' + esc(c.transito_dias != null ? c.transito_dias + ' dias' : '-') + '</td><td style=\"padding:2px 12px 2px 0\">' + esc(c.validade || '-') + '</td><td>' + esc(c.revisao === 'a_rever' ? 'a rever' : 'automática') + '</td></tr>').join('');\nconst cotHtml = cots.length ? '<table><tr><th align=\"left\">Modo</th><th align=\"left\">Preço</th><th align=\"left\">Trânsito</th><th align=\"left\">Validade</th><th align=\"left\">Revisão</th></tr>' + linhasCot + '</table>' : '<p>Ainda não há cotações de frete registadas.</p>';\nconst compHtml = temComp ? '<table>' + linha('Código NC', comp.codigo_nc) + linha('Taxa de direitos', comp.taxa_direitos_pct != null ? comp.taxa_direitos_pct + ' %' : (comp.taxa_texto || 'por confirmar')) + linha('Estado', compEstado) + '</table>' + (comp.requisitos_fitossanitarios ? '<p><b>Requisitos fitossanitários:</b> ' + esc(comp.requisitos_fitossanitarios) + '</p>' : '') + (comp.notas_taxas ? '<p><b>Notas:</b> ' + esc(comp.notas_taxas) + '</p>' : '') : '<p>As notas de compliance ainda não estão disponíveis.</p>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Proposta para validação - ' + p.produto + ' - destino ' + p.destino_pais;\nconst aprovar = '<p><b>Para aprovar, responda a este email apenas com a palavra OK na primeira linha.</b> Se quiser alterações, responda com o comentário: a proposta continua em validação e a equipa é avisada. Por favor não altere o assunto.</p>';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>A proposta <b>' + esc(p.codigo) + '</b> está pronta para a sua revisão. Nada é enviado ao cliente sem a sua validação.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Densidade', p.densidade) + linha('Granulometria', p.granulometria) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><h3>Cotações de frete (' + cots.length + ')</h3>' + cotHtml + '<h3>Compliance</h3>' + compHtml + aprovar + '<p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '📝 Proposta *' + p.codigo + '* para validação · ' + p.produto + ' · destino ' + p.destino_pais + ' · cotações: ' + cots.length + ' · compliance: ' + compEstado + (teste ? ' · (teste)' : '');\nreturn [{ json: { codigo: p.codigo, assunto, corpo_html: corpo, slack_texto: slack, para: teste ? cfg.destinatario_teste : cfg.destinatario_validacao, cotacoes: cots.length, compliance: compEstado } }];"
       }
     },
     {
@@ -237,6 +237,46 @@
       },
       "notes": "Aviso curto no Slack (#novas-propostas). Não espera: uma falha do Slack não pára o fluxo.",
       "executeOnce": true
+    },
+    {
+      "name": "Marcar proposta em validação",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        128
+      ],
+      "notes": "Depois do email enviado, a proposta passa a em_validacao. O WF8 só aprova propostas neste estado.",
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Montar resumo\").first().json.codigo }}"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "em_validacao"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "connections": {
@@ -310,6 +350,17 @@
       "main": [
         [
           {
+            "node": "Marcar proposta em validação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar proposta em validação": {
+      "main": [
+        [
+          {
             "node": "Avisar Slack: proposta para validação",
             "type": "main",
             "index": 0
@@ -337,7 +388,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8xj41URokjCimmon",
-    "sourceVersionId": "16e766bd-4d23-4de1-8659-1791482d2192",
+    "sourceVersionId": "63518439-d474-471a-b266-2df09075ccc8",
     "exportedAt": "2026-10-08",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }
