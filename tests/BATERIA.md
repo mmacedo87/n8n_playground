@@ -112,7 +112,10 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | W1 | Com 2 cotações e compliance automático: assunto `[TESTE] [código] Proposta para validação...`, tabela de cotações (modo, preço, trânsito, validade), compliance e texto Slack com contagens (exec. 113) | Passa |
 | W2 | Sem cotações nem compliance: "Ainda não há cotações", "compliance ainda não disponível"; HTML do cliente escapado (exec. 114) | Passa |
 | W3 | Código inexistente → erro claro "proposta ... não encontrada" (exec. 115) | Passa |
-| W4 | Execução real (email + Slack) | Pendente: o workflow só é chamado por outro workflow e ainda não há chamador |
+| W5 | Com os dados completos (exec. 125): o email tem a coluna «Revisão» (automática / a rever) e a instrução «responda apenas com OK» | Passa |
+| W6 | Proposta já `aprovada` → erro «não pode voltar a ser enviada para validação» (exec. 126); código inexistente continua a dar erro claro (exec. 127) | Passa |
+| W7 | Depois do email, o nó «Marcar proposta em validação» passa a proposta a `em_validacao` (nó fixado nos testes; confirmar na primeira execução real) | Estrutural |
+| W4 | Execução real (email + Slack + estado) | Pendente: precisa de uma proposta com cotações e do WF6 a chamar o WF5 |
 
 ## L. WF6 Ler cotações das transportadoras (dados fixados; Code corre a sério)
 | Id | Verifica | Resultado |
@@ -120,6 +123,18 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | L1 | 3 emails: resposta de transportadora conhecida com PRP a_cotar é aceite; o nosso pedido (`[TESTE] ...`) e remetente desconhecido são ignorados; extração válida → `revisao=automatica`, moeda em maiúsculas (exec. 116) | Passa |
 | L2 | Validação do LLM: sem preço, modo ou prazo, confiança < 0,8 ou anexos → `a_rever` (verificação estrutural do código) | Passa (estrutural) |
 | L3 | Execução real (Outlook, OpenRouter, Supabase) | Pendente: precisa de uma resposta real de transportadora (os emails das transportadoras de teste são `@example.invalid`) |
+| L4 | Passagem ao WF5: 1 cotação nova + 1 já registada, 2 pedidos enviados → a proposta segue (cotações 2, pedidos 2) (exec. 130) | Passa |
+| L6 | Estrutural: «Ler pedidos de cotação enviados» com `executeOnce` e `alwaysOutputData` (o `addNode` ignorava-os; corrigido com `setNodeSettings`). O nó é fixado nos testes, por isso só a primeira execução real confirma | Estrutural |
+| L5 | Poucas cotações: 1 cotação para 2 pedidos (exec. 128) e 1 para 4 pedidos, exige 3 (exec. 129) → nada é enviado ao WF5 | Passa |
+
+## M. WF8 Aprovação da Bárbara por email (dados fixados; Code e If correm a sério)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| M1 | Resposta «OK» da Bárbara a proposta `em_validacao` → `aplicar=true`, `aprovada_por`/`aprovada_em` preenchidos, nó de gravação chamado, aviso Slack «aprovada» (exec. 121) | Passa |
+| M2 | «OK mas muda o frete» → comentário: NÃO aprova, aviso Slack com o comentário (exec. 122) | Passa |
+| M3 | Remetente desconhecido → ignorado, nada acontece (exec. 123) | Passa |
+| M4 | Proposta já `aprovada` → aprovação ignorada, aviso Slack (exec. 124) | Passa |
+| M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | Pendente: o workflow está por publicar; precisa de uma proposta real em `em_validacao` (W4) |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
