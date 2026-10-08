@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução: 2026-10-08 (Lisboa), depois de o WF3 passar a enviar UM único email às transportadoras. Supabase (A1-A27) todos passam; n8n: B1-B3 (credenciais, Error Workflow, callerPolicy) verificados; WF3 testado com dados fixados em modo de teste e em modo de produção (exec. 70 e 71), WF2 (exec. 72, 73) e WF4 (exec. 74) passam. Não re-corridos nesta data: C, E, restantes G, H e I (o código dos respetivos workflows não mudou). G9 e F1-F6 (execução real) continuam pendentes.
+Última execução: 2026-10-08 (Lisboa; WF3 com reenvio até 5 tentativas, R2-R4 passam), depois de o WF3 passar a enviar UM único email às transportadoras. Supabase (A1-A27) todos passam; n8n: B1-B3 (credenciais, Error Workflow, callerPolicy) verificados; WF3 testado com dados fixados em modo de teste e em modo de produção (exec. 70 e 71), WF2 (exec. 72, 73) e WF4 (exec. 74) passam. Não re-corridos nesta data: C, E, restantes G, H e I (o código dos respetivos workflows não mudou). G9 e F1-F6 (execução real) continuam pendentes.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -94,7 +94,9 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | # | Teste | Resultado |
 |---|---|---|
 | R1 | WF2 real pelo formulário (cliente "TESTE REAL", ES): proposta gravada, email de confirmação, WF3 e WF4 arrancam | 2026-10-08. Exec. 75 e 77: falharam com "Forbidden" do Outlook (token a renovar; credencial OK à 3.ª tentativa). Exec. 79/80: o WF3 falhou porque o BCC ia vazio em modo de teste (bug corrigido, WF3 versão da43bd61). Exec. 85 (PRP-2026-0013): **passou**: proposta a `a_cotar`, 4 pedidos `enviado` com `redirecionado_teste`, 1 linha em `ai_log`, `proposta_compliance` automatico/regra_ue |
-| R2 | Repetir uma proposta cujo envio falhou | **Conhecido, por corrigir**: as linhas `falhou` contam como "já contactadas" e o WF3 recusa (exec. 83) |
+| R2 | Repetir uma proposta cujo envio falhou (real, PRP-2026-0012 com 4 linhas `falhou`, exec. 90) | **Passa** (2026-10-08): as linhas `falhou` são substituídas, 4 pedidos `enviado` com `tentativas=2`, proposta a `a_cotar`, 1 email |
+| R3 | Limite de tentativas (fixado, exec. 88): 5 falhas anteriores → o WF3 não envia e falha com "falhou 5 vezes (máximo 5) e NÃO foi tentado de novo" (o Mail Error Flow envia o aviso) | Passa |
+| R4 | Com 4 falhas anteriores (fixado, exec. 89): tenta a 5.ª, `tentativa=5`, os itens do email repostos após o apagar | Passa |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.

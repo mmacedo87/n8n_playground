@@ -226,6 +226,7 @@ create table pedidos_cotacao (
   estado text not null default 'a_enviar' check (estado in ('a_enviar','enviado','falhou','respondido')),
   gerado_por text not null default 'llm' check (gerado_por in ('llm','modelo_fixo')),
   modelo text,
+  tentativas smallint not null default 1,
   criado_em timestamptz not null default now(),
   enviado_em timestamptz,
   atualizado_em timestamptz not null default now(),

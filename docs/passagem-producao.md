@@ -82,7 +82,8 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] O WF2 arranca o WF3 no fim (nó "Pedir cotações de frete (WF3)"): confirmar o ID do WF3 nesse nó na instância de destino.
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
 - [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
-- [ ] Apagar os dados de teste (propostas PRP-2026-0001 a 0009, pedidos_cotacao, ai_log) antes de começar.
+- [ ] Reenvio após falha: o WF3 repete o envio até 5 tentativas (coluna `pedidos_cotacao.tentativas`, migração 0004) e à 6.ª não envia e avisa por email (via Mail Error Flow). Confirmar que o Mail Error Flow está definido como Error Workflow do WF3.
+- [ ] Apagar os dados de teste (propostas PRP-2026-0001 a 0013, pedidos_cotacao, ai_log) antes de começar.
 
 ## 13. WF4 (enriquecimento) e compliance
 - [ ] Validar com o despachante o código pautal de cada produto em `produtos` (hoje `validado=false`) e marcar `validado`, `validado_por` e `validado_em`.
@@ -91,4 +92,4 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Decidir se o Reino Unido passa a consulta automática (UK Trade Tariff) depois de verificar a resposta da API.
 - [ ] Confirmar o ID do WF4 no nó "Enriquecer proposta (WF4)" do WF2 na instância de destino e o Mail Error Flow como Error Workflow do WF4.
 - [ ] Garantir que a Bárbara vê `proposta_compliance` (linhas `a_verificar_manualmente`) antes de validar a proposta (passo 6).
-- [ ] Apagar os dados de teste de `proposta_compliance` antes de começar; apagar o índice duplicado `requisitos_pais_pais_nc_uq`.
+- [ ] Apagar os dados de teste de `proposta_compliance` antes de começar. (O índice duplicado `requisitos_pais_pais_nc_uq` já foi removido pela migração 0004; aplicar a 0004 também em produção.)
