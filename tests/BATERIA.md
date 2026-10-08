@@ -122,9 +122,14 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | --- | --- | --- |
 | L1 | 3 emails: resposta de transportadora conhecida com PRP a_cotar é aceite; o nosso pedido (`[TESTE] ...`) e remetente desconhecido são ignorados; extração válida → `revisao=automatica`, moeda em maiúsculas (exec. 116) | Passa |
 | L2 | Validação do LLM: sem preço, modo ou prazo, confiança < 0,8 ou anexos → `a_rever` (verificação estrutural do código) | Passa (estrutural) |
-| L3 | Execução real (Outlook, OpenRouter, Supabase) | Pendente: precisa de uma resposta real de transportadora (os emails das transportadoras de teste são `@example.invalid`) |
+| L3 | Execução real (Outlook, OpenRouter, Supabase, download do anexo) | Pendente: precisa de uma resposta real de transportadora, de preferência com PDF (os emails das transportadoras de teste são `@example.invalid`) |
 | L4 | Passagem ao WF5: 1 cotação nova + 1 já registada, 2 pedidos enviados → a proposta segue (cotações 2, pedidos 2) (exec. 130) | Passa |
 | L6 | Estrutural: «Ler pedidos de cotação enviados» com `executeOnce` e `alwaysOutputData` (o `addNode` ignorava-os; corrigido com `setNodeSettings`). O nó é fixado nos testes, por isso só a primeira execução real confirma | Estrutural |
+| L7 | PDF com texto anexo (exec. 132): «Escolher o PDF» + «Extrair texto do PDF» (a sério, PDF real de teste) leem «frete maritimo 950 EUR, 8 dias»; texto do email + PDF vai ao LLM; confiança 0,95 → `automatica` com a nota «dados também lidos do PDF anexo» | Passa |
+| L8 | Anexo que não é PDF (exec. 133): `anexo_lido=false`, sem dados → `a_rever` com «Há anexos que não foi possível ler» | Passa |
+| L9 | Email sem anexos (exec. 134): o nó do PDF falha sem binário, o fluxo segue e a cotação mantém o comportamento anterior (`automatica`) | Passa |
+| L10 | Regressão do L1 com a nova cadeia (exec. 135): só o email da transportadora conhecida é aceite; o nosso pedido e o remetente desconhecido são ignorados | Passa |
+| L11 | Estrutural: cotação lida de PDF exige confiança ≥ 0,9 para ficar `automatica` (senão `a_rever`) | Estrutural |
 | L5 | Poucas cotações: 1 cotação para 2 pedidos (exec. 128) e 1 para 4 pedidos, exige 3 (exec. 129) → nada é enviado ao WF5 | Passa |
 
 ## M. WF8 Aprovação da Bárbara por email (dados fixados; Code e If correm a sério)

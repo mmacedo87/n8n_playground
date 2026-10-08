@@ -1,6 +1,6 @@
 {
   "name": "WF6 - Ler cotações das transportadoras",
-  "description": "Lê na caixa Outlook as respostas das transportadoras (assunto com código PRP), extrai preço, modo, prazo e validade com LLM, valida e grava em cotacoes_frete (a_rever quando houver dúvidas). Texto apenas: PDFs ficam para revisão manual.",
+  "description": "Lê na caixa Outlook as respostas das transportadoras (assunto com código PRP), extrai preço, modo, prazo e validade com LLM, valida e grava em cotacoes_frete (a_rever quando houver dúvidas). Lê também o texto de PDFs anexos (PDFs digitalizados ficam a rever).",
   "nodes": [
     {
       "name": "Ler respostas das transportadoras",
@@ -205,7 +205,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const base = $('Casar email com proposta e transportadora').all().map(i => i.json);\nconst MODOS = ['rodoviario', 'maritimo', 'aereo', 'ferroviario'];\nreturn $input.all().map((it, idx) => {\n  const b = base[idx];\n  const o = (it.json && it.json.output) || {};\n  const preco = typeof o.preco === 'number' && o.preco >= 0 ? o.preco : null;\n  const modo = MODOS.includes(o.modo) ? o.modo : null;\n  const dias = typeof o.transito_dias === 'number' && o.transito_dias >= 0 ? Math.round(o.transito_dias) : null;\n  const validade = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(o.validade || '')) ? o.validade : null;\n  let conf = typeof o.confianca === 'number' ? Math.min(1, Math.max(0, o.confianca)) : 0;\n  const completa = preco !== null && modo !== null && dias !== null;\n  const rever = !completa || conf < 0.8 || b.tem_anexos;\n  if (!completa) conf = Math.min(conf, 0.5);\n  return { json: { proposta_id: b.proposta_id, transportadora_id: b.transportadora_id, transportadora_nome: b.transportadora_nome, codigo: b.codigo, email_id: b.email_id, modo, preco, moeda: preco !== null ? String(o.moeda || '').slice(0, 3).toUpperCase() || null : null, transito_dias: dias, validade, condicoes: o.condicoes ? String(o.condicoes).slice(0, 500) : (b.tem_anexos ? 'Há anexos (PDF): rever manualmente' : null), confianca: conf, revisao: rever ? 'a_rever' : 'automatica', recebida_em: b.recebida_em } };\n});"
+        "jsCode": "const base = $('Juntar texto do anexo').all().map(i => i.json);\nconst MODOS = ['rodoviario', 'maritimo', 'aereo', 'ferroviario'];\nreturn $input.all().map((it, idx) => {\n  const b = base[idx];\n  const o = (it.json && it.json.output) || {};\n  const preco = typeof o.preco === 'number' && o.preco >= 0 ? o.preco : null;\n  const modo = MODOS.includes(o.modo) ? o.modo : null;\n  const dias = typeof o.transito_dias === 'number' && o.transito_dias >= 0 ? Math.round(o.transito_dias) : null;\n  const validade = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(o.validade || '')) ? o.validade : null;\n  let conf = typeof o.confianca === 'number' ? Math.min(1, Math.max(0, o.confianca)) : 0;\n  const completa = preco !== null && modo !== null && dias !== null;\n  const anexoPendente = !!b.tem_anexos && !b.anexo_lido;\n  const minConf = b.anexo_lido ? 0.9 : 0.8;\n  const rever = !completa || conf < minConf || anexoPendente;\n  if (!completa) conf = Math.min(conf, 0.5);\n  let cond = o.condicoes ? String(o.condicoes).slice(0, 460) : null;\n  if (anexoPendente) cond = cond || 'Há anexos que não foi possível ler: rever manualmente';\n  else if (b.anexo_lido) cond = ((cond || '') + ' [dados também lidos do PDF anexo]').trim();\n  return { json: { proposta_id: b.proposta_id, transportadora_id: b.transportadora_id, transportadora_nome: b.transportadora_nome, codigo: b.codigo, email_id: b.email_id, modo, preco, moeda: preco !== null ? String(o.moeda || '').slice(0, 3).toUpperCase() || null : null, transito_dias: dias, validade, condicoes: cond, confianca: conf, revisao: rever ? 'a_rever' : 'automatica', recebida_em: b.recebida_em } };\n});"
       },
       "notes": "Nunca confia no LLM: valida tipos e valores. Fica a_rever se faltar preço, modo ou prazo, se a confiança for baixa ou se houver anexos."
     },
@@ -440,6 +440,83 @@
           "waitForSubWorkflow": false
         }
       }
+    },
+    {
+      "name": "Ler email com anexos",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        112
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Descarrega o email com os anexos (binários attachment_0, attachment_1...). Sem anexos devolve só o email.",
+      "parameters": {
+        "resource": "message",
+        "operation": "get",
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.email_id }}"
+        },
+        "output": "simple",
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "name": "Escolher o PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        112
+      ],
+      "notes": "Fica com o primeiro anexo PDF e põe-no no campo data, que é o que o nó seguinte lê. Outros tipos de anexo não são lidos (a cotação fica a rever).",
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const bin = $input.item.binary || {};\nconst k = Object.keys(bin).find(x => /pdf/i.test(String(bin[x].mimeType || '')) || /\\.pdf$/i.test(String(bin[x].fileName || '')));\nconst out = { json: { tem_pdf: !!k, pdf_nome: k ? (bin[k].fileName || k) : null, n_anexos: Object.keys(bin).length } };\nif (k) out.binary = { data: bin[k] };\nreturn out;"
+      }
+    },
+    {
+      "name": "Extrair texto do PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        112
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Lê o texto do PDF (até 5 páginas). PDFs digitalizados (imagem) não têm texto: ficam a rever. Sem PDF o nó falha e o fluxo segue.",
+      "parameters": {
+        "operation": "pdf",
+        "options": {
+          "joinPages": true,
+          "maxPages": 5
+        }
+      }
+    },
+    {
+      "name": "Juntar texto do anexo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1750,
+        112
+      ],
+      "notes": "Junta o texto do PDF ao texto do email, item a item (a ordem é a de 'Casar email com proposta e transportadora'). anexo_lido=true só se o PDF deu pelo menos 30 caracteres de texto.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const base = $('Casar email com proposta e transportadora').all().map(i => i.json);\nconst pdfInfo = $('Escolher o PDF').all().map(i => i.json);\nconst extra = $input.all().map(i => i.json);\nreturn base.map((b, idx) => {\n  const info = pdfInfo[idx] || {};\n  const ex = extra[idx] || {};\n  const t = info.tem_pdf && !ex.error ? String(ex.text || '').replace(/\\s+/g, ' ').trim().slice(0, 4000) : '';\n  const lido = t.length >= 30;\n  return { json: { ...b, texto: lido ? b.texto + ' [Texto do anexo PDF ' + (info.pdf_nome || '') + ']: ' + t : b.texto, anexo_lido: lido, anexos_total: info.n_anexos || 0 } };\n});"
+      }
     }
   ],
   "connections": {
@@ -502,7 +579,7 @@
       "main": [
         [
           {
-            "node": "Extrair cotação (LLM)",
+            "node": "Ler email com anexos",
             "type": "main",
             "index": 0
           }
@@ -602,6 +679,50 @@
         [
           {
             "node": "Enviar proposta para validação (WF5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler email com anexos": {
+      "main": [
+        [
+          {
+            "node": "Escolher o PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escolher o PDF": {
+      "main": [
+        [
+          {
+            "node": "Extrair texto do PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair texto do PDF": {
+      "main": [
+        [
+          {
+            "node": "Juntar texto do anexo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar texto do anexo": {
+      "main": [
+        [
+          {
+            "node": "Extrair cotação (LLM)",
             "type": "main",
             "index": 0
           }
