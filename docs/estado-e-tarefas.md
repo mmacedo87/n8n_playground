@@ -9,7 +9,7 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, ~2 pedidos
 | 3. Cotação de transporte | Parcial | WF3: 1 email único a até 5 transportadoras (BCC), reenvio até 5 tentativas, aviso Slack (#pedidos-cotacao). Falta ler as respostas (PDF/texto livre) e comparar cotações |
 | 4. Enriquecimento | Feito (dados por validar) | WF4: código pautal, taxa (UE regra, EUA via USITC, resto manual) e notas fitossanitárias em `proposta_compliance`. Códigos pautais por validar pelo despachante |
 | 5. Geração de proposta (Moloni) | Por fazer | Depende de confirmar âmbito da API Moloni (OAuth, módulo Documentos) |
-| 6. Validação (Bárbara) | Por fazer | Passo humano; falta o ecrã/aviso para aprovar |
+| 6. Validação (Bárbara) | Parcial | WF5: email e aviso Slack com o resumo (proposta, cotações, compliance). Falta o chamador e o mecanismo de aprovação |
 | 7. Envio ao cliente | Por fazer | Email com Bárbara em CC, só depois da aprovação |
 | 8. Confirmação | Por fazer | Detetar "SIM" (resposta livre vs. link/botão) |
 | 9. Expedição | Por fazer | Tabela partilhada Bárbara + Madalena |

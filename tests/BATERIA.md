@@ -106,5 +106,13 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | S1 | Sub-workflow "Notificar Slack" real: publica no canal certo com o texto escapado | **Passa** (2026-10-08, exec. 108): mensagens publicadas em #novas-propostas e #pedidos-cotacao depois de a app ser convidada (antes falhava com `channel_not_found`, exec. 102 e 106) |
 | S2 | WF2 chama o aviso "nova proposta" e o WF3 o aviso "cotação enviada", em paralelo e sem esperar | **Passa** (exec. 108, PRP-2026-0015): "🆕 Nova proposta ..." às 19:56:39 e "📦 Pedido de cotação enviado ... 4 transportadoras · (teste)" às 19:56:40 |
 
+## W. WF5 Resumo para validação (dados fixados; Set e Code correm a sério)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| W1 | Com 2 cotações e compliance automático: assunto `[TESTE] [código] Proposta para validação...`, tabela de cotações (modo, preço, trânsito, validade), compliance e texto Slack com contagens (exec. 113) | Passa |
+| W2 | Sem cotações nem compliance: "Ainda não há cotações", "compliance ainda não disponível"; HTML do cliente escapado (exec. 114) | Passa |
+| W3 | Código inexistente → erro claro "proposta ... não encontrada" (exec. 115) | Passa |
+| W4 | Execução real (email + Slack) | Pendente: o workflow só é chamado por outro workflow e ainda não há chamador |
+
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
