@@ -17,14 +17,17 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF2 Pedido de proposta | `8pRJJuN094Mp9iuu` | formulário; chama WF3, WF4 e Slack sem esperar |
 | WF3 Pedido de cotação de frete | `x9RhWxZfJ0apbhlc` | UM email (BCC), reenvio até 5 tentativas, 6.ª avisa |
 | WF4 Enriquecimento | `ya6mCmn3qi4YE3CG` | compliance, sem IA |
-| WF5 Resumo para validação | `8xj41URokjCimmon` | email à Bárbara + Slack; sem chamador ainda |
-| WF6 Ler cotações | `HErViy6cNVrTIH7A` | inativo, manual; só texto |
+| WF5 Resumo para validação | `8xj41URokjCimmon` | email à Bárbara + Slack; marca `em_validacao`; chamado pelo WF6 |
+| WF6 Ler cotações | `HErViy6cNVrTIH7A` | inativo, manual; texto e PDFs; chama o WF5 |
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |
-| Read Outlook Messages | `39zlpRbdQvI7dHGe` | inativo |
+| WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | por publicar; só "OK" na 1.ª linha aprova |
+| WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
+| Read Outlook Messages | `39zlpRbdQvI7dHGe` | inativo, manual; chama o WF1, grava lead rascunho |
 
 ## Armadilhas já encontradas
 - `test_workflow` fixa gatilho, nós com credenciais e HTTP; Execute Workflow corre a sério se não for fixado. Execute Workflow Trigger não se executa por `execute_workflow`.
+- Para ver erros de um sub-workflow chamado em teste, pôr `saveDataSuccessExecution=all` no sub-workflow e repor `none` no fim (o `onError` contínuo conta como sucesso).
 - Execuções de sucesso não são guardadas (`saveDataSuccessExecution none`): verificar no Supabase.
 - `addNode` ignora `alwaysOutputData`/`executeOnce`: usar `setNodeSettings`. Um nó com 0 itens pára o ramo em silêncio.
 - Slack: a app (`status_notifications`) tem de ser membro de cada canal privado.

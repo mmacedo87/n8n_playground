@@ -101,3 +101,17 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Credencial "Slack API" criada na instância de destino com permissão `chat:write`; o Mail Error Flow é o Error Workflow do "Notificar Slack".
 - [ ] As mensagens só levam o essencial (código, cliente, produto, quantidade, destino); não incluir preços, moradas nem dados pessoais de contactos.
 - [ ] O workflow próprio do utilizador "Claude → Slack | Estado das tarefas" é independente e fica fora do repositório.
+
+## 15. WF5, WF6, WF8 (validação e leitura de cotações)
+- [ ] Definir o email da Bárbara no WF5 (destinatário do resumo) e a lista `AUTORIZADOS` no código do WF8 (hoje só o email de teste). O WF8 só aprova com "OK"/"aprovo" na primeira linha, de um remetente autorizado, numa proposta em `em_validacao`.
+- [ ] Confirmar a regra de arranque do WF5 no WF6 (`MAX_EXIGIDAS=3`: com 3 cotações, ou todas as pedidas se forem menos).
+- [ ] Publicar o WF8 (poll de 2 minutos ao Outlook) só quando houver uma proposta real em `em_validacao`; ativar o WF6 com o trigger de produção.
+- [ ] Testes reais por fazer: M5 (resposta real da Bárbara), uma resposta real de transportadora para o WF6 (texto e PDF).
+- [ ] Confirmar os IDs do WF5 (no WF6) e do Mail Error Flow como Error Workflow do WF5, WF6 e WF8 na instância de destino.
+
+## 16. WF1 e Read Outlook Messages (pedidos por email)
+- [ ] Aplicar a migração `0005_leads_rascunho_pedido.sql` (colunas `assunto`, `dados_extraidos`, `confianca`, `campos_em_falta` em `leads`).
+- [ ] Credencial OpenRouter com créditos na conta da chave usada (o erro 402 fez o WF1 falhar em segurança: `falhou_llm=true`, sem dados inventados).
+- [ ] Teste real X6: um email na Folder 1 gera lead rascunho, draft em To Check, original lido e aviso Slack.
+- [ ] Os leads são rascunhos para um humano rever; ninguém cria a proposta sozinho. O nó de chamada ao WF2 fica desativado até haver decisão.
+- [ ] RGPD: o `ai_log` só leva o domínio do remetente; o texto do email vai ao LLM (confirmar zero retenção no OpenRouter) e `leads` entra na purga (`purgar_leads_antigos`).

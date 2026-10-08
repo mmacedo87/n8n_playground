@@ -25,9 +25,11 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | `wf3-pedido-cotacao-frete.json` | Pede cotação de frete com UM único email a até 5 transportadoras (em BCC), com o código PRP no assunto; LLM redige só introdução e fecho | Publicado (modo de teste: emails desviados) |
 | `notificar-slack.json` | Sub-workflow reutilizável: publica uma mensagem curta num canal do Slack (`propostas`, `cotacoes`, `estado`). Chamado pelo WF2 (nova proposta) e pelo WF3 (cotação enviada), sem esperar pelo resultado | Publicado |
 | `wf4-enriquecimento-proposta.json` | Enriquecimento: código pautal, taxa por destino (UE por regra, EUA via USITC, restantes manual) e notas fitossanitárias, gravados em `proposta_compliance`. Sem LLM | Publicado |
-| `wf5-resumo-validacao.json` | Fase 6: envia à Bárbara o resumo da proposta (dados, cotações de frete, compliance) para validação e avisa no Slack. Ainda sem chamador | Publicado |
-| `wf6-ler-cotacoes.json` | Fase 3: lê as respostas das transportadoras (assunto com PRP), extrai preço, modo, prazo e validade com LLM, valida em código e grava em `cotacoes_frete` (`a_rever` se houver dúvidas). Só texto; PDFs ficam para revisão | Inativo, trigger manual |
-| `read-outlook-messages.json` | Workflow principal: lê emails, cria drafts, (futuro) chama o WF2 | Inativo, trigger manual |
+| `wf5-resumo-validacao.json` | Fase 6: envia à Bárbara o resumo da proposta (dados, cotações de frete, compliance) para validação e avisa no Slack. Chamado pelo WF6 quando há cotações suficientes; marca a proposta `em_validacao` | Publicado |
+| `wf6-ler-cotacoes.json` | Fase 3: lê as respostas das transportadoras (assunto com PRP), extrai preço, modo, prazo e validade com LLM, valida em código e grava em `cotacoes_frete` (`a_rever` se houver dúvidas). Lê também o texto de PDFs anexos; chama o WF5 quando há cotações suficientes | Inativo, trigger manual |
+| `wf1-extrair-pedido-email.json` | Sub-workflow: o LLM extrai o pedido de um email e o código valida os campos, calcula o que falta e escreve o rascunho de resposta. Nunca cria propostas | Publicado |
+| `wf8-aprovacao-barbara.json` | Fase 6: lê a resposta da Bárbara ao email do WF5; só "OK"/"aprovo" na primeira linha, de remetente autorizado e com a proposta em `em_validacao`, a passa a `aprovada`. O resto é só aviso no Slack | Por publicar |
+| `read-outlook-messages.json` | Fase 1: lê os emails da Folder 1, chama o WF1, grava o pedido como lead rascunho, avisa no Slack e cria o draft de resposta (não envia). A chamada ao WF2 fica desativada | Inativo, trigger manual |
 
 ## Slack
 - `#novas-propostas`: uma linha por proposta nova (código, cliente, produto, quantidade, Incoterm, destino). Vem do WF2.
@@ -40,7 +42,7 @@ Ver `docs/estado-e-tarefas.md` (mapa das 10 fases do briefing e lista de pendent
 
 ## Antes de importar noutra instância
 
-Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinatários (`REDACTED@example.invalid`), IDs de pastas Outlook, ID do Mail Error Flow como Error Workflow e IDs do WF2, WF3, WF4 e Notificar Slack nos nós de chamada, e os IDs dos canais Slack no código do nó "Escolher canal e texto". Ver `docs/versionamento.md`.
+Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinatários (`REDACTED@example.invalid`), IDs de pastas Outlook, ID do Mail Error Flow como Error Workflow e IDs do WF1, WF2, WF3, WF4, WF5 e Notificar Slack nos nós de chamada, e os IDs dos canais Slack no código do nó "Escolher canal e texto". Ver `docs/versionamento.md`.
 
 ## Regras de trabalho
 

@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução: 2026-10-08 (Lisboa, bateria completa depois da integração com o Slack). Supabase A1-A27 todos passam (transação revertida). n8n com dados fixados: WF3 (exec. 95), WF2 válido e inválido (exec. 96, 97) e WF4 (exec. 98) passam. Reais: WF2→WF3+WF4 (exec. 99, PRP-2026-0014), repetição do WF3 (exec. 105, passou depois de corrigir o bug do R5), Mail Error Flow (exec. 103, 107). Slack: S1/S2 passam (exec. 108, PRP-2026-0015) depois de convidar a app. Pendentes: G9, F1-F6 (F5 leitura real do Outlook não corrida: o workflow está inativo e mexe na caixa de entrada).
+Última execução: 2026-10-08 (Lisboa, 23:20, bateria final da T7). Supabase A1-A27 e os testes novos de `leads` (migração 0005) passam numa transação revertida (nada deixado; contador 15, 15 propostas, 0 leads); advisors de segurança só com INFO. n8n com dados fixados nesta corrida: WF4 (exec. 168), WF2 válido (exec. 169) e inválido (exec. 170). WF3, Notificar Slack e Mail Error Flow não mudaram desde a última corrida real com sucesso (exec. 108, 142-167 para o aviso de estado). Testados nas alterações de hoje: WF5 W1-W7 (exec. 125-127), WF6 L4-L10 (exec. 128-135), WF8 M1-M4 (exec. 121-124), WF1 X1-X4 (exec. 137-140), Read Outlook X5 (exec. 141). Real com LLM: X7 (exec. 164). Pendentes: G9 (402 já visto em execução real, ver X7), F1-F6, X6 (email real na Folder 1), M5 (resposta real da Bárbara), L real com resposta de transportadora.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
