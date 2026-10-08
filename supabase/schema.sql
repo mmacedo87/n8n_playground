@@ -53,6 +53,10 @@ create table leads (
   pais               text,
   quantidade_texto   text,              -- como veio no email, antes de normalizar
   origem_email_id    text unique,       -- ID da mensagem no Outlook (evita duplicados)
+  assunto            text,              -- WF1 (migração 0005): assunto do email
+  dados_extraidos    jsonb,             -- WF1: pedido extraído pelo LLM e validado em código (rascunho)
+  confianca          numeric(3,2) check (confianca is null or confianca between 0 and 1),
+  campos_em_falta    text[] not null default '{}',
   estado             text not null default 'novo'
                      check (estado in ('novo','contactado','convertido','descartado')),
   criado_em          timestamptz not null default now(),
