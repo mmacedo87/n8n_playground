@@ -17,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import deploy_workflows as D  # noqa: E402
+import github_setup as GS  # noqa: E402
+import repo_files  # noqa: E402
 
 CONFIG = ROOT / "deploy" / "config.json"
 EXAMPLE = ROOT / "deploy" / "config.example.json"
@@ -41,7 +43,11 @@ LABELS = {
     "credenciais.openRouterApi": "a conta do OpenRouter (IA)",
 }
 
-STATE = {"key": None, "job": {"state": "idle", "steps": [], "error": None, "total": 0}}
+def novo_gjob():
+    return {"state": "idle", "steps": [], "error": None, "url": None, "avisos": []}
+
+
+STATE = {"key": None, "job": {"state": "idle", "steps": [], "error": None, "total": 0}, "gh": None, "gjob": novo_gjob()}
 LOCK = threading.Lock()
 
 
@@ -60,6 +66,55 @@ def friendly(msg):
     if "REDACTED" in msg:
         return "Ficou um email por preencher: %s" % msg
     return msg
+
+
+def gh_friendly(e):
+    st, msg = getattr(e, "status", None), str(e)
+    if st == 401:
+        return "O GitHub não aceitou a chave. Crie uma nova (passo 1 desta página) e cole-a outra vez."
+    if st == 403 or st == 404:
+        return "A chave não tem permissão para isto. Crie-a de novo marcando as caixas «repo» e «workflow» (passo 1 desta página)."
+    if st == 0:
+        return "Não consegui ligar ao GitHub. Confirme a internet e tente outra vez."
+    if st and st >= 500:
+        return "O GitHub teve um erro temporário. Clique outra vez em Criar: o que já foi feito não se duplica."
+    return msg.replace("HTTP %s: " % st, "") if st else msg
+
+
+def repo_root():
+    return ROOT / "repositorio" if (ROOT / "repositorio").is_dir() else ROOT
+
+
+def gh_check(token):
+    try:
+        w = GS.whoami(token)
+    except GS.GitHubError as e:
+        return {"ok": False, "error": gh_friendly(e)}
+    sc = w["scopes"]
+    if sc is not None and not ({"repo", "workflow"} <= set(sc)):
+        return {"ok": False, "error": "A chave funciona, mas falta marcar as caixas «repo» e «workflow». Crie-a de novo (passo 1 desta página)."}
+    STATE["gh"] = token
+    return {"ok": True, "login": w["login"]}
+
+
+def gh_job(owner, repo, private):
+    job = STATE["gjob"]
+
+    def prog(passo, estado):
+        with LOCK:
+            st = job["steps"]
+            if estado == "a fazer":
+                st.append({"name": passo, "estado": estado})
+            elif st and st[-1]["name"] == passo:
+                st[-1]["estado"] = estado
+    try:
+        files = repo_files.collect(repo_root())
+        r = GS.run(owner, repo, files, STATE["gh"], private=private, progress=prog)
+        job.update(state="done", url=r["url"], avisos=r["avisos"])
+    except GS.GitHubError as e:
+        job.update(state="error", error=gh_friendly(e))
+    except Exception as e:
+        job.update(state="error", error="Erro inesperado: %s" % e)
 
 
 def load_cfg():
@@ -150,6 +205,9 @@ class H(BaseHTTPRequestHandler):
         elif self.path == "/api/status":
             with LOCK:
                 self._json(STATE["job"])
+        elif self.path == "/api/github/status":
+            with LOCK:
+                self._json(STATE["gjob"])
         elif self.path == "/api/schema":
             sql = (ROOT / "supabase" / "schema.sql").read_text(encoding="utf-8")
             self._json({"sql": sql})
@@ -182,6 +240,23 @@ class H(BaseHTTPRequestHandler):
                     return self._json({"ok": False, "error": "A instalação já está a decorrer."})
                 STATE["job"].update(state="running", steps=[], error=None, total=c["total"])
             threading.Thread(target=deploy_job, daemon=True).start()
+            self._json({"ok": True})
+        elif self.path == "/api/github/check":
+            self._json(gh_check((body.get("token") or "").strip()))
+        elif self.path == "/api/github/create":
+            if not STATE["gh"]:
+                return self._json({"ok": False, "error": "Falta ligar ao GitHub (teste a chave primeiro)."})
+            owner, repo = (body.get("owner") or "").strip(), (body.get("repo") or "").strip()
+            if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", owner):
+                return self._json({"ok": False, "error": "O nome da conta GitHub não é válido."})
+            if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", repo) or repo in (".", ".."):
+                return self._json({"ok": False, "error": "O nome do repositório só pode ter letras, números, hífen, ponto e sublinhado, sem espaços."})
+            with LOCK:
+                if STATE["gjob"]["state"] == "running":
+                    return self._json({"ok": False, "error": "A criação já está a decorrer."})
+                STATE["gjob"] = novo_gjob()
+                STATE["gjob"]["state"] = "running"
+            threading.Thread(target=gh_job, args=(owner, repo, bool(body.get("private", True))), daemon=True).start()
             self._json({"ok": True})
         else:
             self._json({"erro": "não existe"}, 404)

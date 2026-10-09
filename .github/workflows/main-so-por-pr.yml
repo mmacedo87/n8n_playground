@@ -27,13 +27,14 @@ jobs:
         with:
           python-version: "3.12"
       - name: Testes (sem Playwright)
-        run: python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py
+        run: python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py tests/test_github.py
       - name: Verificar segredos
         run: bash scripts/check_no_secrets.sh
 
   push-direto:
     name: Deteta pushes diretos para main
-    if: github.event_name == 'push'
+    # o commit inicial feito pelo assistente de instalação não vem de um PR
+    if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'chore(inicio):')
     runs-on: ubuntu-latest
     steps:
       - name: Falhar se o commit não vier de um PR fundido

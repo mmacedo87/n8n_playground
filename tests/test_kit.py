@@ -29,10 +29,24 @@ class T(unittest.TestCase):
 
     def test_K1_conteudo(self):
         for f in ["LEIA-ME-PRIMEIRO.html", "Iniciar-Windows.bat", "Iniciar-Mac.command", "app/deploy_app.py", "app/index.html",
-                  "scripts/deploy_workflows.py", "supabase/schema.sql", "deploy/config.example.json", "workflows/manifest.json"]:
+                  "scripts/deploy_workflows.py", "scripts/github_setup.py", "scripts/repo_files.py", "supabase/schema.sql", "deploy/config.example.json", "workflows/manifest.json"]:
             self.assertTrue((self.dir / f).exists(), f)
         self.assertEqual(len(list((self.dir / "workflows").glob("*.json"))), 16)
         self.assertFalse((self.dir / "deploy" / "config.json").exists())
+
+    def test_K5_repositorio_dentro_do_kit_passa_os_testes(self):
+        """O que vai para o GitHub tem de passar os mesmos testes que a Action corre lá."""
+        import os
+        if os.environ.get("KIT_NESTED"):
+            self.skipTest("execução aninhada")
+        repo = self.dir / "repositorio"
+        for f in [".github/workflows/main-so-por-pr.yml", "workflows/manifest.json", "scripts/github_setup.py", "tests/test_github.py"]:
+            self.assertTrue((repo / f).exists(), f)
+        self.assertFalse((repo / "deploy" / "config.json").exists())
+        env = dict(os.environ, KIT_NESTED="1")
+        r = subprocess.run([sys.executable, "-m", "unittest", "tests/test_deploy.py", "tests/test_app.py", "tests/test_kit.py", "tests/test_github.py"],
+                           cwd=repo, capture_output=True, text=True, env=env, timeout=300)
+        self.assertEqual(r.returncode, 0, r.stderr[-1500:])
 
     def test_K2_sem_segredos_nem_dados_pessoais(self):
         txt = "".join(p.read_text(errors="ignore") for p in self.dir.rglob("*") if p.is_file())

@@ -66,7 +66,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 
 ## 10. GitHub
 - [ ] Passar o repositório a privado e ativar secret scanning e push protection.
-- [ ] Proteger `main` (Pull Request obrigatório, sem force-push) e etiquetar a versão de arranque (`v1.0.0`).
+- [ ] Proteger `main` (Pull Request obrigatório, sem force-push) e etiquetar a versão de arranque (`v1.0.0`). O assistente de instalação já faz isto ao criar o repositório (ver «Repositório GitHub de produção»); confirmar em Settings → Rules que a regra `proteger-main` está **Active**.
 - [ ] Confirmar que nada sensível está no histórico (`scripts/check_no_secrets.sh`).
 
 ## 11. Entregabilidade do email (evitar spam)
@@ -149,5 +149,23 @@ Fica fora do script: aplicar as migrações do Supabase e as tags dos workflows.
 - [ ] Correr o dry-run e, se passar, o deploy; abrir um workflow e confirmar que as credenciais ficaram ligadas.
 
 ### Assistente de instalação (para quem não é técnico)
-Para quem vai instalar sem experiência: gerar o kit com `python3 scripts/build_kit.py` (cria `dist/Kit-de-instalacao.zip`) e entregá-lo. Dentro vem a folha `LEIA-ME-PRIMEIRO.html` (instruções passo a passo, estilo IKEA) e um ficheiro de duplo clique (`Iniciar-Windows` ou `Iniciar-Mac`) que abre uma página com 6 passos: base de dados, ligar ao n8n, contas, emails e Slack, verificar, instalar. Só é preciso ter o Python instalado. A página escreve o `deploy/config.json`, não guarda a chave de API e dá mensagens de erro em português.
+Para quem vai instalar sem experiência: gerar o kit com `python3 scripts/build_kit.py` (cria `dist/Kit-de-instalacao.zip`) e entregá-lo. Dentro vem a folha `LEIA-ME-PRIMEIRO.html` (instruções passo a passo, estilo IKEA) e um ficheiro de duplo clique (`Iniciar-Windows` ou `Iniciar-Mac`) que abre uma página com 7 passos (+1 opcional): base de dados, ligar ao n8n, contas, emails e Slack, verificar, instalar e, opcionalmente, o repositório GitHub. Só é preciso ter o Python instalado. A página escreve o `deploy/config.json`, não guarda a chave de API e dá mensagens de erro em português.
 - [ ] Teste real do assistente numa instância n8n de teste antes de o entregar (T-assistente).
+
+### Repositório GitHub de produção (passo opcional do assistente)
+No fim da instalação, o assistente pode criar o repositório da empresa, sem o técnico precisar de saber `git`. O que faz, por esta ordem:
+1. Cria o repositório (privado por defeito) na conta ou organização indicada.
+2. Envia os ficheiros (workflows, scripts, SQL, testes, documentação e a GitHub Action) num único commit `chore(inicio): ...`.
+3. Cria os branches `dev`, `stable` e `main` **no mesmo commit**.
+4. Garante que o GitHub Actions está ativo.
+5. Cria a regra (ruleset) `proteger-main`: `main` só por pull request, sem force-push nem apagar, sem exceções para administradores, e com o check obrigatório «PR para main (origem dev + testes)».
+
+**O que a pessoa tem de fazer:** criar uma chave pessoal do GitHub (link já preparado na página, com as permissões `repo` e `workflow`, validade de 7 dias) e colá-la. A chave só vive na memória do assistente e pode ser apagada no GitHub no fim.
+
+**GitHub Action** (`.github/workflows/main-so-por-pr.yml`): em pull request para `main` só aceita origem `dev` ou `stable`, corre os testes unitários e a verificação de segredos; em push para `main` falha se o commit não vier de um PR (o commit inicial do assistente é a única exceção). O bloqueio efetivo é o ruleset.
+
+**Limites a conhecer:**
+- Em repositórios **privados**, o GitHub só permite rulesets nos planos pagos (Pro/Team). No plano gratuito o assistente cria tudo, avisa e indica como ativar a regra à mão; alternativa: repositório público (não tem segredos nem dados de clientes).
+- Se o nome do repositório já existir **com conteúdo**, o assistente recusa e pede outro nome; se ficou a meio, basta carregar outra vez em Criar (não duplica).
+- Fluxo de trabalho depois: alterar em `dev` → PR `dev` → `main` → merge → alinhar `dev` e `stable` com o `main` (ver `docs/versionamento.md`).
+- [ ] Teste real do passo GitHub com uma conta de teste (T-github) antes de entregar o kit.
