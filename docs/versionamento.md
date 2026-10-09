@@ -14,6 +14,7 @@ Estado: aprovado para arrancar (2026-10-06). Aplica-se a workflows n8n, SQL do S
 | Branch | Uso |
 | --- | --- |
 | `dev` | Trabalho corrente, ligado ao ambiente de desenvolvimento/testes do n8n |
+| `stable` | Cópia de `dev` num ponto estável (mesmo commit); serve de referência para instalar em produção |
 | `main` | Só o que foi validado e pode ir para produção. Atualizado por Pull Request vindo de `dev` |
 | `feat/<nome>` | Opcional, para trabalho maior (ex. `feat/wf1-extracao`); entra em `dev` por PR |
 
@@ -67,3 +68,10 @@ README.md
 - **Médio prazo:** exportação noturna automática com GitHub Action que chama a API do n8n (chave guardada como secret do GitHub) e abre um PR em `dev` se houver diferenças.
 - **Produção:** se o plano n8n incluir Source Control (Environments), usar a ligação Git nativa com um branch por ambiente e deixar de exportar à mão.
 - **Detalhe a decidir:** manter o webhookId fora do Git obriga a que o URL do formulário mude quando se reimporta; em produção, fixar o caminho do formulário (campo `path`) e guardá-lo.
+
+## Proteção do `main` (GitHub Actions)
+- Ficheiro `.github/workflows/main-so-por-pr.yml`.
+- **Em PR para `main`:** só aceita PRs de `dev` ou `stable`, corre os testes unitários (`test_deploy`, `test_app`, `test_kit`) e a verificação de segredos.
+- **Em push para `main`:** falha se o commit não vier de um PR fundido (deteta pushes diretos; uma Action não os consegue impedir).
+- O bloqueio efetivo é a regra de proteção do branch `main` (exigir PR e o check «PR para main (origem dev + testes)»).
+- Depois de um merge em `main`, avançar `dev` e `stable` (fast-forward) para o mesmo commit.
