@@ -127,7 +127,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const r = $('Interpretar resposta').first().json;\nconst p = $input.first().json || {};\nconst cod = r.codigo;\nif (!p.id) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Recebi uma resposta a ' + cod + ' mas a proposta não existe.' } }];\nif (r.acao === 'comentario') return [{ json: { ...r, aplicar: false, slack_texto: '💬 A Bárbara respondeu a *' + cod + '* com um comentário (a proposta continua em validação): \"' + r.comentario + '\"' } }];\nif (p.estado !== 'em_validacao') return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* está no estado ' + p.estado + ' (e não em validação).' } }];\nreturn [{ json: { ...r, aplicar: true, aprovada_por: r.remetente, aprovada_em: new Date().toISOString(), slack_texto: '✅ Proposta *' + cod + '* aprovada por ' + r.remetente + '. O envio ao cliente ainda é manual.' } }];"
+        "jsCode": "const r = $('Interpretar resposta').first().json;\nconst p = $input.first().json || {};\nconst cod = r.codigo;\nif (!p.id) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Recebi uma resposta a ' + cod + ' mas a proposta não existe.' } }];\nif (r.acao === 'comentario') return [{ json: { ...r, aplicar: false, slack_texto: '💬 A Bárbara respondeu a *' + cod + '* com um comentário (a proposta continua em validação): \"' + r.comentario + '\"' } }];\nif (p.estado !== 'em_validacao') return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* está no estado ' + p.estado + ' (e não em validação).' } }];\nreturn [{ json: { ...r, aplicar: true, aprovada_por: r.remetente, aprovada_em: new Date().toISOString(), slack_texto: '✅ Proposta *' + cod + '* aprovada por ' + r.remetente + '. O envio ao cliente segue (WF9); falha se ainda não houver preço final.' } }];"
       }
     },
     {
@@ -263,6 +263,47 @@
           "waitForSubWorkflow": false
         }
       }
+    },
+    {
+      "name": "Chamar WF9 (enviar proposta ao cliente)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1400,
+        300
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "UrGBkXG37To7RYMR"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "codigo": "={{ $('Marcar proposta como aprovada').first().json.codigo }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "notes": "Depois da aprovação, envia a proposta ao cliente (WF9). Não espera. O WF9 recusa propostas sem preço final e o erro chega pelo Mail Error Flow."
     }
   ],
   "connections": {
@@ -346,6 +387,11 @@
             "node": "Avisar Slack: resultado da resposta",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Chamar WF9 (enviar proposta ao cliente)",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -366,8 +412,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "4dU064sO0xcxkPTc",
-    "sourceVersionId": "e2587158-c7ec-45ca-9cb8-c50c9e770d0f",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "350ad425-1fa2-4f61-9379-0d4d36b890fa",
+    "exportedAt": "2026-10-09",
     "sanitized": "ids de credenciais, emails e errorWorkflow removidos"
   }
 }
