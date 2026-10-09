@@ -1,0 +1,48 @@
+name: main só por pull request
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  origem-e-testes:
+    name: PR para main (origem dev + testes)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Só aceitar PRs vindos de dev ou stable
+        run: |
+          case "${{ github.head_ref }}" in
+            dev|stable) echo "Origem permitida: ${{ github.head_ref }}" ;;
+            *) echo "::error::Só são aceites PRs de dev ou stable para main."; exit 1 ;;
+          esac
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Testes (sem Playwright)
+        run: python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py
+      - name: Verificar segredos
+        run: bash scripts/check_no_secrets.sh
+
+  push-direto:
+    name: Deteta pushes diretos para main
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Falhar se o commit não vier de um PR fundido
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '[.[] | select(.merged_at != null)] | length')
+          if [ "$n" -eq 0 ]; then
+            echo "::error::Commit ${{ github.sha }} entrou em main sem pull request. Reverter e abrir PR."
+            exit 1
+          fi
+          echo "OK: commit veio de um PR fundido."
