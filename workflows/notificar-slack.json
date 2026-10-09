@@ -104,7 +104,7 @@
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
-    "errorWorkflow": "<ID do Mail Error Flow na instância de destino>",
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "none",
     "callerPolicy": "workflowsFromSameOwner"
