@@ -13,6 +13,8 @@ sys.path.insert(0, str(ROOT / "tests"))
 sys.path.insert(0, str(ROOT / "app"))
 import test_deploy as TD  # noqa: E402
 import deploy_app as A  # noqa: E402
+import test_github as TG  # noqa: E402
+import os  # noqa: E402
 
 
 def req(base, path, body=None, host=None):
@@ -31,7 +33,7 @@ def req(base, path, body=None, host=None):
 class T(unittest.TestCase):
     def setUp(self):
         self.bak = A.CONFIG.read_bytes() if A.CONFIG.exists() else None
-        A.STATE.update(key=None, job={"state": "idle", "steps": [], "error": None, "total": 0})
+        A.STATE.update(key=None, job={"state": "idle", "steps": [], "error": None, "total": 0}, gh=None, gjob=A.novo_gjob())
         self.mock = TD.Mock()
         self.srv = A.make_server(0)
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
@@ -118,6 +120,69 @@ class T(unittest.TestCase):
         r = json.loads(req(self.base, "/api/schema")[1])
         self.assertIn("create table", r["sql"].lower())
         self.assertIn("expedicoes", r["sql"])
+
+    # --- repositório GitHub ---
+    def gh_setup(self, **kw):
+        self.gm = TG.MockGH(**kw)
+        self.addCleanup(self.gm.close)
+        os.environ["GITHUB_API_URL"] = self.gm.url
+        self.addCleanup(os.environ.pop, "GITHUB_API_URL", None)
+
+    def gh_wait(self):
+        for _ in range(300):
+            s = json.loads(req(self.base, "/api/github/status")[1])
+            if s["state"] != "running":
+                return s
+            time.sleep(0.1)
+        self.fail("GitHub não terminou")
+
+    def test_A11_github_chave_e_criacao(self):
+        self.gh_setup()
+        r = json.loads(req(self.base, "/api/github/check", {"token": "errado"})[1])
+        self.assertFalse(r["ok"])
+        self.assertIn("não aceitou a chave", r["error"])
+        r = json.loads(req(self.base, "/api/github/check", {"token": "tok"})[1])
+        self.assertEqual(r, {"ok": True, "login": "ana"})
+        r = json.loads(req(self.base, "/api/github/create", {"owner": "ana", "repo": "propostas", "private": True})[1])
+        self.assertTrue(r["ok"])
+        s = self.gh_wait()
+        self.assertEqual(s["state"], "done")
+        self.assertEqual(s["url"], "https://github.com/ana/propostas")
+        self.assertEqual([x["estado"] for x in s["steps"]], ["ok"] * 5)
+        self.assertEqual(sorted(self.gm.repos["ana/propostas"]["refs"]), ["dev", "main", "stable"])
+
+    def test_A12_github_sem_chave_ou_nomes_invalidos(self):
+        self.gh_setup()
+        r = json.loads(req(self.base, "/api/github/create", {"owner": "ana", "repo": "x"})[1])
+        self.assertIn("Falta ligar ao GitHub", r["error"])
+        req(self.base, "/api/github/check", {"token": "tok"})
+        for owner, repo in (("ana", "tem espaços"), ("ana", ".."), ("a/b", "x"), ("", "x")):
+            r = json.loads(req(self.base, "/api/github/create", {"owner": owner, "repo": repo})[1])
+            self.assertFalse(r["ok"], (owner, repo))
+        self.assertEqual(self.gm.repos, {})
+
+    def test_A13_github_chave_sem_permissoes(self):
+        self.gh_setup(scopes="read:user")
+        r = json.loads(req(self.base, "/api/github/check", {"token": "tok"})[1])
+        self.assertFalse(r["ok"])
+        self.assertIn("«workflow»", r["error"])
+        self.assertIsNone(A.STATE["gh"])
+
+    def test_A14_github_plano_gratuito_aviso_e_token_nao_fica_em_disco(self):
+        self.gh_setup(ruleset_status=403)
+        req(self.base, "/api/github/check", {"token": "tok"})
+        req(self.base, "/api/github/create", {"owner": "ana", "repo": "p2", "private": True})
+        s = self.gh_wait()
+        self.assertEqual(s["state"], "done")
+        self.assertEqual(len(s["avisos"]), 1)
+        req(self.base, "/api/config", {"github": {"owner": "ana", "repo": "p2", "private": True}, "n8n_url": "x"})
+        self.assertNotIn("tok", A.CONFIG.read_text())
+        self.assertNotIn("ghp_", A.CONFIG.read_text())
+
+    def test_A15_github_erro_traduzido(self):
+        self.assertIn("permissão", A.gh_friendly(TG.G.GitHubError(403, "HTTP 403: x")))
+        self.assertIn("erro temporário", A.gh_friendly(TG.G.GitHubError(502, "HTTP 502: x")))
+        self.assertIn("internet", A.gh_friendly(TG.G.GitHubError(0, "sem ligação")))
 
 
 if __name__ == "__main__":

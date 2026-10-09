@@ -12,6 +12,8 @@ sys.path.insert(0, str(ROOT / "tests"))
 sys.path.insert(0, str(ROOT / "app"))
 import test_deploy as TD  # noqa: E402
 import deploy_app as A  # noqa: E402
+import test_github as TG  # noqa: E402
+import os  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else None
@@ -26,8 +28,10 @@ class Env:
     def __enter__(self):
         self.bak = A.CONFIG.read_bytes() if A.CONFIG.exists() else None
         A.CONFIG.unlink(missing_ok=True)
-        A.STATE.update(key=None, job={"state": "idle", "steps": [], "error": None, "total": 0})
+        A.STATE.update(key=None, job={"state": "idle", "steps": [], "error": None, "total": 0}, gh=None, gjob=A.novo_gjob())
         self.mock = TD.Mock()
+        self.gh = TG.MockGH()
+        os.environ["GITHUB_API_URL"] = self.gh.url
         self.srv = A.make_server(0)
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
         self.url = "http://127.0.0.1:%d" % self.srv.server_port
@@ -37,6 +41,8 @@ class Env:
         self.srv.shutdown()
         self.srv.server_close()
         self.mock.close()
+        self.gh.close()
+        os.environ.pop("GITHUB_API_URL", None)
         if self.bak is None:
             A.CONFIG.unlink(missing_ok=True)
         else:
@@ -362,6 +368,114 @@ def S15_sem_erros_de_pagina(b):
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
         pg.click('button:has-text("Voltar")')
         assert not pg.errs, pg.errs
+
+
+def to_github(pg):
+    pg.wait_for_selector('button:has-text("Começar")')  # a configuração já carregou
+    pg.evaluate("step=7;render()")
+    pg.wait_for_selector("#ghtok")
+
+
+def gh_token(pg, tok="tok"):
+    pg.fill("#ghtok", tok)
+    pg.click('button:has-text("Testar chave")')
+    pg.wait_for_selector("#ghm .msg")
+
+
+def S16_github_caminho_completo(b):
+    with Env() as e:
+        pg = page(b, e)
+        to_step6(pg, e)
+        pg.click('button:has-text("Instalar agora")')
+        pg.wait_for_selector("#fin .msg.ok", timeout=30000)
+        pg.click('button:has-text("Continuar: repositório GitHub")')
+        assert "Repositório GitHub" in pg.inner_text("#main h2")
+        assert pg.is_disabled("#ghb")
+        gh_token(pg, "errado")
+        assert "não aceitou a chave" in pg.inner_text("#ghm") and pg.is_disabled("#ghb")
+        gh_token(pg)
+        assert "ana" in pg.inner_text("#ghm") and pg.input_value("#gho") == "ana"
+        assert pg.input_value("#ghr") == "propostas-cortica" and not pg.is_disabled("#ghb")
+        pg.click("#ghb")
+        pg.wait_for_selector("#ghfin .msg.ok", timeout=30000)
+        assert pg.locator("#ghpr li").count() == 5 and "✅" in pg.inner_text("#ghpr")
+        assert "github.com/ana/propostas-cortica" in pg.inner_text("#ghfin")
+        assert "Merge pull request" in pg.inner_text("#ghfin")
+        r = e.gh.repos["ana/propostas-cortica"]
+        assert sorted(r["refs"]) == ["dev", "main", "stable"] and len(set(r["refs"].values())) == 1
+        assert len(r["rulesets"]) == 1
+        assert not pg.errs, pg.errs
+
+
+def S17_github_chave_sem_permissoes(b):
+    with Env() as e:
+        e.gh.scopes = "read:user"
+        pg = page(b, e)
+        to_github(pg)
+        gh_token(pg)
+        assert "«workflow»" in pg.inner_text("#ghm") and pg.is_disabled("#ghb")
+
+
+def S18_github_nomes_invalidos(b):
+    with Env() as e:
+        pg = page(b, e)
+        to_github(pg)
+        gh_token(pg)
+        for v in ("tem espaços", "", "a/b", "x" * 101):
+            pg.fill("#ghr", v)
+            assert pg.is_disabled("#ghb"), v
+        pg.fill("#ghr", "ok.nome_1-2")
+        assert not pg.is_disabled("#ghb")
+        pg.fill("#gho", "conta inválida")
+        assert pg.is_disabled("#ghb")
+
+
+def S19_github_plano_gratuito_mostra_aviso(b):
+    with Env() as e:
+        e.gh.ruleset_status = 403
+        pg = page(b, e)
+        to_github(pg)
+        gh_token(pg)
+        pg.click("#ghb")
+        pg.wait_for_selector("#ghfin .msg.ok", timeout=30000)
+        assert "⚠️" in pg.inner_text("#ghpr")
+        assert "plano pago" in pg.inner_text("#ghfin") and pg.locator("#ghfin .msg.bad").count() == 1
+
+
+def S20_github_duplo_clique_e_falha_a_meio(b):
+    with Env() as e:
+        e.gh.fail_blob_at = 4
+        pg = page(b, e)
+        to_github(pg)
+        gh_token(pg)
+        pg.dblclick("#ghb")
+        pg.wait_for_selector("#ghfin .msg.bad", timeout=30000)
+        assert "erro temporário" in pg.inner_text("#ghfin")
+        assert not pg.is_disabled("#ghb")
+        assert sorted(e.gh.repos["ana/propostas-cortica"]["refs"]) == ["main"]
+        pg.click("#ghb")
+        pg.wait_for_selector("#ghfin .msg.ok", timeout=30000)
+        r = e.gh.repos["ana/propostas-cortica"]
+        assert sorted(r["refs"]) == ["dev", "main", "stable"] and len(r["rulesets"]) == 1
+        assert sum(1 for x in e.gh.log if x == ("POST", "/user/repos")) <= 2
+
+
+def S21_github_token_nao_persiste_e_360px(b):
+    with Env() as e:
+        pg = page(b, e, 360, 740)
+        to_github(pg)
+        gh_token(pg, "tok")
+        pg.fill("#gho", "ana")
+        assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth + 1")
+        pg.evaluate("flush()")
+        pg.wait_for_timeout(300)
+        txt = A.CONFIG.read_text()
+        assert "tok" not in json.loads(txt).get("github", {}) and '"ana"' in txt
+        pg.reload()
+        pg.wait_for_selector('button:has-text("Começar")')
+        pg.evaluate("step=7;render()")
+        assert pg.input_value("#ghtok") == "" and pg.is_disabled("#ghb")
+        assert pg.input_value("#gho") == "ana"
 
 
 SC = [v for k, v in sorted(globals().items()) if k.startswith("S") and k[1:3].isdigit()]
