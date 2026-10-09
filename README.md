@@ -54,3 +54,6 @@ Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinat
 1. Alterar em DEV, correr a bateria de testes, exportar com `scripts/sanitize_workflow.py`, correr `scripts/check_no_secrets.sh`, commit em `dev`.
 2. Tudo o que é novo leva testes novos; correr sempre a bateria completa.
 3. Para `main` só por Pull Request.
+
+## Deploy para outra instância
+`scripts/deploy_workflows.py` instala os workflows de `workflows/` numa instância n8n, resolve as referências por nome e aplica `deploy/config.json` (modelo em `deploy/config.example.json`). Ver `docs/passagem-producao.md`. Testes: `python3 -m unittest tests/test_deploy.py`.

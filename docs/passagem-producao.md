@@ -137,3 +137,13 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Acompanhar as execuções do n8n nos primeiros meses; acima de 80 % de 2.500, subir para o Pro.
 - [ ] Confirmar licenças de Outlook/Slack no cliente e faturação mensal ou anual de n8n e Moloni.
 - [ ] Modelo de IA: manter Haiku 4.5.
+
+## Deploy automático (menos configuração manual)
+Os workflows exportados já não têm IDs: referem outros workflows por nome (`{{WF:Nome}}`). Um script instala tudo e resolve os IDs sozinho. Mantém-se manual apenas:
+1. Criar uma **chave de API** no n8n de destino (Settings, n8n API) e `export N8N_API_KEY=...`.
+2. Criar as 4 **credenciais** no destino (Outlook, Slack, Supabase, OpenRouter) e copiar os seus IDs.
+3. Copiar `deploy/config.example.json` para `deploy/config.json` (não vai para o Git) e preencher: URL do n8n, emails, IDs dos canais Slack e IDs das credenciais.
+
+Depois: `python3 scripts/deploy_workflows.py --dry-run` (valida sem tocar na instância) e `python3 scripts/deploy_workflows.py`. O script ordena pelas dependências, cria ou atualiza por nome (pode correr-se outra vez sem duplicar), aplica a configuração (emails, canais, URLs, credenciais, aprovadores do WF8), deixa `destinatario_teste` vazio (recusa se estiver preenchido) e ativa o que o `workflows/manifest.json` marca como `publish`. WF6, WF8 e Read Outlook ficam inativos (ativar à mão quando houver teste real).
+Fica fora do script: aplicar as migrações do Supabase e as tags dos workflows.
+- [ ] Correr o dry-run e, se passar, o deploy; abrir um workflow e confirmar que as credenciais ficaram ligadas.

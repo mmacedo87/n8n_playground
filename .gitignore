@@ -12,3 +12,5 @@ exports-raw/
 # Sistema
 .DS_Store
 __pycache__/
+deploy/config.json
+deploy/out/

@@ -1,0 +1,20 @@
+{
+  "_nota": "Ordem irrelevante: o deploy ordena pelas dependências ({{WF:Nome}} e errorWorkflow). publish=true ativa o workflow no destino.",
+  "workflows": [
+    {"file": "mail-error-flow.json", "publish": true},
+    {"file": "notificar-slack.json", "publish": true},
+    {"file": "wf2-error-flow.json", "publish": true},
+    {"file": "wf1-extrair-pedido-email.json", "publish": true},
+    {"file": "wf4-enriquecimento-proposta.json", "publish": true},
+    {"file": "wf3-pedido-cotacao-frete.json", "publish": true},
+    {"file": "wf2-pedido-proposta.json", "publish": true},
+    {"file": "wf5-resumo-validacao.json", "publish": true},
+    {"file": "wf6-ler-cotacoes.json", "publish": false},
+    {"file": "wf9-envio-cliente.json", "publish": true},
+    {"file": "wf8-aprovacao-barbara.json", "publish": false},
+    {"file": "wf10-confirmacao-encomenda.json", "publish": true},
+    {"file": "wf12-followup-cliente.json", "publish": true},
+    {"file": "wf11-plano-expedicao.json", "publish": true},
+    {"file": "read-outlook-messages.json", "publish": false}
+  ]
+}

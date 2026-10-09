@@ -3,7 +3,7 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução: 2026-10-09 (fases 7-10): Supabase A1-A27 + B1-B8 (migração 0006, 11 tabelas) passam numa transação revertida (A9 só falha dentro de uma transação única porque `now()` é constante; o trigger foi confirmado em dados reais). WF9 exec. 172-176, WF10 exec. 177-183, WF12 exec. 184-187, WF11 exec. 188-192, WF8 exec. 193-194 (dados fixados) e teste real ponta a ponta na PRP-2026-0016 (exec. 195-201: enviada → aceite → expedição → concluída). Anterior: 2026-10-08 (Lisboa, 23:20, bateria final da T7). Supabase A1-A27 e os testes novos de `leads` (migração 0005) passam numa transação revertida (nada deixado; contador 15, 15 propostas, 0 leads); advisors de segurança só com INFO. n8n com dados fixados nesta corrida: WF4 (exec. 168), WF2 válido (exec. 169) e inválido (exec. 170). WF3, Notificar Slack e Mail Error Flow não mudaram desde a última corrida real com sucesso (exec. 108, 142-167 para o aviso de estado). Testados nas alterações de hoje: WF5 W1-W7 (exec. 125-127), WF6 L4-L10 (exec. 128-135), WF8 M1-M4 (exec. 121-124), WF1 X1-X4 (exec. 137-140), Read Outlook X5 (exec. 141). Real com LLM: X7 (exec. 164). Pendentes: G9 (402 já visto em execução real, ver X7), F1-F6, X6 (email real na Folder 1), M5 (resposta real da Bárbara), L real com resposta de transportadora.
+Última execução: 2026-10-09 (deploy automático D1-D9 passam; fases 7-10): Supabase A1-A27 + B1-B8 (migração 0006, 11 tabelas) passam numa transação revertida (A9 só falha dentro de uma transação única porque `now()` é constante; o trigger foi confirmado em dados reais). WF9 exec. 172-176, WF10 exec. 177-183, WF12 exec. 184-187, WF11 exec. 188-192, WF8 exec. 193-194 (dados fixados) e teste real ponta a ponta na PRP-2026-0016 (exec. 195-201: enviada → aceite → expedição → concluída). Anterior: 2026-10-08 (Lisboa, 23:20, bateria final da T7). Supabase A1-A27 e os testes novos de `leads` (migração 0005) passam numa transação revertida (nada deixado; contador 15, 15 propostas, 0 leads); advisors de segurança só com INFO. n8n com dados fixados nesta corrida: WF4 (exec. 168), WF2 válido (exec. 169) e inválido (exec. 170). WF3, Notificar Slack e Mail Error Flow não mudaram desde a última corrida real com sucesso (exec. 108, 142-167 para o aviso de estado). Testados nas alterações de hoje: WF5 W1-W7 (exec. 125-127), WF6 L4-L10 (exec. 128-135), WF8 M1-M4 (exec. 121-124), WF1 X1-X4 (exec. 137-140), Read Outlook X5 (exec. 141). Real com LLM: X7 (exec. 164). Pendentes: G9 (402 já visto em execução real, ver X7), F1-F6, X6 (email real na Folder 1), M5 (resposta real da Bárbara), L real com resposta de transportadora.
 
 ## A. Supabase (transação revertida, sem deixar dados)
 | Id | Verifica |
@@ -162,6 +162,20 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | W12 | WF12: follow-up válido; estado errado, já enviado, plano por preencher (exec. 184-187) | Passa |
 | W8b | WF8: aprovar chama o WF9, comentário não (exec. 193-194) | Passa |
 | E2E | Real na PRP-2026-0016: WF9 → WF10 → WF11 → WF12, emails para a caixa de teste (exec. 195-201) | Passa |
+
+## D. Deploy automático (`tests/test_deploy.py`, API n8n simulada)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| D1 | O manifest cobre todos os ficheiros e todas as referências `{{WF:Nome}}` existem | Passa |
+| D2 | Ordem por dependências (Mail Error Flow primeiro, sub-workflows antes de quem os chama) | Passa |
+| D3 | Dry-run: 15 workflows, sem marcadores por resolver | Passa |
+| D4 | Config incompleta ou credencial em falta: falha sem qualquer chamada à API | Passa |
+| D5 | Deploy: IDs resolvidos, errorWorkflow, emails, URLs, canais Slack, aprovadores do WF8, credenciais, 12 ativos e WF6/WF8/Read Outlook inativos | Passa |
+| D6 | Segunda corrida atualiza por nome, sem duplicar | Passa |
+| D7 | `destinatario_teste` preenchido bloqueia o deploy | Passa |
+| D8 | O sanitizer gera marcadores | Passa |
+| D9 | Sem `N8N_API_KEY` o script recusa | Passa |
+| D10 | Real contra o n8n de produção (precisa de chave de API e config) | Pendente |
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
