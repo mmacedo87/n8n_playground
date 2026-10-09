@@ -187,3 +187,6 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
+
+### E.2 Cenários de ecrã (`tests/e2e_app_cenarios.py`, Playwright)
+S01 chave errada → certa · S02 endereço inexistente / barra final · S03 editar endereço invalida a ligação · S04 formatos de credenciais · S05 emails e canais inválidos · S06 recarregar (chave não persiste) · S07 falha 500 a meio + repetir sem duplicar · S08 duplo clique em Instalar · S09 teclado · S10 360 px sem scroll horizontal · S11 modo escuro/desktop · S12 copiar SQL (+ recurso) · S13 verificação falha com mensagem clara · S14 Voltar mantém dados · S15 sem erros de página. Resultado: 15/15.

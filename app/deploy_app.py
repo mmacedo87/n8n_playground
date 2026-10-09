@@ -51,6 +51,8 @@ def friendly(msg):
         return "Falta preencher %s." % LABELS.get(m.group(1), m.group(1))
     if "HTTP 401" in msg or "HTTP 403" in msg:
         return "O n8n não aceitou a chave de API. Crie uma nova e cole-a outra vez."
+    if re.search(r"HTTP 5\d\d", msg):
+        return "O n8n teve um erro temporário ao instalar. Clique em Instalar para tentar outra vez: o que já foi instalado não se duplica."
     if "HTTP 404" in msg:
         return "O n8n respondeu, mas sem a função de API. Confirme o endereço e que a API está ativa."
     if "destinatario_teste" in msg:

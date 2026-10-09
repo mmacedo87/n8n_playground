@@ -25,6 +25,7 @@ CFG = {
 class Mock:
     def __init__(self):
         self.store, self.log, self.n = {}, [], 0
+        self.auth_key, self.fail_names = None, {}
         mock = self
 
         class H(BaseHTTPRequestHandler):
@@ -43,22 +44,38 @@ class Mock:
                 n = int(self.headers.get("Content-Length") or 0)
                 return json.loads(self.rfile.read(n)) if n else {}
 
+            def _auth(self):
+                if mock.auth_key and self.headers.get("X-N8N-API-KEY") != mock.auth_key:
+                    self._send({"message": "unauthorized"}, 401)
+                    return False
+                return True
+
             def do_GET(self):
+                if not self._auth():
+                    return
                 mock.log.append(("GET", self.path))
                 self._send({"data": [{"id": i, "name": w["name"]} for i, w in mock.store.items()], "nextCursor": None})
 
             def do_POST(self):
+                if not self._auth():
+                    return
                 mock.log.append(("POST", self.path))
                 if self.path.endswith("/activate"):
                     wid = self.path.split("/")[-2]
                     mock.store[wid]["active"] = True
                     return self._send({"id": wid})
+                b = self._body()
+                if mock.fail_names.get(b.get("name"), 0) > 0:
+                    mock.fail_names[b["name"]] -= 1
+                    return self._send({"message": "boom"}, 500)
                 mock.n += 1
                 wid = "ID%03d" % mock.n
-                mock.store[wid] = self._body()
+                mock.store[wid] = b
                 self._send({"id": wid})
 
             def do_PUT(self):
+                if not self._auth():
+                    return
                 mock.log.append(("PUT", self.path))
                 wid = self.path.split("/")[-1]
                 mock.store[wid] = self._body()

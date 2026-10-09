@@ -87,7 +87,7 @@ function render(){bar();const m=$("#main");
  <li>Clique no seu nome (canto inferior esquerdo), <b>Settings</b>, depois <b>n8n API</b>, e <b>Create an API key</b>. Dê um nome (ex.: <i>instalação</i>) e confirme.</li>
  <li>Copie a chave que aparece e cole-a abaixo. <div class="tip">A chave só aparece uma vez. Esta página não a guarda em lado nenhum.</div></li></ol>
  <label>Endereço do n8n<small>É o que aparece na barra do browser, por exemplo https://empresa.app.n8n.cloud</small></label>
- <input type="text" id="url" value="${esc(cfg.n8n_url)}" oninput="cfg.n8n_url=this.value.trim().replace(/\\/+$/,'');connected=false;save();$('#cm').innerHTML=''">
+ <input type="text" id="url" value="${esc(cfg.n8n_url)}" oninput="cfg.n8n_url=this.value.trim().replace(/\\/+$/,'');connected=false;save();render2();$('#cm').innerHTML=''">
  <label>Chave de API</label><input type="password" id="key" oninput="connected=false;$('#cm').innerHTML=''">
  <p><button onclick="testConn()">Testar ligação</button></p><div id="cm">${connected?'<div class="msg ok">Ligação feita com sucesso.</div>':''}</div></div>${nav(connected)}`;return}
  if(step===3){const T=[
