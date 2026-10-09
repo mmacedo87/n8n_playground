@@ -57,3 +57,5 @@ Os JSON não têm segredos. Preencher: credenciais (ligadas pelo nome), destinat
 
 ## Deploy para outra instância
 `scripts/deploy_workflows.py` instala os workflows de `workflows/` numa instância n8n, resolve as referências por nome e aplica `deploy/config.json` (modelo em `deploy/config.example.json`). Ver `docs/passagem-producao.md`. Testes: `python3 -m unittest tests/test_deploy.py`.
+
+**Assistente para quem não é técnico:** `app/` (página local com 6 passos) e `python3 scripts/build_kit.py`, que cria o kit `dist/Kit-de-instalacao.zip`. Testes: `tests/test_app.py`, `tests/test_kit.py`, `tests/e2e_app.py`.

@@ -147,3 +147,7 @@ Os workflows exportados já não têm IDs: referem outros workflows por nome (`{
 Depois: `python3 scripts/deploy_workflows.py --dry-run` (valida sem tocar na instância) e `python3 scripts/deploy_workflows.py`. O script ordena pelas dependências, cria ou atualiza por nome (pode correr-se outra vez sem duplicar), aplica a configuração (emails, canais, URLs, credenciais, aprovadores do WF8), deixa `destinatario_teste` vazio (recusa se estiver preenchido) e ativa o que o `workflows/manifest.json` marca como `publish`. WF6, WF8 e Read Outlook ficam inativos (ativar à mão quando houver teste real).
 Fica fora do script: aplicar as migrações do Supabase e as tags dos workflows.
 - [ ] Correr o dry-run e, se passar, o deploy; abrir um workflow e confirmar que as credenciais ficaram ligadas.
+
+### Assistente de instalação (para quem não é técnico)
+Para quem vai instalar sem experiência: gerar o kit com `python3 scripts/build_kit.py` (cria `dist/Kit-de-instalacao.zip`) e entregá-lo. Dentro vem a folha `LEIA-ME-PRIMEIRO.html` (instruções passo a passo, estilo IKEA) e um ficheiro de duplo clique (`Iniciar-Windows` ou `Iniciar-Mac`) que abre uma página com 6 passos: base de dados, ligar ao n8n, contas, emails e Slack, verificar, instalar. Só é preciso ter o Python instalado. A página escreve o `deploy/config.json`, não guarda a chave de API e dá mensagens de erro em português.
+- [ ] Teste real do assistente numa instância n8n de teste antes de o entregar (T-assistente).

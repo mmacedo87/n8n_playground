@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instalação: leia primeiro</title>
+<style>
+:root{--bg:#ead9bd;--card:#fbf5e9;--ink:#3a2817;--line:#d6bf98;--dark:#7a4d22;--deep:#4a2e14;--okbg:#e8efd6;--ok:#4d6a2a}
+@media (prefers-color-scheme:dark){:root{--bg:#2a1d10;--card:#3a2a18;--ink:#f3e6cf;--line:#6b4d2c;--dark:#e0b97e;--deep:#f3e6cf;--okbg:#2f3a1f;--ok:#a9cc7a}}
+body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.6 "Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:780px;margin:0 auto;padding:24px 16px 70px}
+h1{font-family:Georgia,serif;color:var(--deep);font-size:32px;margin:0 0 6px}
+h2{font-family:Georgia,serif;color:var(--deep);font-size:24px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 24px;margin:18px 0}
+.step{display:flex;gap:18px;align-items:flex-start}
+.n{flex:0 0 56px;height:56px;border-radius:50%;background:var(--dark);color:#fff8e8;font:700 30px Georgia,serif;display:flex;align-items:center;justify-content:center}
+.step p{margin:4px 0}
+.box{background:var(--okbg);color:var(--ok);border-radius:10px;padding:8px 12px;font-size:17px;display:inline-block;margin-top:4px}
+.warn{border-left:6px solid var(--dark);background:#f6e6c5;color:#4a2e14;padding:12px 16px;border-radius:10px;font-size:18px}
+@media (prefers-color-scheme:dark){.warn{background:#4a3520;color:#f3e6cf}}
+ul{margin:6px 0 6px 22px;padding:0}
+@media print{body{background:#fff}}
+</style></head><body><div class="w">
+<h1>Instalação da automação de propostas</h1>
+<p>Instruções passo a passo. Não precisa de saber nada de informática: é só seguir os números pela ordem. Demora cerca de 30 minutos.</p>
+
+<div class="card"><h2>O que vem na caixa</h2>
+<ul><li>Esta folha de instruções.</li><li>Um ficheiro para <b>abrir com duplo clique</b> (<i>Iniciar-Windows</i> ou <i>Iniciar-Mac</i>).</li><li>O assistente, que o guia ecrã a ecrã.</li></ul></div>
+
+<div class="card"><h2>O que precisa de ter à mão</h2>
+<ul><li>Um computador (Windows ou Mac) ligado à internet.</li><li>Os acessos (utilizador e palavra-passe) ao <b>n8n</b>, <b>Supabase</b>, <b>Slack</b>, <b>Microsoft/Outlook</b> e <b>OpenRouter</b>.</li><li>Os emails da Bárbara, da Madalena e da empresa.</li></ul></div>
+
+<div class="card step"><div class="n">1</div><div><h2>Abrir a pasta</h2>
+<p>Clique com o botão direito no ficheiro <b>.zip</b> que recebeu e escolha <b>Extrair tudo</b> (Windows) ou faça duplo clique (Mac).</p><span class="box">Deve aparecer uma pasta com estes ficheiros.</span></div></div>
+
+<div class="card step"><div class="n">2</div><div><h2>Instalar o Python (só uma vez)</h2>
+<p>O Python é o programa que faz o assistente funcionar. Se já o tem, passe ao passo 3.</p>
+<ul><li>Abra <b>python.org/downloads</b> e clique no botão amarelo <b>Download Python</b>.</li><li>Abra o ficheiro transferido.</li><li><b>Windows:</b> no primeiro ecrã, <b>marque a caixa "Add python.exe to PATH"</b> e clique <b>Install Now</b>.</li><li><b>Mac:</b> clique sempre em <b>Continuar</b> e <b>Instalar</b>.</li></ul>
+<div class="warn">Se esquecer a caixa "Add python.exe to PATH" no Windows, desinstale e instale outra vez.</div></div></div>
+
+<div class="card step"><div class="n">3</div><div><h2>Abrir o assistente</h2>
+<ul><li><b>Windows:</b> duplo clique em <b>Iniciar-Windows</b>.</li><li><b>Mac:</b> clique com o botão direito em <b>Iniciar-Mac</b>, escolha <b>Abrir</b> e confirme <b>Abrir</b>.</li></ul>
+<span class="box">Abre uma janela preta (deixe-a aberta) e, logo a seguir, uma página com o título "Instalação da automação de propostas".</span>
+<p>Se a página não abrir sozinha, copie o endereço que aparece na janela preta (começa por http://127.0.0.1) para o browser.</p></div></div>
+
+<div class="card step"><div class="n">4</div><div><h2>Seguir a página, passo a passo</h2>
+<p>A página tem 6 passos e diz exatamente o que clicar em cada um. O botão <b>Seguinte</b> só fica ativo quando o passo está certo.</p>
+<ul><li>Pode fechar tudo e continuar mais tarde: o que escreveu fica guardado (a chave secreta do n8n não, tem de a criar outra vez).</li><li>Nada fica estragado se se enganar: pode repetir qualquer passo e a instalação pode ser repetida.</li></ul></div></div>
+
+<div class="card step"><div class="n">5</div><div><h2>Terminar</h2>
+<p>No fim aparece <b>"Está feito!"</b> com uma lista curta do que fazer a seguir. Pode imprimi-la. Depois feche a janela preta.</p></div></div>
+
+<div class="card"><h2>Se algo correr mal</h2>
+<ul><li><b>A janela preta fechou logo:</b> o Python não está instalado. Faça o passo 2.</li><li><b>Mensagem a vermelho na página:</b> leia-a, ela diz o que falta. Volte ao passo indicado e corrija.</li><li><b>Mais ajuda:</b> tire uma fotografia ao ecrã e envie-a a quem lhe entregou este kit.</li></ul></div>
+</div></body></html>

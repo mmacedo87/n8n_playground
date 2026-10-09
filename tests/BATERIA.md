@@ -177,5 +177,13 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | D9 | Sem `N8N_API_KEY` o script recusa | Passa |
 | D10 | Real contra o n8n de produção (precisa de chave de API e config) | Pendente |
 
+## E. Assistente de instalação (`tests/test_app.py`, `tests/test_kit.py`, `tests/e2e_app.py`)
+| Id | Verifica | Resultado |
+| --- | --- | --- |
+| A1-A10 | Página e config vazia; config guardada sem a chave de API; ligação ok/falha; erros em português; verificar; instalar sem ligar recusa; instalação completa (15); só aceita acessos locais; SQL servido | Passa |
+| K1-K4 | O kit tem tudo (16 workflows, launchers, instruções), sem segredos nem dados pessoais, launchers corretos, o assistente arranca a partir do zip extraído | Passa |
+| E2E | Browser real (telemóvel 430 px): os 7 ecrãs, botões bloqueados até o passo estar certo, credenciais e canais reconhecidos a partir de endereços colados, instalação completa | Passa |
+| E3 | Real: assistente contra um n8n de teste (precisa de chave de API) e utilizador não técnico a seguir a folha | Pendente |
+
 ## F. Pendentes (precisam de execução real)
 ~~F1 envio real do email · F2 escrita real no Supabase · F3 submissão real~~ (feitos em 2026-10-07: PRP-2026-0002 gravada; email enviado para o destinatário de teste, sem erro registado; receção a confirmar pelo utilizador) · F4 aviso de erro real em produção · F5 leitura real da Folder 1 · F6 bloqueio de campos em falta no navegador.
