@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano do agente orquestrador</title>
+<style>
+/* Layout: plano em secções (resumo, decisão agente vs workflow, arquitetura, níveis, fases, custos, riscos); tema cortiça */
+:root{
+  --bg:#ead9bd; --card:#fbf5e9; --ink:#3a2817; --muted:#6e5a44; --line:#d6bf98;
+  --cork:#c49a62; --cork-dark:#7a4d22; --cork-deep:#4a2e14; --olive:#5f7a3a; --olive-soft:#e8efd6;
+  --amber:#b98a2c; --amber-soft:#f8e7bf; --red:#a8412c; --red-soft:#f7e0d8; --soft:#f3e4cb; --on-dark:#fff8e8;
+  --serif:Georgia,"Times New Roman",serif; --sans:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#241a10; --card:#31241a; --ink:#f1e3cc; --muted:#c3ad8d; --line:#5a4430;
+  --cork:#b98a52; --cork-dark:#8a5a2b; --cork-deep:#f1e3cc; --olive:#9bb870; --olive-soft:#2f3a1f;
+  --amber:#e0b04f; --amber-soft:#4a3813; --red:#e0806a; --red-soft:#4a2a22; --soft:#3d2d1e; --on-dark:#fff8e8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#241a10; --card:#31241a; --ink:#f1e3cc; --muted:#c3ad8d; --line:#5a4430;
+  --cork:#b98a52; --cork-dark:#8a5a2b; --cork-deep:#f1e3cc; --olive:#9bb870; --olive-soft:#2f3a1f;
+  --amber:#e0b04f; --amber-soft:#4a3813; --red:#e0806a; --red-soft:#4a2a22; --soft:#3d2d1e; --on-dark:#fff8e8; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);padding-inline:16px;padding-block:24px 56px;
+  background-image:radial-gradient(circle at 12% 18%,rgba(122,77,34,.16) 0 1.6px,transparent 2px),radial-gradient(circle at 63% 41%,rgba(122,77,34,.13) 0 1.2px,transparent 1.8px),radial-gradient(circle at 87% 77%,rgba(74,46,20,.14) 0 2px,transparent 2.6px);
+  background-size:97px 89px,131px 113px,173px 151px}
+.wrap{max-width:1000px;margin-inline:auto;display:flex;flex-direction:column;gap:30px}
+header{border-radius:18px;padding:24px 26px;color:var(--on-dark);display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  background-color:var(--cork-dark);
+  background-image:radial-gradient(circle at 15% 25%,rgba(255,224,170,.28) 0 2px,transparent 3px),radial-gradient(circle at 48% 70%,rgba(40,22,8,.35) 0 2.2px,transparent 3.2px),radial-gradient(circle at 72% 30%,rgba(255,224,170,.22) 0 1.6px,transparent 2.6px),linear-gradient(135deg,#9a6633,#6d4320);
+  background-size:67px 61px,89px 83px,113px 97px,100% 100%}
+header svg{width:72px;height:72px;flex:0 0 auto}
+header div{flex:1 1 280px;min-width:0}
+.tag{display:inline-block;font-size:.8rem;padding:2px 10px;border-radius:999px;border:1px solid rgba(251,242,224,.5);background:rgba(251,242,224,.18)}
+h1{font:700 1.9rem/1.2 var(--serif);margin:8px 0 6px;text-wrap:balance}
+header p{margin:0;color:#f0dcb8}
+h2{font:700 1.35rem/1.3 var(--serif);color:var(--cork-dark);margin:0 0 6px;padding-bottom:4px;border-bottom:2px solid var(--cork);text-wrap:balance}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h2{color:var(--cork)}}
+:root[data-theme="dark"] h2{color:var(--cork)}
+h3{font:700 1.05rem/1.3 var(--serif);margin:0 0 4px}
+p{margin:0}
+section{display:flex;flex-direction:column;gap:12px}
+.lead{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;display:grid;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--cork);border-radius:12px;padding:12px 16px}
+.kpi b{display:block;font:700 1.55rem/1.15 var(--serif);color:var(--cork-dark)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kpi b{color:var(--cork)}}
+:root[data-theme="dark"] .kpi b{color:var(--cork)}
+.kpi span{color:var(--muted);font-size:.9rem}
+ul{margin:0;padding-left:1.2rem;display:grid;gap:3px}
+.nota{border-left:4px solid var(--cork-dark);background:var(--amber-soft);padding:10px 14px;border-radius:6px}
+.aviso{border-left:4px solid var(--red);background:var(--red-soft);padding:10px 14px;border-radius:6px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:.95rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft)}
+td.num,th.num{text-align:right;white-space:nowrap}
+tr.total td{font-weight:700;background:var(--soft)}
+.pill{display:inline-block;font-size:.78rem;padding:1px 9px;border-radius:999px;border:1px solid var(--line);background:var(--soft)}
+.pill.rec{background:var(--olive-soft);border-color:var(--olive)}
+.pill.alerta{background:var(--amber-soft);border-color:var(--amber)}
+code{font:.88em ui-monospace,Consolas,monospace;background:var(--soft);padding:1px 5px;border-radius:4px}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:760px;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;border:1.5px solid;vertical-align:-2px;margin-right:6px}
+svg text{fill:var(--ink);font-size:12.5px;text-anchor:middle;font-family:inherit}
+svg .n{fill:var(--card);stroke:var(--cork-dark);stroke-width:1.6}
+svg .t{fill:var(--soft);stroke:var(--cork-dark);stroke-width:1.6}
+svg .llm{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1.6}
+svg .gate{fill:var(--red-soft);stroke:var(--red);stroke-width:1.6}
+svg .plan{fill:var(--soft);stroke:var(--muted);stroke-width:1.6;stroke-dasharray:5 4}
+svg .band{fill:var(--soft);stroke:var(--line)}
+svg .ar{stroke:var(--muted);stroke-width:1.6;fill:none}
+svg .ard{stroke:var(--red);stroke-width:1.6;fill:none;stroke-dasharray:4 3}
+svg .lab{font-size:11.5px;font-style:italic;fill:var(--muted)}
+svg .small{font-size:11.5px;fill:var(--muted)}
+.l-n{background:var(--card);border-color:var(--cork-dark)} .l-llm{background:var(--amber-soft);border-color:var(--amber)}
+.l-gate{background:var(--red-soft);border-color:var(--red)} .l-plan{background:var(--soft);border-color:var(--muted);border-style:dashed}
+footer{color:var(--muted);font-size:.85rem;border-top:2px solid var(--cork);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg viewBox="0 0 84 84" role="img" aria-label="Rolha de cortiça"><defs><radialGradient id="rl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#e6bf88"/><stop offset="1" stop-color="#b98a52"/></radialGradient></defs><circle cx="42" cy="42" r="38" fill="url(#rl)" stroke="#fbeccd" stroke-width="3"/><g fill="#7a4d22" opacity=".55"><circle cx="26" cy="28" r="2.4"/><circle cx="52" cy="22" r="1.8"/><circle cx="60" cy="46" r="2.6"/><circle cx="34" cy="54" r="2"/><circle cx="46" cy="64" r="1.6"/><circle cx="22" cy="46" r="1.5"/></g></svg>
+  <div>
+    <span class="tag">Branch agent · versão 0.1 · 9 de outubro de 2026</span>
+    <h1>Plano do agente orquestrador</h1>
+    <p>Um agente no n8n que, em horário de expediente, vigia a caixa de email, identifica novos pedidos e lança o fluxo completo quando for preciso. Plano de implementação e previsão de custos.</p>
+  </div>
+</header>
+
+<section>
+  <h2>Em resumo</h2>
+  <div class="grid">
+    <div class="kpi"><b>~31 h</b><span>de esforço para o núcleo (fases 0 a 4 e 6); 39 h com o roteamento de respostas (fase 5, opcional)</span></div>
+    <div class="kpi"><b>1 a 10 €/mês</b><span>de IA a mais, já com margem de 2× (cenários baixo, médio e alto)</span></div>
+    <div class="kpi"><b>0 € de licenças</b><span>se ficar no n8n Starter; até 85 % das 2.500 execuções no pior cenário</span></div>
+    <div class="kpi"><b>+30 €/mês</b><span>só se as execuções passarem os 80 % e for preciso subir ao n8n Pro</span></div>
+  </div>
+  <div class="card">
+    <p><b>Recomendação.</b> Uma solução híbrida: um «porteiro» sem IA vê a caixa de email a cada corrida e só acorda o agente quando há emails novos; o agente coordenador delega a leitura a um sub-agente de triagem (só leitura) e chama os workflows que já existem como ferramentas. Começa-se em modo sombra e a subir por níveis de autonomia, com a Bárbara a confirmar antes de qualquer proposta ser criada.</p>
+    <p>O agente <b>não decide preços, não aprova e não envia nada ao cliente</b>. A validação da Bárbara (WF8) fica exatamente como está.</p>
+  </div>
+  <p class="nota">Pressupostos de custo e esforço são estimativas. A fase 0 (um dia de verificação técnica) serve para confirmar três pontos que a documentação não permite fechar já: formato da tarefa agendada, custo real de uma corrida vazia e o que conta como execução na quota do n8n.</p>
+</section>
+
+<section>
+  <h2>Ponto de partida</h2>
+  <div class="card">
+    <ul>
+      <li><b>Entrada de emails:</b> o workflow «Read Outlook Messages» corre à mão. Lê a Folder 1, chama o WF1 (o LLM extrai, o código valida), grava um lead rascunho, avisa no Slack e cria um draft de resposta que nunca envia.</li>
+      <li><b>Outras caixas:</b> o WF8 lê a aprovação da Bárbara com um poll de 2 minutos (por publicar); o WF6 lê as respostas das transportadoras, mas corre à mão.</li>
+      <li><b>Dedup já resolvido:</b> a tabela <code>leads</code> tem <code>origem_email_id</code> único, por isso um email não gera dois leads.</li>
+      <li><b>Decisão de 8 de outubro:</b> um lead por email é sempre rascunho e a proposta só é criada por uma pessoa. Este plano respeita-a até ao nível 2 e propõe uma decisão explícita se um dia se chegar ao nível 3.</li>
+      <li><b>Registo de IA:</b> o <code>ai_log</code> já guarda modelo e versão do prompt; o agente usa o mesmo.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Agente ou workflow?</h2>
+  <p class="lead">Uma tarefa agendada com passos fixos é, em regra, um workflow. O agente só compensa onde há decisão sobre texto livre. Por isso a pergunta útil é: onde é que o agente acrescenta algo?</p>
+  <div class="card">
+    <ul>
+      <li><b>Onde o agente ajuda:</b> perceber de que tipo é cada email (pedido novo, resposta de transportadora, resposta da Bárbara, resposta de cliente, ruído), lidar com pedidos incompletos e escolher o passo seguinte.</li>
+      <li><b>O que continua a ser código ou pessoas:</b> preços, validação dos campos, aprovação, envio ao cliente, contas, estado das propostas.</li>
+    </ul>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Opção</th><th>O que é</th><th>Vantagens</th><th>Desvantagens</th></tr></thead>
+    <tbody>
+      <tr><td><b>A · Workflow puro</b></td><td>Schedule + Outlook + WF1 + IF, tudo fixo</td><td>Mais barato e previsível; já está quase feito</td><td>Só distingue «é pedido» de «não é»; cada novo tipo de email exige novas regras</td></tr>
+      <tr><td><b>B · Híbrido</b> <span class="pill rec">recomendado</span></td><td>Porteiro sem IA + agente coordenador + sub-agente de triagem; workflows como ferramentas</td><td>Custo de IA quase nulo quando não há emails; superfície de risco pequena; reversível</td><td>Mais peças; depende da maturidade dos agentes do n8n (verificada na fase 0)</td></tr>
+      <tr><td><b>C · Agente puro</b></td><td>O agente lê a caixa e decide tudo, a cada corrida</td><td>Mais flexível</td><td>IA em todas as corridas; mais exposto a instruções escondidas nos emails; mais difícil de testar</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="card">
+    <h3>Duas formas de montar a opção B</h3>
+    <ul>
+      <li><b>B1 · Agente do n8n com tarefa agendada:</b> o agente é um recurso próprio, com instruções, sub-agentes, ferramentas, tarefas agendadas e orçamento. A primeira ferramenta que chama é o porteiro; se não há emails novos, termina.</li>
+      <li><b>B2 · Workflow com nó de agente:</b> o Schedule e o porteiro ficam num workflow e o agente só é chamado se houver emails novos. Corrida vazia sem IA, mas sem as funcionalidades de agente próprio (orçamento mensal, memória).</li>
+    </ul>
+    <p>A fase 0 decide entre B1 e B2. Em ambos, a lógica de negócio fica nos workflows que já existem.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Arquitetura</h2>
+  <p class="lead">A tracejado vermelho, o ponto de decisão humana. O resto do fluxo (WF2 a WF12) mantém-se.</p>
+  <div class="diagram">
+  <svg viewBox="0 0 1000 400" role="img" aria-label="Arquitetura do agente orquestrador">
+    <defs><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6e5130"/></marker></defs>
+    <text x="500" y="20" class="lab">Cada corrida, só em horário de expediente (hora de Lisboa)</text>
+    <rect class="t" x="20" y="36" width="140" height="68" rx="9"/>
+    <text x="90" y="60">Relógio</text><text x="90" y="76" class="small">tarefa agendada</text><text x="90" y="91" class="small">seg a sex, 09h a 18h</text>
+    <rect class="n" x="195" y="36" width="140" height="68" rx="9"/>
+    <text x="265" y="60" style="font-weight:600">Porteiro (WF13)</text><text x="265" y="76" class="small">vê a caixa Outlook</text><text x="265" y="91" class="small">sem IA · salta os já vistos</text>
+    <rect class="n" x="370" y="36" width="130" height="68" rx="9"/>
+    <text x="435" y="66">Há emails</text><text x="435" y="82">novos?</text>
+    <rect class="plan" x="370" y="146" width="130" height="50" rx="9"/>
+    <text x="435" y="167">Termina</text><text x="435" y="183" class="small">sem gastar IA</text>
+    <rect class="llm" x="535" y="36" width="140" height="68" rx="9"/>
+    <text x="605" y="60" style="font-weight:600">Coordenador</text><text x="605" y="76" class="small">agente n8n</text><text x="605" y="91" class="small">decide o passo seguinte</text>
+    <rect class="llm" x="710" y="36" width="140" height="68" rx="9"/>
+    <text x="780" y="60" style="font-weight:600">Sub-agente</text><text x="780" y="76" class="small">triagem, só leitura</text><text x="780" y="91" class="small">classifica cada email</text>
+    <rect class="t" x="875" y="36" width="105" height="68" rx="9"/>
+    <text x="927" y="60">Tipos</text><text x="927" y="76" class="small">pedido · transportadora</text><text x="927" y="91" class="small">Bárbara · cliente · ruído</text>
+    <path class="ar" d="M160 70H193" marker-end="url(#ag)"/>
+    <path class="ar" d="M335 70H368" marker-end="url(#ag)"/>
+    <path class="ar" d="M500 70H533" marker-end="url(#ag)"/>
+    <path class="ar" d="M675 62H708" marker-end="url(#ag)"/>
+    <path class="ar" d="M708 82H677" marker-end="url(#ag)"/>
+    <path class="ar" d="M850 70H873" marker-end="url(#ag)"/>
+    <path class="ar" d="M435 104V144" marker-end="url(#ag)"/>
+    <text x="452" y="128" class="lab" style="text-anchor:start">não</text>
+    <text x="518" y="62" class="lab">sim</text>
+    <text x="500" y="226" class="lab">Ferramentas: workflows já existentes, chamados pelo coordenador (lista fixa, parâmetros validados em código)</text>
+    <path class="ar" d="M605 104V236H85V250" marker-end="url(#ag)"/>
+    <rect class="n" x="20" y="252" width="130" height="68" rx="9"/>
+    <text x="85" y="276" style="font-weight:600">WF1</text><text x="85" y="292">Extrair pedido</text><text x="85" y="307" class="small">LLM + código</text>
+    <rect class="n" x="180" y="252" width="130" height="68" rx="9"/>
+    <text x="245" y="276">Gravar lead</text><text x="245" y="292">rascunho</text><text x="245" y="307" class="small">e avisar no Slack</text>
+    <rect class="gate" x="340" y="252" width="140" height="68" rx="9"/>
+    <text x="410" y="276" style="font-weight:600">Bárbara confirma</text><text x="410" y="292" class="small">1 clique (nível 2)</text><text x="410" y="307" class="small">ou automático (nível 3)</text>
+    <rect class="n" x="510" y="252" width="130" height="68" rx="9"/>
+    <text x="575" y="276" style="font-weight:600">WF2</text><text x="575" y="292">Cria proposta</text><text x="575" y="307" class="small">arranca WF3 e WF4</text>
+    <rect class="n" x="670" y="252" width="130" height="68" rx="9"/>
+    <text x="735" y="276" style="font-weight:600">WF5 a WF8</text><text x="735" y="292">Resumo e aprovação</text><text x="735" y="307" class="small">inalterado</text>
+    <rect class="n" x="830" y="252" width="150" height="68" rx="9"/>
+    <text x="905" y="276" style="font-weight:600">WF9 a WF12</text><text x="905" y="292">Cliente, expedição</text><text x="905" y="307" class="small">inalterado</text>
+    <path class="ar" d="M150 286H178" marker-end="url(#ag)"/>
+    <path class="ar" d="M310 286H338" marker-end="url(#ag)"/>
+    <path class="ard" d="M480 286H508" marker-end="url(#ag)"/>
+    <path class="ar" d="M640 286H668" marker-end="url(#ag)"/>
+    <path class="ar" d="M800 286H828" marker-end="url(#ag)"/>
+    <rect class="band" x="20" y="340" width="960" height="26" rx="8"/>
+    <text x="500" y="357" class="small">Guarda-corpos: orçamento mensal de IA · máximo de iterações · registo de cada decisão · interruptor de segurança · memória desligada no início</text>
+    <rect class="band" x="20" y="372" width="960" height="22" rx="8"/>
+    <text x="500" y="387" class="small">Estado: Supabase (leads com dedup por email, ai_log e uma tabela nova de corridas do agente)</text>
+  </svg>
+  </div>
+  <div class="legend">
+    <span><i class="l-n"></i>Passo automático</span>
+    <span><i class="l-llm"></i>Passo com IA</span>
+    <span><i class="l-gate"></i>Decisão humana</span>
+    <span><i class="l-plan"></i>Fim de corrida</span>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Componente</th><th>Papel</th><th>IA</th><th>O que pode fazer</th></tr></thead>
+    <tbody>
+      <tr><td><b>Relógio</b></td><td>Tarefa agendada com fuso de Lisboa. Exemplo de 2 em 2 horas: <code>0 9-18/2 * * 1-5</code> (09h, 11h, 13h, 15h, 17h). A frequência é um parâmetro.</td><td>Não</td><td>Acordar o coordenador</td></tr>
+      <tr><td><b>Porteiro (WF13, novo)</b></td><td>Lê os não lidos da pasta, ignora os que já estão em <code>leads.origem_email_id</code>, corta o texto a 6.000 caracteres e devolve só o necessário</td><td>Não</td><td>Só ler</td></tr>
+      <tr><td><b>Sub-agente de triagem</b></td><td>Devolve, por email, <code>tipo</code>, <code>confianca</code> e <code>motivo</code> num formato fixo. Modelo Claude Haiku 4.5 via OpenRouter</td><td>Sim</td><td>Só ler; sem ferramentas de ação</td></tr>
+      <tr><td><b>Coordenador</b></td><td>Recebe as classificações e chama a ferramenta certa por tipo. Limite de iterações e orçamento mensal</td><td>Sim</td><td>Só ferramentas da lista fixa</td></tr>
+      <tr><td><b>Ferramentas</b></td><td>WF1, gravar lead, Slack, consulta de estado de uma proposta (leitura) e, nos níveis 2 e 3, o WF2</td><td>Não</td><td>Efeitos externos só no WF2 e no Slack</td></tr>
+      <tr><td><b>Tabela de corridas (migração 0007, nova)</b></td><td>Uma linha por corrida: emails vistos, classificação, decisão, custo estimado, versão da instrução</td><td>Não</td><td>Auditoria e custos reais</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Níveis de autonomia</h2>
+  <p class="lead">Sobe-se um nível de cada vez, só depois de o anterior ter provado que acerta. Os limiares abaixo são propostas, a confirmar contigo e com a Bárbara.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Nível</th><th>O que faz</th><th>Quem decide</th><th>Quando subir</th></tr></thead>
+    <tbody>
+      <tr><td><b>0 · Sombra</b></td><td>Classifica e regista; não age. Compara-se com o que a Bárbara faria</td><td>Pessoas</td><td>Cerca de 2 semanas e acordo com a Bárbara em pelo menos 95 % dos emails</td></tr>
+      <tr><td><b>1 · Rascunho</b></td><td>Como hoje, mas automático: grava o lead rascunho, avisa no Slack e cria o draft de resposta (sem enviar)</td><td>Pessoas</td><td>4 semanas sem lead errado ou pedido perdido</td></tr>
+      <tr><td><b>2 · Confirmação de 1 clique</b> <span class="pill rec">alvo</span></td><td>Quando o pedido está completo, o agente propõe criar a proposta; a Bárbara confirma por um link (mesmo padrão do WF10) e só então corre o WF2</td><td>Bárbara</td><td>Só por decisão tua, depois de várias semanas sem correções</td></tr>
+      <tr><td><b>3 · Automático</b> <span class="pill alerta">decisão explícita</span></td><td>Com campos completos e confiança de pelo menos 0,90, lança o WF2 sozinho, com limite diário (por exemplo 3 propostas)</td><td>Agente</td><td>Não recomendado de início</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="aviso"><b>Atenção ao nível 3.</b> O WF2 arranca o WF3, que envia um email às transportadoras reais antes de a Bárbara ver a proposta. Um engano do agente passaria a sair da empresa. É por isso que o nível 2 é o alvo e o 3 exige uma decisão tua.</p>
+</section>
+
+<section>
+  <h2>Segurança, RGPD e AI Act</h2>
+  <div class="card">
+    <ul>
+      <li><b>Emails são texto não fiável.</b> Um email pode trazer instruções escondidas. O sub-agente de triagem não tem ferramentas de ação; o coordenador só chama workflows de uma lista fixa, com parâmetros validados em código; o texto do email nunca é tratado como instrução; as ferramentas com efeitos externos pedem aprovação.</li>
+      <li><b>Orçamento e limites.</b> Orçamento mensal de IA no próprio agente (proposta: 10 $, com alerta aos 80 %), teto por sessão e número máximo de iterações por corrida. Sem créditos o erro é 402 e o fluxo falha em segurança, como já aconteceu.</li>
+      <li><b>Idempotência.</b> O email só é marcado como lido depois de o lead estar gravado; <code>origem_email_id</code> único evita duplicados se uma corrida for repetida.</li>
+      <li><b>Interruptor de segurança.</b> Despublicar o agente ou desativar a tarefa; proposta adicional: um indicador na base de dados que o porteiro verifica antes de tudo.</li>
+      <li><b>Supervisão humana.</b> O WF8 não muda: só «OK» na primeira linha, de um remetente autorizado, aprova. O agente não escreve em <code>aprovada_por</code>.</li>
+      <li><b>Registo e transparência.</b> Cada corrida fica registada com modelo, versão da instrução e decisões. Instruções do agente versionadas no Git.</li>
+      <li><b>RGPD.</b> O texto do email já vai ao LLM no WF1; mantém-se o pendente de retenção zero no OpenRouter. Memória do agente desligada no início, para guardar menos dados. A purga de leads aos 12 meses mantém-se.</li>
+      <li><b>Horário.</b> A tarefa usa o fuso de Lisboa, por isso acompanha a hora de verão. Emails fora do horário esperam pela primeira corrida da manhã. Feriados não estão tratados; podem ser uma lista no porteiro.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Plano de implementação</h2>
+  <p class="lead">Cada fase leva testes e, antes de a dar por fechada, corre-se a bateria completa. Um commit por workflow no branch <code>agent</code>; quando a bateria passar, Pull Request para <code>dev</code>.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Fase</th><th>Entrega</th><th>Testes</th><th class="num">Esforço</th></tr></thead>
+    <tbody>
+      <tr><td><b>0 · Decisões e verificação</b></td><td>Confirmar: formato e fuso da tarefa agendada; custo real de uma corrida vazia; se as chamadas a ferramentas contam na quota de execuções e se um poll sem resultados não conta; sub-agente a chamar workflows. Escolher B1 ou B2</td><td>Corrida de ensaio sem efeitos externos</td><td class="num">3 h</td></tr>
+      <tr><td><b>1 · Porteiro (WF13)</b></td><td>Workflow só de leitura com dedup e corte de texto; interruptor de segurança</td><td>Caixa vazia, 1 email novo, email repetido, email enorme, interruptor desligado</td><td class="num">4 h</td></tr>
+      <tr><td><b>2 · Triagem em sombra</b></td><td>Sub-agente com saída fixa; migração 0007 (tabela de corridas); nada age</td><td>20 emails sintéticos de todos os tipos, incluindo tentativas de instruções escondidas</td><td class="num">6 h</td></tr>
+      <tr><td><b>3 · Coordenador, nível 1</b></td><td>Coordenador com WF1, gravar lead e Slack; orçamento e limites; tarefa agendada em modo de teste (emails desviados)</td><td>Teste real X6 (email na Folder 1); falha de IA (402); corrida repetida</td><td class="num">8 h</td></tr>
+      <tr><td><b>4 · Nível 2</b></td><td>Link de confirmação de 1 clique que chama o WF2 (padrão do WF10, token com validade)</td><td>Confirmar uma vez, duas vezes, token expirado, pedido incompleto</td><td class="num">6 h</td></tr>
+      <tr><td><b>5 · Roteamento de respostas</b> <span class="pill">opcional</span></td><td>O agente encaminha respostas de transportadoras para o WF6 e a aprovação da Bárbara para o WF8; passa a haver uma só porta de entrada em vez de três</td><td>Respostas com e sem PDF; «OK» e comentários; remetente desconhecido</td><td class="num">8 h</td></tr>
+      <tr><td><b>6 · Produção e observação</b></td><td>Passagem conforme <code>docs/passagem-producao.md</code>; revisão semanal das decisões do agente durante 4 semanas</td><td>Bateria completa; teste ponta a ponta com cliente fictício</td><td class="num">4 h + acompanhamento</td></tr>
+      <tr class="total"><td colspan="3">Núcleo (fases 0 a 4 e 6)</td><td class="num">31 h</td></tr>
+      <tr class="total"><td colspan="3">Com a fase 5</td><td class="num">39 h</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="nota">As horas são de trabalho assistido (construir, testar, documentar) com uma margem de ±30 %. A fase 0 pode alterar as fases seguintes, sobretudo se o B2 for escolhido.</p>
+</section>
+
+<section>
+  <h2>Previsão de custos</h2>
+  <p class="lead">Valores mensais sem IVA. Dólares convertidos a 0,92 € por dólar, como no resto da documentação.</p>
+
+  <div class="card">
+    <h3>Pressupostos</h3>
+    <ul>
+      <li><b>Modelo:</b> Claude Haiku 4.5 via OpenRouter, a 1 $ por milhão de tokens de entrada e 5 $ por milhão de saída.</li>
+      <li><b>Corrida vazia:</b> 4.000 tokens de entrada e 300 de saída (instruções, ferramentas e uma chamada ao porteiro): cerca de 0,0055 $.</li>
+      <li><b>Email novo triado:</b> 3.000 tokens de entrada e 400 de saída: cerca de 0,005 $.</li>
+      <li><b>Pedido tratado pelo coordenador:</b> 15.000 tokens de entrada e 3.000 de saída, por causa das várias voltas: cerca de 0,03 $. A extração do WF1 não entra aqui, porque já está no orçamento de IA existente.</li>
+      <li><b>Dias úteis:</b> 22 por mês, das 09h às 18h.</li>
+    </ul>
+  </div>
+
+  <h3>Custo mensal de IA a mais</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Cenário</th><th>Frequência</th><th class="num">Corridas</th><th class="num">Emails novos</th><th class="num">Pedidos</th><th class="num">Custo</th><th class="num">Teto (×2)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Baixo</b> (volume de hoje)</td><td>4 em 4 h</td><td class="num">66</td><td class="num">100</td><td class="num">2</td><td class="num">0,85 €</td><td class="num">1,70 €</td></tr>
+      <tr><td><b>Médio</b> (produção prevista)</td><td>2 em 2 h</td><td class="num">110</td><td class="num">300</td><td class="num">35</td><td class="num">2,90 €</td><td class="num">5,81 €</td></tr>
+      <tr><td><b>Alto</b></td><td>1 em 1 h</td><td class="num">220</td><td class="num">600</td><td class="num">35</td><td class="num">4,84 €</td><td class="num">9,68 €</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="lead">O teto cobre repetições, voltas extra e emails mais longos. O orçamento mensal configurado no agente (proposta: 10 $) impede que se passe daí.</p>
+
+  <h3>Execuções do n8n</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Cenário</th><th class="num">Execuções a mais</th><th class="num">Total (uso previsto de 1.000 a 1.800 antes do agente)</th><th>Limite do Starter</th></tr></thead>
+    <tbody>
+      <tr><td>Baixo</td><td class="num">72</td><td class="num">1.072 a 1.872</td><td>Dentro dos 80 % (2.000)</td></tr>
+      <tr><td>Médio</td><td class="num">215</td><td class="num">1.215 a 2.015</td><td>No limite superior passa ligeiramente os 80 % (81 %)</td></tr>
+      <tr><td>Alto</td><td class="num">325</td><td class="num">1.325 a 2.125</td><td>No limite superior passa os 80 % (85 %)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="lead">Execuções a mais = corridas do agente + 3 por pedido real (WF1, gravar lead, Slack). Se um poll sem resultados contar como execução, o resultado muda; é um dos pontos da fase 0.</p>
+
+  <h3>Total mensal em produção</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Situação</th><th class="num">Total por mês</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Sem agente (plano atual)</td><td class="num">57 a 59 €</td><td>Inclui Moloni Flex (10,90 €); 47 a 49 € sem Moloni</td></tr>
+      <tr><td>Com agente, cenário baixo</td><td class="num">58 a 61 €</td><td>Fica no n8n Starter</td></tr>
+      <tr><td>Com agente, cenário médio</td><td class="num">60 a 65 €</td><td>Fica no n8n Starter, a vigiar as execuções</td></tr>
+      <tr><td>Com agente, cenário alto</td><td class="num">62 a 69 €</td><td>Fica no Starter com folga curta</td></tr>
+      <tr class="total"><td>Se for preciso o n8n Pro</td><td class="num">+30 €</td><td>Starter 20 €, Pro 50 € (faturação anual). Por exemplo, cenário alto: 92 a 99 €</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Custos únicos</h3>
+      <ul>
+        <li><b>Esforço:</b> 31 a 39 h (ver plano de implementação).</li>
+        <li><b>Créditos de teste de IA:</b> 5 a 10 €, com testes reais comedidos.</li>
+        <li><b>Licenças novas:</b> nenhuma.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>O que pode fazer subir o custo</h3>
+      <ul>
+        <li>Corridas de hora a hora (a corrida vazia é barata, mas soma).</li>
+        <li>Modelo maior para os emails difíceis: custa várias vezes mais por token; só se a triagem falhar com o Haiku.</li>
+        <li>Memória do agente: usa modelos extra para resumir; fica desligada.</li>
+        <li>Mais emails por mês do que o previsto.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Riscos</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Risco</th><th>Como se mitiga</th></tr></thead>
+    <tbody>
+      <tr><td>O agente cria uma proposta errada</td><td>Níveis 0 a 2; o WF2 valida tudo em código; a Bárbara valida no WF8 antes do cliente</td></tr>
+      <tr><td>Instruções escondidas num email</td><td>Triagem sem ferramentas de ação; lista fixa de workflows; parâmetros validados; testes com emails hostis na fase 2</td></tr>
+      <tr><td>Custo de IA descontrolado</td><td>Orçamento mensal no agente, teto por sessão, máximo de iterações, registo por corrida</td></tr>
+      <tr><td>Quota de execuções esgotada</td><td>Porteiro sem IA e dedup; alerta aos 80 % de 2.500; subir ao Pro se for preciso</td></tr>
+      <tr><td>Os agentes do n8n são recentes e podem mudar</td><td>Fase 0; a lógica fica nos workflows; o agente só orquestra, por isso desligá-lo devolve o fluxo manual de hoje</td></tr>
+      <tr><td>Sem créditos no OpenRouter (erro 402)</td><td>Falha em segurança, sem inventar dados; aviso por Mail Error Flow; alerta de saldo</td></tr>
+      <tr><td>Ruído e spam a gastar IA</td><td>Pré-filtro no porteiro (tamanho, remetentes conhecidos) antes de chegar ao sub-agente</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>O que preciso de ti</h2>
+  <div class="card">
+    <ul>
+      <li><b>Frequência:</b> proponho 2 em 2 horas, das 09h às 17h, em dias úteis.</li>
+      <li><b>Nível de arranque:</b> proponho 0 durante 2 semanas e depois 1; o nível 2 como alvo.</li>
+      <li><b>Orçamento mensal máximo de IA:</b> proponho 10 $.</li>
+      <li><b>Caixa a vigiar:</b> só a Folder 1 do Outlook da Bárbara, como hoje, ou outra pasta.</li>
+      <li><b>Fase 5:</b> entra já no plano ou fica para depois do nível 2?</li>
+      <li><b>Nível 3:</b> se um dia for a considerar, fica registado como decisão explícita, por causa do email às transportadoras.</li>
+      <li><b>Integração:</b> confirmo o Pull Request <code>agent</code> para <code>dev</code> quando a bateria completa passar.</li>
+    </ul>
+  </div>
+  <p class="lead">Fontes de preços: <a href="https://n8n.io/pricing">n8n.io/pricing</a> (Starter 20 € e Pro 50 € por mês com faturação anual, 2.500 e 10.000 execuções) e <a href="https://openrouter.ai/anthropic/claude-haiku-4-5/pricing">OpenRouter, Claude Haiku 4.5</a> (1 $ e 5 $ por milhão de tokens). Supabase Pro e Moloni Flex vêm do resumo de custos já existente. Confirmar nos sites dos fornecedores antes de decidir.</p>
+</section>
+
+<footer>Automação de propostas comerciais · branch agent · plano do agente orquestrador, versão 0.1 · 9 de outubro de 2026</footer>
+</div>
+</body>
+</html>
