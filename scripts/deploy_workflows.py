@@ -212,13 +212,15 @@ def save(api, existing, d):
         return api.call("POST", "/workflows", b)["id"], "criado (definições reduzidas)"
 
 
-def run(cfg, dry_run=False, only=None, api=None, out_dir=None):
+def run(cfg, dry_run=False, only=None, api=None, out_dir=None, progress=None):
     wfs = load_workflows()
     check_config(cfg, wfs)
     seq = order(wfs)
     if only:
         seq = [n for n in seq if n in only or any(only_n in n for only_n in only)]
     ids, report = {}, []
+    total = len(seq)
+    say = progress or (lambda *_: None)
     existing = {}
     if not dry_run:
         existing = {w["name"]: w["id"] for w in api.list_all()}
@@ -227,6 +229,7 @@ def run(cfg, dry_run=False, only=None, api=None, out_dir=None):
         if n in existing:
             ids[n] = existing[n]
     for i, name in enumerate(seq):
+        say(i, total, name, "a instalar")
         d = apply_config(json.loads(json.dumps(wfs[name])), cfg)
         publish = d.pop("_publish")
         d.pop("_file")
@@ -243,6 +246,7 @@ def run(cfg, dry_run=False, only=None, api=None, out_dir=None):
                 (Path(out_dir) / (re.sub(r"\W+", "_", name) + ".json")).write_text(
                     json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
             report.append((name, "simulado", ids[name], publish))
+            say(i + 1, total, name, "simulado")
             continue
         wid, estado = save(api, existing, d)
         ids[name] = wid
@@ -251,6 +255,7 @@ def run(cfg, dry_run=False, only=None, api=None, out_dir=None):
             api.call("POST", "/workflows/%s/activate" % wid)
             estado += ", ativo"
         report.append((name, estado, wid, publish))
+        say(i + 1, total, name, estado)
     return report
 
 
