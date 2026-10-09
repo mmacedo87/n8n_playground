@@ -1,0 +1,24 @@
+{
+  "n8n_url": "https://NOME-DA-EMPRESA.app.n8n.cloud",
+  "emails": {
+    "erros": "quem recebe os avisos de erro",
+    "confirmacao_pedido": "quem recebe a confirmação de cada pedido (WF2)",
+    "cotacoes": "email da empresa que recebe o pedido de cotação (transportadoras em BCC)",
+    "validacao_barbara": "email da Bárbara (resumo para validação)",
+    "cc_barbara": "email da Bárbara (em cópia nas propostas ao cliente)",
+    "madalena": "email da Madalena (aviso de expedição)",
+    "barbara": "email da Bárbara (aviso de expedição)",
+    "aprovadores": ["emails autorizados a aprovar por resposta (WF8)"]
+  },
+  "slack_canais": {
+    "propostas": "ID do canal de novas propostas",
+    "cotacoes": "ID do canal de pedidos de cotação",
+    "estado": "ID do canal de estado"
+  },
+  "credenciais": {
+    "microsoftOutlookOAuth2Api": "ID da credencial Outlook criada no destino",
+    "slackApi": "ID da credencial Slack",
+    "supabaseApi": "ID da credencial Supabase",
+    "openRouterApi": "ID da credencial OpenRouter"
+  }
+}

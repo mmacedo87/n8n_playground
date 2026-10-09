@@ -1,0 +1,419 @@
+{
+  "name": "WF8 - Aprovação da Bárbara por email",
+  "description": "Lê na caixa Outlook a resposta da Bárbara ao email de validação do WF5. Se a primeira linha for OK/aprovo, a proposta em validação passa a aprovada (com quem e quando); qualquer outro texto é só um aviso no Slack e nunca aprova. Humano sempre no loop.",
+  "nodes": [
+    {
+      "name": "Resposta recebida na caixa",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "notes": "Vê emails novos com PRP- no assunto a cada 2 minutos. A decisão é toda tomada no nó seguinte; este nó não altera nada na caixa.",
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 2,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "event": "messageReceived",
+        "output": "fields",
+        "fields": [
+          "subject",
+          "from",
+          "body",
+          "bodyPreview",
+          "receivedDateTime"
+        ],
+        "filters": {
+          "readStatus": "both",
+          "custom": "contains(subject,'PRP-')"
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "name": "Interpretar resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        80
+      ],
+      "notes": "DEV: AUTORIZADOS tem o email de teste. Em produção pôr aqui só o email da Bárbara (o mesmo de destinatario_validacao no WF5). Só aprova se a primeira linha for exatamente OK/aprovo/aprovado/aprovada; qualquer outro texto é tratado como comentário e NÃO aprova.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const AUTORIZADOS = ['REDACTED@example.invalid'];\nconst m = $input.first().json;\nconst assunto = String(m.subject || '');\nconst de = String(((m.from || {}).emailAddress || {}).address || '').toLowerCase();\nconst cod = ((assunto.match(/PRP-\\d{4}-\\d{4}/i) || [])[0] || '').toUpperCase();\nconst html = String((m.body && m.body.content) || m.bodyPreview || '');\nconst texto = html.replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<br\\s*\\/?>|<\\/p>|<\\/div>|<\\/tr>/gi, '\\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');\nconst linhas = texto.split('\\n').map(l => l.replace(/\\s+/g, ' ').trim()).filter(Boolean);\nlet primeira = linhas[0] || '';\nif (/^(de|from|enviado|sent|on .* wrote|em .* escreveu)\\s*:/i.test(primeira)) primeira = '';\nconst base = { codigo: cod, remetente: de, assunto, comentario: primeira.slice(0, 300) };\nif (!cod) return [{ json: { ...base, acao: 'ignorar', motivo: 'sem código PRP' } }];\nif (!/^\\s*(re|res|rv)\\s*:/i.test(assunto)) return [{ json: { ...base, acao: 'ignorar', motivo: 'não é uma resposta' } }];\nif (!AUTORIZADOS.includes(de)) return [{ json: { ...base, acao: 'ignorar', motivo: 'remetente não autorizado' } }];\nconst aprova = /^(ok|aprovo|aprovado|aprovada)\\s*[.!]?$/i.test(primeira);\nreturn [{ json: { ...base, acao: aprova ? 'aprovar' : 'comentario', motivo: aprova ? 'resposta OK' : 'resposta com comentário' } }];"
+      }
+    },
+    {
+      "name": "É aprovação ou comentário?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.acao }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "rightValue": "ignorar"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Ler proposta",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        80
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "name": "Decidir",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        80
+      ],
+      "notes": "Só aprova uma proposta que esteja em_validacao. Comentários nunca alteram o estado: viram um aviso no Slack para o humano tratar.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $('Interpretar resposta').first().json;\nconst p = $input.first().json || {};\nconst cod = r.codigo;\nif (!p.id) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Recebi uma resposta a ' + cod + ' mas a proposta não existe.' } }];\nif (r.acao === 'comentario') return [{ json: { ...r, aplicar: false, slack_texto: '💬 A Bárbara respondeu a *' + cod + '* com um comentário (a proposta continua em validação): \"' + r.comentario + '\"' } }];\nif (p.estado !== 'em_validacao') return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* está no estado ' + p.estado + ' (e não em validação).' } }];\nreturn [{ json: { ...r, aplicar: true, aprovada_por: r.remetente, aprovada_em: new Date().toISOString(), slack_texto: '✅ Proposta *' + cod + '* aprovada por ' + r.remetente + '. O envio ao cliente segue (WF9); falha se ainda não houver preço final.' } }];"
+      }
+    },
+    {
+      "name": "Aplicar aprovação?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.aplicar }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Marcar proposta como aprovada",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        0
+      ],
+      "notes": "O filtro por estado=em_validacao impede aprovar duas vezes ou aprovar uma proposta que mudou entretanto.",
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Decidir\").first().json.codigo }}"
+            },
+            {
+              "keyName": "estado",
+              "condition": "eq",
+              "keyValue": "em_validacao"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "aprovada"
+            },
+            {
+              "fieldId": "aprovada_por",
+              "fieldValue": "={{ $(\"Decidir\").first().json.aprovada_por }}"
+            },
+            {
+              "fieldId": "aprovada_em",
+              "fieldValue": "={{ $(\"Decidir\").first().json.aprovada_em }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "name": "Avisar Slack: resultado da resposta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        80
+      ],
+      "executeOnce": true,
+      "notes": "Aviso no Slack (#novas-propostas). Não espera: uma falha do Slack não desfaz a aprovação.",
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $(\"Decidir\").first().json.slack_texto }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      }
+    },
+    {
+      "name": "Chamar WF9 (enviar proposta ao cliente)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1400,
+        300
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:WF9 - Envio da proposta ao cliente}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "codigo": "={{ $('Marcar proposta como aprovada').first().json.codigo }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "notes": "Depois da aprovação, envia a proposta ao cliente (WF9). Não espera. O WF9 recusa propostas sem preço final e o erro chega pelo Mail Error Flow."
+    }
+  ],
+  "connections": {
+    "Resposta recebida na caixa": {
+      "main": [
+        [
+          {
+            "node": "Interpretar resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar resposta": {
+      "main": [
+        [
+          {
+            "node": "É aprovação ou comentário?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É aprovação ou comentário?": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta": {
+      "main": [
+        [
+          {
+            "node": "Decidir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir": {
+      "main": [
+        [
+          {
+            "node": "Aplicar aprovação?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aplicar aprovação?": {
+      "main": [
+        [
+          {
+            "node": "Marcar proposta como aprovada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar Slack: resultado da resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar proposta como aprovada": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: resultado da resposta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Chamar WF9 (enviar proposta ao cliente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "tags": [
+    {
+      "name": "propostas"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "4dU064sO0xcxkPTc",
+    "sourceVersionId": "350ad425-1fa2-4f61-9379-0d4d36b890fa",
+    "exportedAt": "2026-10-09",
+    "sanitized": "ids de credenciais, emails e errorWorkflow removidos"
+  }
+}

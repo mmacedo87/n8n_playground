@@ -1,0 +1,148 @@
+{
+  "name": "WF2 Error Flow - Pedido de proposta",
+  "description": "Workflow de erro do WF2: quando o WF2 falha, envia um aviso que diz se a proposta chegou a ser gravada e que o WF3 (pedido de cotações) NÃO foi chamado. Destinatário no nó Preparar aviso do WF2.",
+  "nodes": [
+    {
+      "id": "fb7d7f88-6d79-4e1d-85a0-567c59de64b1",
+      "name": "Quando o WF2 falha",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f895aa39-7b3d-44c3-8a25-c310dc681880",
+      "name": "Preparar aviso do WF2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a-dest",
+              "name": "destinatario",
+              "value": "REDACTED@example.invalid",
+              "type": "string"
+            },
+            {
+              "id": "a-quando",
+              "name": "quando",
+              "value": "={{ $now.setZone(\"Europe/Lisbon\").toFormat(\"dd/MM/yyyy HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "a-no",
+              "name": "ultimoNo",
+              "value": "={{ $json.execution?.lastNodeExecuted ?? \"(desconhecido)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a-exec",
+              "name": "execucaoId",
+              "value": "={{ $json.execution?.id ?? \"(sem id)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a-url",
+              "name": "execucaoUrl",
+              "value": "={{ $json.execution?.url ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a-erro",
+              "name": "mensagemErro",
+              "value": "={{ String($json.execution?.error?.message ?? \"(sem mensagem)\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}",
+              "type": "string"
+            },
+            {
+              "id": "a-codigo",
+              "name": "codigoProposta",
+              "value": "={{ (String($json.execution?.error?.message ?? \"\").match(/PRP-[0-9]{4}-[0-9]{4}/) || [\"\"])[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "a-situacao",
+              "name": "situacao",
+              "value": "={{ $json.execution?.lastNodeExecuted === \"Pedir cotações de frete (WF3)\" ? \"A proposta foi registada e confirmada, mas o WF3 (pedido de cotações às transportadoras) não arrancou. Peça as cotações manualmente com o formulário do WF3 e o código da proposta.\" : (String($json.execution?.error?.message ?? \"\").match(/PRP-[0-9]{4}-[0-9]{4}/) ? \"A proposta \" + String($json.execution.error.message).match(/PRP-[0-9]{4}-[0-9]{4}/)[0] + \" foi gravada mas o WF2 não terminou. O WF3 NÃO foi chamado, por isso nenhuma transportadora foi contactada. Não submeta o pedido de novo; peça as cotações manualmente com o formulário do WF3 e este código.\" : \"O WF2 falhou antes de gravar qualquer proposta. O WF3 NÃO foi chamado, por isso nenhuma transportadora foi contactada.\") }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "notes": "Altere aqui o email que recebe os avisos (campo destinatario)."
+    },
+    {
+      "id": "50587025-26c3-4df0-8215-7420dc5d9b71",
+      "name": "Enviar aviso do WF2",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.destinatario }}",
+        "subject": "=[ERRO WF2] Pedido de proposta falhou{{ $json.codigoProposta ? \" – \" + $json.codigoProposta : \"\" }} – WF3 não foi chamado",
+        "bodyContent": "=<p><b>O WF2 (pedido de proposta) falhou.</b></p><p>{{ $json.situacao }}</p><ul><li><b>Quando:</b> {{ $json.quando }}</li><li><b>Último nó executado:</b> {{ $json.ultimoNo }}</li><li><b>Execução:</b> {{ $json.execucaoId }}</li></ul><p><b>Erro:</b> {{ $json.mensagemErro }}</p><p><a href=\"{{ $json.execucaoUrl }}\">Abrir a execução no n8n</a></p>",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "saveToSentItems": true
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Quando o WF2 falha": {
+      "main": [
+        [
+          {
+            "node": "Preparar aviso do WF2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar aviso do WF2": {
+      "main": [
+        [
+          {
+            "node": "Enviar aviso do WF2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "Xs4ZlE9DSqNifiPk",
+    "sourceVersionId": "20392884-ef85-423d-8390-d1ca42f958b5",
+    "exportedAt": "2026-10-07",
+    "sanitized": "destinatario, ids de credenciais e webhookIds removidos"
+  }
+}

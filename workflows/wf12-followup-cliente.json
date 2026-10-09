@@ -1,0 +1,450 @@
+{
+  "name": "WF12 - Follow-up ao cliente",
+  "description": "Depois de a Madalena preencher o plano de expedição, envia ao cliente (Bárbara em CC) a proposta final com o modo de expedição, recolha e chegada estimada; marca a proposta e a expedição concluídas. Entrada: codigo. Só envia uma vez.",
+  "nodes": [
+    {
+      "name": "Chamado por outro workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "codigo"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Normalizar código",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        128
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "codigo",
+              "type": "string",
+              "value": "={{ String($json.codigo ?? \"\").trim().toUpperCase().slice(0, 20) }}"
+            },
+            {
+              "id": "c2",
+              "name": "destinatario_teste",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "c3",
+              "name": "cc_barbara",
+              "type": "string",
+              "value": "REDACTED@example.invalid"
+            }
+          ]
+        }
+      },
+      "notes": "DEV: destinatario_teste preenchido desvia o email do cliente. Em produção esvaziar destinatario_teste e pôr em cc_barbara o email da Bárbara."
+    },
+    {
+      "name": "Ler proposta",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        128
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Ler plano de expedição",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        720,
+        128
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "expedicoes",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "proposta_id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Ler proposta\").first().json.id ?? \"00000000-0000-0000-0000-000000000000\" }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "name": "Ler cotação escolhida",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        944,
+        128
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "cotacoes_frete",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Ler proposta\").first().json.frete_escolhido_id ?? \"00000000-0000-0000-0000-000000000000\" }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "name": "Montar email final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Normalizar código').first().json;\nconst p = $('Ler proposta').first().json;\nconst e = $('Ler plano de expedição').first().json;\nconst f = $('Ler cotação escolhida').first().json || {};\nif (!p || !p.id) throw new Error('Follow-up: proposta ' + cfg.codigo + ' não encontrada.');\nif (p.estado !== 'em_expedicao') throw new Error('Follow-up: a proposta ' + p.codigo + ' está no estado ' + p.estado + ' e só se envia o follow-up no estado em_expedicao.');\nif (p.followup_enviado_em) throw new Error('Follow-up: a proposta ' + p.codigo + ' já teve o follow-up enviado em ' + p.followup_enviado_em + '. Nada foi reenviado.');\nif (!e || !e.id || e.estado !== 'planeada') throw new Error('Follow-up: a proposta ' + p.codigo + ' ainda não tem o plano de expedição preenchido.');\nconst emailCliente = String(p.contacto_email || '').trim();\nif (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(emailCliente)) throw new Error('Follow-up: a proposta ' + p.codigo + ' não tem um email de cliente válido.');\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst teste = !!cfg.destinatario_teste;\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nconst modos = pt ? { rodoviario: 'Rodoviário', maritimo: 'Marítimo', aereo: 'Aéreo', ferroviario: 'Ferroviário' } : { rodoviario: 'Road', maritimo: 'Sea', aereo: 'Air', ferroviario: 'Rail' };\nconst fmt = (d) => { const x = new Date(d + 'T00:00:00Z'); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); };\nlet chegada = null;\nif (e.data_recolha && f.transito_dias != null) { const x = new Date(e.data_recolha + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + Number(f.transito_dias)); chegada = x.toISOString().slice(0, 10); }\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst valor = p.preco_final != null ? Number(p.preco_final).toFixed(2) + ' ' + (p.moeda || 'EUR') : '-';\nconst T = pt\n  ? { assunto: 'Encomenda confirmada - plano de expedição', ola: 'Exmos. Senhores,', intro: 'Obrigado pela confirmação. Segue a proposta final da encomenda <b>' + esc(p.codigo) + '</b>, com o plano de expedição.', prod: 'Produto', q: 'Quantidade', inc: 'Incoterm', dest: 'Destino', tot: 'Valor total', exp: 'Modo de expedição', rec: 'Recolha prevista', prodDias: 'Tempo de produção', dias: ' dias', cheg: 'Chegada estimada', notas: 'Notas', fim: 'Ficamos ao dispor para qualquer esclarecimento.', cump: 'Com os melhores cumprimentos,', sist: 'Equipa comercial (mensagem enviada com o apoio de um sistema automático, revista pela nossa equipa)', teste: 'Email de teste.' }\n  : { assunto: 'Order confirmed - shipping plan', ola: 'Dear Sir or Madam,', intro: 'Thank you for your confirmation. Please find the final proposal for order <b>' + esc(p.codigo) + '</b>, with the shipping plan.', prod: 'Product', q: 'Quantity', inc: 'Incoterm', dest: 'Destination', tot: 'Total amount', exp: 'Shipping mode', rec: 'Planned pick-up', prodDias: 'Production time', dias: ' days', cheg: 'Estimated arrival', notas: 'Notes', fim: 'Please do not hesitate to contact us if you need any clarification.', cump: 'Best regards,', sist: 'Sales team (sent with the support of an automated system, reviewed by our team)', teste: 'Test email.' };\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] ' + T.assunto;\nconst corpo = (teste ? '<p><i>' + T.teste + '</i></p>' : '') + '<p>' + T.ola + '</p><p>' + T.intro + '</p><table>' + linha(T.prod, p.produto) + linha(T.q, p.quantidade + ' ' + (p.unidade || 'kg')) + linha(T.inc, p.incoterm) + linha(T.dest, p.destino_pais + (p.destino_local ? ' - ' + p.destino_local : '')) + linha(T.tot, valor) + linha(T.exp, modos[e.modo] || e.modo) + linha(T.rec, e.data_recolha ? fmt(e.data_recolha) : '-') + linha(T.prodDias, e.tempo_producao_dias != null ? e.tempo_producao_dias + T.dias : '-') + (chegada ? linha(T.cheg, fmt(chegada)) : '') + (e.notas ? linha(T.notas, e.notas) : '') + '</table><p>' + T.fim + '</p><p>' + T.cump + '<br>' + T.sist + '</p>';\nconst slack = '📦 Follow-up da proposta *' + p.codigo + '* enviado ao cliente · ' + (modos[e.modo] || e.modo) + ' · recolha ' + (e.data_recolha ? fmt(e.data_recolha) : '-') + (teste ? ' · (teste, redirecionado)' : '');\nreturn [{ json: { codigo: p.codigo, proposta_id: p.id, expedicao_id: e.id, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : emailCliente, cc: cfg.cc_barbara, slack_texto: slack } }];"
+      }
+    },
+    {
+      "name": "Enviar proposta final ao cliente",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        128
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.para }}",
+        "subject": "={{ $json.assunto }}",
+        "bodyContent": "={{ $json.corpo_html }}",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "ccRecipients": "={{ $json.cc || $json.para }}"
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "name": "Marcar proposta como concluída",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Montar email final\").first().json.codigo }}"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "concluida"
+            },
+            {
+              "fieldId": "followup_enviado_em",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "followup_enviado_em impede um segundo envio."
+    },
+    {
+      "name": "Marcar expedição como concluída",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "expedicoes",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Montar email final\").first().json.expedicao_id }}"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "concluida"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "name": "Avisar Slack: follow-up enviado",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        128
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $(\"Montar email final\").first().json.slack_texto }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "executeOnce": true,
+      "notes": "Aviso curto no Slack (#novas-propostas). Não espera."
+    }
+  ],
+  "connections": {
+    "Chamado por outro workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalizar código",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar código": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta": {
+      "main": [
+        [
+          {
+            "node": "Ler plano de expedição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler plano de expedição": {
+      "main": [
+        [
+          {
+            "node": "Ler cotação escolhida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler cotação escolhida": {
+      "main": [
+        [
+          {
+            "node": "Montar email final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar email final": {
+      "main": [
+        [
+          {
+            "node": "Enviar proposta final ao cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar proposta final ao cliente": {
+      "main": [
+        [
+          {
+            "node": "Marcar proposta como concluída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar proposta como concluída": {
+      "main": [
+        [
+          {
+            "node": "Marcar expedição como concluída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar expedição como concluída": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: follow-up enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    {
+      "name": "subworkflow"
+    },
+    {
+      "name": "propostas"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "ETUqp17gsET6Vc5A",
+    "sourceVersionId": "7cb828d8-e7d2-45b0-8d55-5036858b4a11",
+    "exportedAt": "2026-10-09",
+    "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
+  }
+}

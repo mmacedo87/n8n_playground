@@ -1,0 +1,795 @@
+{
+  "name": "WF2 - Pedido de proposta",
+  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas. Depois de gravar, confirmar e devolver, arranca o WF3 (pedido de cotações de frete) sem esperar por ele; se o WF2 falhar antes, o WF3 não é chamado e o WF2 Error Flow avisa.",
+  "nodes": [
+    {
+      "id": "3b60d028-511f-47b4-a364-82b1948c7c30",
+      "name": "Formulário de pedido de proposta",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Pedido de proposta",
+        "formDescription": "Preencha os dados do pedido. Todos os campos são obrigatórios.",
+        "responseMode": "onReceived",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "cliente",
+              "fieldLabel": "Cliente",
+              "fieldType": "text",
+              "placeholder": "Nome da empresa",
+              "requiredField": true
+            },
+            {
+              "fieldName": "produto",
+              "fieldLabel": "Produto",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Granulado de cortiça"
+                  },
+                  {
+                    "option": "Pó de cortiça"
+                  },
+                  {
+                    "option": "Aglomerado de cortiça"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "densidade",
+              "fieldLabel": "Densidade",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "60-80 kg/m3"
+                  },
+                  {
+                    "option": "80-100 kg/m3"
+                  },
+                  {
+                    "option": "100-120 kg/m3"
+                  },
+                  {
+                    "option": "120-150 kg/m3"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "granulometria",
+              "fieldLabel": "Granulometria",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "0-1 mm"
+                  },
+                  {
+                    "option": "1-2 mm"
+                  },
+                  {
+                    "option": "2-4 mm"
+                  },
+                  {
+                    "option": "4-8 mm"
+                  },
+                  {
+                    "option": "8-15 mm"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "quantidade",
+              "fieldLabel": "Quantidade (kg)",
+              "fieldType": "number",
+              "placeholder": "ex. 1000",
+              "requiredField": true
+            },
+            {
+              "fieldName": "embalagem",
+              "fieldLabel": "Embalagem",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sacos 25 kg em palete"
+                  },
+                  {
+                    "option": "Big bag 1 m3"
+                  },
+                  {
+                    "option": "A granel"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "incoterm",
+              "fieldLabel": "Incoterm",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "EXW"
+                  },
+                  {
+                    "option": "FCA"
+                  },
+                  {
+                    "option": "FAS"
+                  },
+                  {
+                    "option": "FOB"
+                  },
+                  {
+                    "option": "CFR"
+                  },
+                  {
+                    "option": "CIF"
+                  },
+                  {
+                    "option": "CPT"
+                  },
+                  {
+                    "option": "CIP"
+                  },
+                  {
+                    "option": "DAP"
+                  },
+                  {
+                    "option": "DPU"
+                  },
+                  {
+                    "option": "DDP"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "destino",
+              "fieldLabel": "Destino (país)",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "ES - Espanha"
+                  },
+                  {
+                    "option": "FR - França"
+                  },
+                  {
+                    "option": "DE - Alemanha"
+                  },
+                  {
+                    "option": "IT - Itália"
+                  },
+                  {
+                    "option": "NL - Países Baixos"
+                  },
+                  {
+                    "option": "BE - Bélgica"
+                  },
+                  {
+                    "option": "GB - Reino Unido"
+                  },
+                  {
+                    "option": "US - Estados Unidos"
+                  },
+                  {
+                    "option": "BR - Brasil"
+                  },
+                  {
+                    "option": "CN - China"
+                  },
+                  {
+                    "option": "JP - Japão"
+                  },
+                  {
+                    "option": "MA - Marrocos"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Registar pedido",
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Pedido registado. Vai receber um email de confirmação com o número da proposta."
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "5a150f3c-4254-415e-a780-98b7b1c926b0",
+      "name": "Normalizar pedido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        96
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n-cliente",
+              "name": "cliente",
+              "type": "string",
+              "value": "={{ String($json.cliente ?? $json.Cliente ?? \"\").trim().slice(0, 200) }}"
+            },
+            {
+              "id": "n-produto",
+              "name": "produto",
+              "type": "string",
+              "value": "={{ String($json.produto ?? $json.Produto ?? \"\").trim().slice(0, 100) }}"
+            },
+            {
+              "id": "n-densidade",
+              "name": "densidade",
+              "type": "string",
+              "value": "={{ String($json.densidade ?? $json.Densidade ?? \"\").trim().slice(0, 100) }}"
+            },
+            {
+              "id": "n-granulometria",
+              "name": "granulometria",
+              "type": "string",
+              "value": "={{ String($json.granulometria ?? $json.Granulometria ?? \"\").trim().slice(0, 100) }}"
+            },
+            {
+              "id": "n-quantidade",
+              "name": "quantidade",
+              "type": "number",
+              "value": "={{ Number($json.quantidade ?? $json[\"Quantidade (kg)\"]) }}"
+            },
+            {
+              "id": "n-embalagem",
+              "name": "embalagem",
+              "type": "string",
+              "value": "={{ String($json.embalagem ?? $json.Embalagem ?? \"\").trim().slice(0, 100) }}"
+            },
+            {
+              "id": "n-incoterm",
+              "name": "incoterm",
+              "type": "string",
+              "value": "={{ String($json.incoterm ?? $json.Incoterm ?? \"\").trim().toUpperCase().slice(0, 10) }}"
+            },
+            {
+              "id": "n-destino",
+              "name": "destino",
+              "type": "string",
+              "value": "={{ String($json.destino ?? $json[\"Destino (país)\"] ?? \"\").split(\" - \")[0].trim().toUpperCase().slice(0, 10) }}"
+            },
+            {
+              "id": "n-destinatario",
+              "name": "destinatario_confirmacao",
+              "type": "string",
+              "value": "REDACTED@example.invalid"
+            }
+          ]
+        }
+      },
+      "notes": "Junta os dois modos de entrada (formulário e chamada por outro workflow). destinatario_confirmacao é o email que recebe a confirmação."
+    },
+    {
+      "id": "52de7d69-761f-4f5a-9a40-0203a7e68ab3",
+      "name": "Dados válidos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "f39c41c9-4ddb-48df-b7c1-d56e230bce27",
+      "name": "Criar proposta no Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "propostas",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "cliente",
+              "fieldValue": "={{ $json.cliente }}"
+            },
+            {
+              "fieldId": "produto",
+              "fieldValue": "={{ $json.produto }}"
+            },
+            {
+              "fieldId": "densidade",
+              "fieldValue": "={{ $json.densidade }}"
+            },
+            {
+              "fieldId": "granulometria",
+              "fieldValue": "={{ $json.granulometria }}"
+            },
+            {
+              "fieldId": "quantidade",
+              "fieldValue": "={{ $json.quantidade }}"
+            },
+            {
+              "fieldId": "embalagem",
+              "fieldValue": "={{ $json.embalagem }}"
+            },
+            {
+              "fieldId": "incoterm",
+              "fieldValue": "={{ $json.incoterm }}"
+            },
+            {
+              "fieldId": "destino_pais",
+              "fieldValue": "={{ $json.destino }}"
+            }
+          ]
+        }
+      },
+      "retryOnFail": false,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "adc2b975-81ea-4426-a490-fe4cdc17e37e",
+      "name": "Enviar confirmação do pedido",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $(\"Normalizar pedido\").item.json.destinatario_confirmacao }}",
+        "subject": "=Pedido de proposta registado – {{ $json.codigo }} – {{ String($json.cliente ?? \"\").slice(0, 60) }}",
+        "bodyContent": "={{ ((e) => `<p>Olá,</p><p>O pedido de proposta <b>${e($json.codigo)}</b> foi registado no sistema de propostas. Seguem os dados recebidos:</p><ul><li><b>Número:</b> ${e($json.codigo)}</li><li><b>Cliente:</b> ${e($json.cliente)}</li><li><b>Produto:</b> ${e($json.produto)}</li><li><b>Densidade:</b> ${e($json.densidade)}</li><li><b>Granulometria:</b> ${e($json.granulometria)}</li><li><b>Quantidade:</b> ${e($json.quantidade)} kg</li><li><b>Embalagem:</b> ${e($json.embalagem)}</li><li><b>Incoterm:</b> ${e($json.incoterm)}</li><li><b>Destino:</b> ${e($json.destino_pais)}</li></ul><p>Próximo passo: a equipa comercial revê o pedido antes de qualquer proposta ser enviada ao cliente.</p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática, não responda a este email)</p>`)((s) => String(s ?? \"\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\")) }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "id": "fe0dbbb9-3b8b-44ff-bacf-4a6d09bb349c",
+      "name": "Devolver proposta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r-ok",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "r-codigo",
+              "name": "codigo",
+              "value": "={{ $(\"Criar proposta no Supabase\").item.json.codigo }}",
+              "type": "string"
+            },
+            {
+              "id": "r-id",
+              "name": "proposta_id",
+              "value": "={{ $(\"Criar proposta no Supabase\").item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "r-estado",
+              "name": "estado",
+              "value": "={{ $(\"Criar proposta no Supabase\").item.json.estado }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "08aecf53-9b41-4c50-b31c-5d9803ee8aed",
+      "name": "Pedido inválido",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        672,
+        192
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Pedido de proposta inválido: cliente=\"{{ $json.cliente }}\", produto=\"{{ $json.produto }}\", quantidade={{ $json.quantidade }}, incoterm=\"{{ $json.incoterm }}\", destino=\"{{ $json.destino }}\""
+      }
+    },
+    {
+      "id": "c51c08bf-5c2d-454b-9b9f-9f0d9746e3bc",
+      "name": "Chamado pelo workflow principal",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        192
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "cliente",
+              "type": "string"
+            },
+            {
+              "name": "produto",
+              "type": "string"
+            },
+            {
+              "name": "densidade",
+              "type": "string"
+            },
+            {
+              "name": "granulometria",
+              "type": "string"
+            },
+            {
+              "name": "quantidade",
+              "type": "number"
+            },
+            {
+              "name": "embalagem",
+              "type": "string"
+            },
+            {
+              "name": "incoterm",
+              "type": "string"
+            },
+            {
+              "name": "destino",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fa83049c-cdf3-4eb6-8e06-c239cebcb6f7",
+      "name": "Email falhou depois de gravar",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        192
+      ],
+      "parameters": {
+        "errorMessage": "=Proposta {{ $(\"Criar proposta no Supabase\").item.json.codigo }} gravada, mas o envio do email de confirmação falhou. Não submeter de novo o pedido. Erro: {{ $json.error?.message ?? $json.error ?? \"desconhecido\" }}",
+        "errorType": "errorMessage"
+      },
+      "notes": "A proposta já foi gravada mas o email de confirmação falhou. A mensagem de erro indica o código para NÃO voltar a submeter o pedido."
+    },
+    {
+      "id": "c27caac1-0310-44e5-bb61-bc097c25655c",
+      "name": "Pedir cotações de frete (WF3)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:WF3 - Pedido de cotação de frete}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "codigo",
+              "id": "codigo",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "codigo": "={{ $json.codigo }}"
+          }
+        }
+      },
+      "notes": "Só corre quando tudo o resto do WF2 correu bem. Não espera pelo WF3: o resultado do WF2 não depende dele e os erros do WF3 têm o seu próprio aviso."
+    },
+    {
+      "id": "c8a4f7e2-6d1b-4a35-9f0e-3b7d2a1c5e90",
+      "name": "Enriquecer proposta (WF4)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:WF4 - Enriquecimento de proposta}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "codigo",
+              "id": "codigo",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "codigo": "={{ $json.codigo }}"
+          }
+        }
+      },
+      "notes": "Corre em paralelo com o WF3. Não espera: o resultado do WF2 não depende dele e os erros do WF4 têm o seu próprio aviso."
+    },
+    {
+      "id": "471eac1b-d135-4fd0-9a9a-d9de056c8c27",
+      "name": "Avisar Slack: nova proposta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ \"🆕 Nova proposta *\" + $(\"Criar proposta no Supabase\").item.json.codigo + \"* · \" + $(\"Criar proposta no Supabase\").item.json.cliente + \" · \" + $(\"Criar proposta no Supabase\").item.json.produto + \" · \" + $(\"Criar proposta no Supabase\").item.json.quantidade + \" kg · \" + $(\"Criar proposta no Supabase\").item.json.incoterm + \" · destino \" + $(\"Criar proposta no Supabase\").item.json.destino_pais }}"
+          }
+        }
+      },
+      "notes": "Aviso curto no Slack (#novas-propostas). Corre em paralelo e não espera: uma falha do Slack não pára o WF2."
+    }
+  ],
+  "connections": {
+    "Formulário de pedido de proposta": {
+      "main": [
+        [
+          {
+            "node": "Normalizar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar pedido": {
+      "main": [
+        [
+          {
+            "node": "Dados válidos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados válidos?": {
+      "main": [
+        [
+          {
+            "node": "Criar proposta no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedido inválido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar proposta no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Enviar confirmação do pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar confirmação do pedido": {
+      "main": [
+        [
+          {
+            "node": "Devolver proposta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email falhou depois de gravar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamado pelo workflow principal": {
+      "main": [
+        [
+          {
+            "node": "Normalizar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Devolver proposta": {
+      "main": [
+        [
+          {
+            "node": "Pedir cotações de frete (WF3)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enriquecer proposta (WF4)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar Slack: nova proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all"
+  },
+  "tags": [
+    "subworkflow",
+    "propostas"
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "8pRJJuN094Mp9iuu",
+    "sourceVersionId": "424506e2-1f0e-4a56-a4ce-38acc8b60614",
+    "exportedAt": "2026-10-08",
+    "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
+  }
+}

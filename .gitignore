@@ -1,0 +1,17 @@
+# Segredos e ambiente
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+
+# Exportações em bruto do n8n (só se guardam as sanitizadas em workflows/)
+exports-raw/
+*.raw.json
+
+# Sistema
+.DS_Store
+__pycache__/
+deploy/config.json
+deploy/out/
+dist/

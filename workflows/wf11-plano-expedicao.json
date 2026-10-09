@@ -1,0 +1,423 @@
+{
+  "name": "WF11 - Plano de expedição",
+  "description": "Formulário da Madalena (ligação no email do WF10, código da proposta em campo oculto): grava tempo de produção, stock, data de recolha, modo e transportadora em expedicoes, passa a proposta a em_expedicao e chama o WF12 (follow-up ao cliente).",
+  "nodes": [
+    {
+      "name": "Madalena preenche o plano de expedição",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "formTitle": "Plano de expedição",
+        "formDescription": "Preencha o plano da encomenda confirmada. Ao submeter, o cliente recebe a proposta final com o modo de expedição e a Bárbara fica em cópia.",
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "codigo"
+            },
+            {
+              "fieldLabel": "Tempo de produção (dias)",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Stock disponível",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sim"
+                  },
+                  {
+                    "option": "Não"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Data de recolha",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Modo de expedição",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Rodoviário"
+                  },
+                  {
+                    "option": "Marítimo"
+                  },
+                  {
+                    "option": "Aéreo"
+                  },
+                  {
+                    "option": "Ferroviário"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Transportadora",
+              "fieldType": "text",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notas",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "O seu nome",
+              "fieldType": "text",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "path": "plano-expedicao",
+          "appendAttribution": false,
+          "buttonLabel": "Guardar plano",
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Plano guardado. O cliente vai receber a proposta final."
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Validar plano",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const f = $input.first().json;\nconst codigo = String(f.codigo ?? '').trim().toUpperCase();\nif (!/^PRP-\\d{4}-\\d{4}$/.test(codigo)) throw new Error('Plano de expedição: código de proposta inválido (\"' + codigo.slice(0, 30) + '\"). Use a ligação do email.');\nconst dias = Number(f['Tempo de produção (dias)']);\nif (!Number.isInteger(dias) || dias < 0 || dias > 365) throw new Error('Plano de expedição ' + codigo + ': tempo de produção inválido (0 a 365 dias).');\nconst stockTxt = String(f['Stock disponível'] ?? '');\nif (!['Sim', 'Não'].includes(stockTxt)) throw new Error('Plano de expedição ' + codigo + ': indique se há stock.');\nconst data = String(f['Data de recolha'] ?? '').slice(0, 10);\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(data) || isNaN(new Date(data + 'T00:00:00Z').getTime())) throw new Error('Plano de expedição ' + codigo + ': data de recolha inválida.');\nconst hoje = new Date().toISOString().slice(0, 10);\nif (data < hoje) throw new Error('Plano de expedição ' + codigo + ': a data de recolha (' + data + ') já passou.');\nconst modos = { 'Rodoviário': 'rodoviario', 'Marítimo': 'maritimo', 'Aéreo': 'aereo', 'Ferroviário': 'ferroviario' };\nconst modo = modos[String(f['Modo de expedição'] ?? '')];\nif (!modo) throw new Error('Plano de expedição ' + codigo + ': modo de expedição inválido.');\nconst transp = String(f['Transportadora'] ?? '').trim().slice(0, 120);\nconst nome = String(f['O seu nome'] ?? '').trim().slice(0, 80);\nif (transp.length < 2) throw new Error('Plano de expedição ' + codigo + ': indique a transportadora.');\nif (nome.length < 2) throw new Error('Plano de expedição ' + codigo + ': indique o seu nome.');\nconst notas = String(f['Notas'] ?? '').trim().slice(0, 1000);\nreturn [{ json: { codigo, tempo_producao_dias: dias, stock_ok: stockTxt === 'Sim', data_recolha: data, modo, transportadora: transp, notas, planeada_por: nome } }];"
+      }
+    },
+    {
+      "name": "Ler proposta",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        128
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Verificar proposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const plano = $('Validar plano').first().json;\nconst p = $input.first().json;\nif (!p || !p.id) throw new Error('Plano de expedição: proposta ' + plano.codigo + ' não encontrada.');\nif (!['aceite', 'em_expedicao'].includes(p.estado)) throw new Error('Plano de expedição: a proposta ' + p.codigo + ' está no estado ' + p.estado + '; só se planeia a expedição de propostas confirmadas pelo cliente (aceite) e ainda sem follow-up.');\nreturn [{ json: { ...plano, proposta_id: p.id } }];"
+      }
+    },
+    {
+      "name": "Gravar plano de expedição",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        944,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "expedicoes",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "proposta_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.proposta_id }}"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "planeada"
+            },
+            {
+              "fieldId": "tempo_producao_dias",
+              "fieldValue": "={{ $json.tempo_producao_dias }}"
+            },
+            {
+              "fieldId": "stock_ok",
+              "fieldValue": "={{ $json.stock_ok }}"
+            },
+            {
+              "fieldId": "data_recolha",
+              "fieldValue": "={{ $json.data_recolha }}"
+            },
+            {
+              "fieldId": "modo",
+              "fieldValue": "={{ $json.modo }}"
+            },
+            {
+              "fieldId": "transportadora",
+              "fieldValue": "={{ $json.transportadora }}"
+            },
+            {
+              "fieldId": "notas",
+              "fieldValue": "={{ $json.notas }}"
+            },
+            {
+              "fieldId": "planeada_por",
+              "fieldValue": "={{ $json.planeada_por }}"
+            },
+            {
+              "fieldId": "planeada_em",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Conferir gravação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst plano = $('Verificar proposta').first().json;\nif (!r || !r.id) throw new Error('Plano de expedição: não existe linha de expedição para ' + plano.codigo + ' (confirmação em falta?). Nada foi gravado.');\nreturn [{ json: { codigo: plano.codigo } }];"
+      },
+      "notes": "Falha com mensagem clara se a linha de expedição não existir (a linha é criada pelo WF10 na confirmação)."
+    },
+    {
+      "name": "Marcar proposta em expedição",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "em_expedicao"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "name": "Chamar WF12 (follow-up ao cliente)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1616,
+        128
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:WF12 - Follow-up ao cliente}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "codigo": "={{ $(\"Conferir gravação\").first().json.codigo }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "executeOnce": true,
+      "notes": "Não espera; o WF12 tem o seu próprio aviso de erro."
+    }
+  ],
+  "connections": {
+    "Madalena preenche o plano de expedição": {
+      "main": [
+        [
+          {
+            "node": "Validar plano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar plano": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta": {
+      "main": [
+        [
+          {
+            "node": "Verificar proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar proposta": {
+      "main": [
+        [
+          {
+            "node": "Gravar plano de expedição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar plano de expedição": {
+      "main": [
+        [
+          {
+            "node": "Conferir gravação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conferir gravação": {
+      "main": [
+        [
+          {
+            "node": "Marcar proposta em expedição",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar proposta em expedição": {
+      "main": [
+        [
+          {
+            "node": "Chamar WF12 (follow-up ao cliente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "tags": [
+    {
+      "name": "propostas"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "P4FDjLoaiGl3XP01",
+    "sourceVersionId": "d1783e7e-14e4-4915-a08b-018ad074efd5",
+    "exportedAt": "2026-10-09",
+    "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
+  }
+}

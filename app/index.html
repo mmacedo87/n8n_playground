@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instalação da automação de propostas</title>
+<style>
+:root{--bg:#ead9bd;--card:#fbf5e9;--ink:#3a2817;--muted:#6e5a44;--line:#d6bf98;--cork:#c49a62;--dark:#7a4d22;--deep:#4a2e14;--ok:#4d6a2a;--okbg:#e8efd6;--bad:#a8412c;--badbg:#f7e0d8}
+@media (prefers-color-scheme:dark){:root{--bg:#2a1d10;--card:#3a2a18;--ink:#f3e6cf;--muted:#cdb994;--line:#6b4d2c;--cork:#c49a62;--dark:#e0b97e;--deep:#f3e6cf;--ok:#a9cc7a;--okbg:#2f3a1f;--bad:#f0a08a;--badbg:#4a2620}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.55 "Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+h1{font-family:Georgia,serif;color:var(--deep);font-size:28px;margin:6px 0 2px}
+h2{font-family:Georgia,serif;color:var(--deep);font-size:26px;margin:4px 0 14px}
+.bar{display:flex;gap:6px;margin:14px 0 18px}
+.bar i{flex:1;height:10px;border-radius:6px;background:var(--line)}
+.bar i.on{background:var(--dark)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0}
+ol.steps>li{counter-increment:s;position:relative;padding:6px 0 14px 54px;min-height:48px}
+ol.steps>li:before{content:counter(s);position:absolute;left:0;top:2px;width:38px;height:38px;border-radius:50%;background:var(--dark);color:#fff8e8;font-weight:700;display:flex;align-items:center;justify-content:center}
+.see{background:var(--okbg);color:var(--ok);border-radius:8px;padding:6px 10px;display:inline-block;font-size:16px;margin-top:4px}
+.tip{background:#f6e6c5;color:#4a2e14;border-left:5px solid var(--dark);padding:10px 14px;border-radius:8px;font-size:17px;margin:10px 0}
+@media (prefers-color-scheme:dark){.tip{background:#4a3520;color:#f3e6cf}}
+label{display:block;font-weight:600;margin:14px 0 4px}
+small{color:var(--muted);display:block;font-weight:400;font-size:16px}
+input[type=text],input[type=password],textarea{width:100%;font:inherit;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;color:#222}
+input:focus,textarea:focus{outline:3px solid var(--cork);border-color:var(--dark)}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;background:var(--dark);color:#fff8e8}
+button.sec{background:transparent;color:var(--dark);border:2px solid var(--dark)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:20px;flex-wrap:wrap}
+.msg{margin-top:10px;padding:10px 14px;border-radius:10px;font-weight:600}
+.msg.ok{background:var(--okbg);color:var(--ok)}.msg.bad{background:var(--badbg);color:var(--bad)}
+.chk{display:flex;gap:12px;align-items:center;margin-top:12px;font-weight:600}
+.chk input{width:26px;height:26px}
+.cred{border:2px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
+.cred.done{border-color:var(--ok)}
+.pill{font-size:15px;font-weight:700;padding:2px 10px;border-radius:20px;background:var(--line);color:var(--deep)}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+ul.prog{list-style:none;padding:0;margin:12px 0}
+ul.prog li{padding:8px 0;border-bottom:1px solid var(--line)}
+a{color:var(--dark)}
+@media print{.nav,.bar,button{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Instalação da automação de propostas</h1>
+<div class="bar" id="bar"></div>
+<div id="main"></div>
+</div>
+<script>
+const STEPS=["Início","Base de dados","Ligar ao n8n","Contas","Emails e Slack","Verificar","Instalar"];
+let step=0, cfg=null, connected=false, checked=false, dbDone=false;
+const $=(s)=>document.querySelector(s);
+const esc=(t)=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api=async(p,b)=>{const r=await fetch(p,b===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()};
+let saveT=null;const flush=async()=>{clearTimeout(saveT);if(cfg)await api("/api/config",cfg)};const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>api("/api/config",cfg),300)};
+const credId=(v)=>{v=(v||"").trim();const m=v.match(/credentials\/([A-Za-z0-9]+)/);return m?m[1]:(/^[A-Za-z0-9]{8,}$/.test(v)?v:"")};
+const slackId=(v)=>{v=(v||"").trim();const m=v.match(/archives\/(C[A-Z0-9]+)/);return m?m[1]:(/^C[A-Z0-9]{8,}$/.test(v)?v:"")};
+const isMail=(v)=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v||"").trim());
+
+function bar(){$("#bar").innerHTML=STEPS.map((_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}
+function nav(canNext,nextLabel){return `<div class="nav"><button class="sec" onclick="go(-1)" ${step===0?"disabled":""}>← Voltar</button><button onclick="go(1)" ${canNext?"":"disabled"}>${nextLabel||"Seguinte →"}</button></div>`}
+function go(d){flush();step=Math.max(0,Math.min(STEPS.length-1,step+d));try{localStorage.setItem("passo",step)}catch(e){}render()}
+function head(){return `<h2>Passo ${step} de ${STEPS.length-1}: ${STEPS[step]}</h2>`}
+
+function render(){bar();const m=$("#main");
+ if(step===0){m.innerHTML=`<div class="card"><h2>Bem-vindo!</h2><p>Vamos instalar a automação em poucos passos. Cada passo diz exatamente o que clicar. Pode fechar esta janela e continuar mais tarde: o que já escreveu fica guardado.</p>
+ <p><b>Antes de começar, tenha à mão:</b></p><ol class="steps">
+ <li>Acesso (utilizador e palavra-passe) ao <b>n8n</b> da empresa.</li>
+ <li>Acesso ao <b>Supabase</b> (<a href="https://supabase.com/dashboard" target="_blank">supabase.com</a>), <b>Slack</b>, <b>Microsoft/Outlook</b> e <b>OpenRouter</b> (<a href="https://openrouter.ai" target="_blank">openrouter.ai</a>).</li>
+ <li>Os <b>emails</b> da Bárbara, da Madalena e da empresa.</li>
+ <li>Cerca de <b>30 minutos</b>.</li></ol>
+ <div class="tip">Se algo correr mal, nada fica estragado: pode repetir qualquer passo.</div></div>${nav(true,"Começar →")}`;return}
+ if(step===1){m.innerHTML=`<div class="card">${head()}<p>A base de dados é onde ficam as propostas. Só se faz uma vez.</p><ol class="steps">
+ <li>Abra <a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a> e entre.</li>
+ <li>Clique em <b>New project</b>. Escolha um nome (ex.: <i>propostas</i>), uma palavra-passe forte (guarde-a) e a região <b>Frankfurt (EU)</b>. Clique <b>Create</b> e espere 2 minutos.</li>
+ <li>No menu da esquerda clique em <b>SQL Editor</b>, depois em <b>New query</b>.</li>
+ <li>Clique aqui: <button class="sec" id="cp" onclick="copySql()">Copiar o texto da base de dados</button><br>Depois clique na caixa grande do Supabase e cole (<b>Ctrl+V</b>; no Mac <b>Cmd+V</b>).<div id="cpm"></div></li>
+ <li>Clique no botão verde <b>Run</b>.<br><span class="see">Deve aparecer "Success. No rows returned".</span></li>
+ <li>Fique com estes dois dados à mão (no menu <b>Project Settings → API</b>): o <b>Project URL</b> e a chave <b>service_role</b>. Vai precisar deles no passo 3. <div class="tip">A chave service_role é secreta: não a envie por email.</div></li></ol>
+ <label class="chk"><input type="checkbox" id="db" ${dbDone?"checked":""} onchange="dbDone=this.checked;render()"> Já fiz tudo isto</label></div>${nav(dbDone)}`;return}
+ if(step===2){m.innerHTML=`<div class="card">${head()}<p>Agora vamos ligar esta página ao n8n da empresa.</p><ol class="steps">
+ <li>Abra o n8n da empresa no browser e entre.</li>
+ <li>Clique no seu nome (canto inferior esquerdo), <b>Settings</b>, depois <b>n8n API</b>, e <b>Create an API key</b>. Dê um nome (ex.: <i>instalação</i>) e confirme.</li>
+ <li>Copie a chave que aparece e cole-a abaixo. <div class="tip">A chave só aparece uma vez. Esta página não a guarda em lado nenhum.</div></li></ol>
+ <label>Endereço do n8n<small>É o que aparece na barra do browser, por exemplo https://empresa.app.n8n.cloud</small></label>
+ <input type="text" id="url" value="${esc(cfg.n8n_url)}" oninput="cfg.n8n_url=this.value.trim().replace(/\\/+$/,'');connected=false;save();render2();$('#cm').innerHTML=''">
+ <label>Chave de API</label><input type="password" id="key" oninput="connected=false;$('#cm').innerHTML=''">
+ <p><button onclick="testConn()">Testar ligação</button></p><div id="cm">${connected?'<div class="msg ok">Ligação feita com sucesso.</div>':''}</div></div>${nav(connected)}`;return}
+ if(step===3){const T=[
+ ["microsoftOutlookOAuth2Api","Outlook (email)","Microsoft Outlook OAuth2 API","Clique em <b>Sign in with Microsoft</b> e entre com a conta de email da empresa que envia as propostas."],
+ ["slackApi","Slack","Slack API","Cole o <b>token do bot</b> da app do Slack (começa por <i>xoxb-</i>). Para criar a app, siga <a href='https://api.slack.com/apps' target='_blank'>api.slack.com/apps</a> e dê-lhe a permissão <i>chat:write</i>."],
+ ["supabaseApi","Supabase (base de dados)","Supabase API","Em <b>Host</b> cole o <b>Project URL</b> e em <b>Service Role Secret</b> a chave <b>service_role</b> do passo 1."],
+ ["openRouterApi","OpenRouter (inteligência artificial)","OpenRouter API","Cole a chave criada em <a href='https://openrouter.ai/keys' target='_blank'>openrouter.ai/keys</a>. Na conta, ative a opção de <b>não guardar dados (zero retenção)</b>."]];
+ const all=T.every(t=>credId(cfg.credenciais[t[0]]));
+ m.innerHTML=`<div class="card">${head()}<p>Cada conta é criada <b>no n8n</b> e depois dizemos a esta página qual é. São 4 contas.</p>
+ <div class="tip"><b>Como criar uma conta no n8n:</b> no menu da esquerda clique em <b>Credentials</b>, depois <b>Create credential</b>, escreva o nome do tipo na pesquisa e escolha-o. Preencha, clique <b>Save</b>. Depois copie o <b>endereço da barra do browser</b> (tem de terminar em <i>/credentials/letras-e-números</i>) e cole-o na caixa respetiva.</div>
+ ${T.map(t=>{const id=credId(cfg.credenciais[t[0]]);return `<div class="cred ${id?"done":""}"><b>${t[1]}</b> <span class="pill ${id?"ok":""}">${id?"✓ reconhecida":"por fazer"}</span>
+ <p style="margin:6px 0">Tipo a procurar: <b>${t[2]}</b>.<br>${t[3]}</p>
+ <input type="text" placeholder="Cole aqui o endereço da conta" value="${esc(cfg.credenciais[t[0]]||"")}" oninput="setCred('${t[0]}',this.value)"></div>`}).join("")}</div>${nav(all)}`;return}
+ if(step===4){const E=cfg.emails,S=cfg.slack_canais;
+ const f=(k,l,h)=>`<label>${l}<small>${h}</small></label><input type="text" value="${esc(E[k]||"")}" oninput="cfg.emails['${k}']=this.value.trim();save();upd4()">`;
+ const c=(k,l)=>`<label>${l}</label><input type="text" placeholder="Cole o link do canal" value="${esc(S[k]||"")}" oninput="cfg.slack_canais['${k}']=slackId(this.value)||this.value.trim();save();upd4()"><span class="pill ${slackId(S[k])?"ok":""}" id="sl_${k}">${slackId(S[k])?"✓ canal reconhecido":""}</span>`;
+ m.innerHTML=`<div class="card">${head()}<p>Escreva os emails certos. Os avisos e propostas vão para estes endereços.</p>
+ ${f("cotacoes","Email da empresa para os pedidos de cotação","As transportadoras recebem o pedido em cópia oculta; este email fica visível.")}
+ ${f("validacao_barbara","Email da Bárbara (validação)","Recebe o resumo de cada proposta.")}
+ ${f("cc_barbara","Email da Bárbara (em cópia nas propostas)","Normalmente é o mesmo.")}
+ ${f("barbara","Email da Bárbara (avisos de expedição)","Normalmente é o mesmo.")}
+ ${f("madalena","Email da Madalena","Recebe o aviso quando o cliente confirma.")}
+ ${f("confirmacao_pedido","Email que recebe a confirmação de cada pedido","")}
+ ${f("erros","Email dos avisos de erro","Quem deve saber quando algo falha.")}
+ <label>Quem pode aprovar propostas<small>Escreva os emails separados por vírgula. Só estas pessoas aprovam respondendo "OK".</small></label>
+ <input type="text" value="${esc((E.aprovadores||[]).join(', '))}" oninput="cfg.emails.aprovadores=this.value.split(/[,;\\s]+/).filter(Boolean);save();upd4()">
+ <div class="tip" style="margin-top:20px"><b>Canais do Slack.</b> No Slack, clique com o botão direito no canal, <b>Copiar → Copiar link</b>, e cole abaixo. Depois, em cada canal escreva <i>/invite @nome-da-app</i> para a app poder escrever lá.</div>
+ ${c("propostas","Canal das novas propostas")}${c("cotacoes","Canal dos pedidos de cotação")}${c("estado","Canal do estado")}</div><div id="n4"></div>`;upd4();return}
+ if(step===5){m.innerHTML=`<div class="card">${head()}<p>Vamos confirmar que está tudo certo <b>antes</b> de instalar. Ainda não se muda nada no n8n.</p><p><button onclick="doCheck()">Verificar tudo</button></p><div id="ck"></div></div><div id="n5"></div>`;if(checked)$("#ck").innerHTML='<div class="msg ok">Tudo certo. Pode instalar.</div>';nav5();return}
+ if(step===6){m.innerHTML=`<div class="card">${head()}<p>Último passo! Clique no botão e <b>não feche esta janela</b> até aparecer "Está feito".</p><p><button id="ib" onclick="doDeploy()">Instalar agora</button></p><ul class="prog" id="pr"></ul><div id="fin"></div></div><div class="nav"><button class="sec" onclick="go(-1)">← Voltar</button></div>`;poll();return}}
+
+function nav5(){$("#n5").innerHTML=nav(checked)}
+function upd4(){const E=cfg.emails,S=cfg.slack_canais;
+ const ok=["cotacoes","validacao_barbara","cc_barbara","barbara","madalena","confirmacao_pedido","erros"].every(k=>isMail(E[k]))&&(E.aprovadores||[]).length&&(E.aprovadores||[]).every(isMail)&&["propostas","cotacoes","estado"].every(k=>slackId(S[k]));
+ ["propostas","cotacoes","estado"].forEach(k=>{const e=$("#sl_"+k);if(e){const g=slackId(S[k]);e.className="pill "+(g?"ok":"");e.textContent=g?"✓ canal reconhecido":""}});
+ $("#n4").innerHTML=nav(ok);checked=false}
+function setCred(k,v){cfg.credenciais[k]=credId(v)||v.trim();save();const d=credId(v);const el=event.target.closest(".cred");el.className="cred "+(d?"done":"");el.querySelector(".pill").className="pill "+(d?"ok":"");el.querySelector(".pill").textContent=d?"✓ reconhecida":"por fazer";
+ const n=document.querySelector(".nav:last-child button:last-child");if(n)n.disabled=!["microsoftOutlookOAuth2Api","slackApi","supabaseApi","openRouterApi"].every(x=>credId(cfg.credenciais[x]))}
+async function copySql(){const r=await api("/api/schema");try{await navigator.clipboard.writeText(r.sql);$("#cpm").innerHTML='<div class="msg ok">Copiado! Agora cole no Supabase.</div>'}catch(e){$("#cpm").innerHTML='<div class="msg bad">Não consegui copiar sozinho. Abra o ficheiro supabase/schema.sql, selecione tudo e copie.</div>'}}
+async function testConn(){const r=await api("/api/connect",{url:cfg.n8n_url,key:$("#key").value.trim()});connected=r.ok;$("#cm").innerHTML=`<div class="msg ${r.ok?"ok":"bad"}">${esc(r.msg)}</div>`;render2()}
+function render2(){const n=document.querySelector(".nav:last-child button:last-child");if(n)n.disabled=!connected}
+async function doCheck(){$("#ck").innerHTML="A verificar…";await flush();const r=await api("/api/check",{});checked=!!r.ok;$("#ck").innerHTML=r.ok?`<div class="msg ok">Tudo certo: ${r.total} workflows prontos a instalar.</div>`:`<div class="msg bad">${esc(r.error)}<br><small>Volte ao passo anterior e corrija.</small></div>`;nav5()}
+async function doDeploy(){$("#ib").disabled=true;await flush();const r=await api("/api/deploy",{});if(!r.ok){$("#fin").innerHTML=`<div class="msg bad">${esc(r.error)}</div>`;$("#ib").disabled=false;return}poll()}
+async function poll(){const s=await api("/api/status");const pr=$("#pr");if(!pr)return;
+ pr.innerHTML=s.steps.map(x=>`<li>${/atualizado|criado|simulado/.test(x.estado)?"✅":"⏳"} ${esc(x.name)} <small>${esc(x.estado)}</small></li>`).join("");
+ if(s.state==="running"){setTimeout(poll,700)}
+ else if(s.state==="error"){$("#fin").innerHTML=`<div class="msg bad">${esc(s.error)}<br><small>Nada de grave: corrija e clique de novo em Instalar. Os workflows já instalados são atualizados, não duplicados.</small></div>`;$("#ib").disabled=false}
+ else if(s.state==="done"){$("#ib").style.display="none";done(s)}}
+function done(s){$("#fin").innerHTML=`<div class="msg ok">Está feito! ${s.steps.length} workflows instalados.</div>
+ <h2 style="margin-top:22px">E agora?</h2><ol class="steps">
+ <li>Abra o n8n → <b>Workflows</b>. Deve ver os ${s.steps.length} workflows.</li>
+ <li>Abra um workflow que use email (por exemplo <b>WF3 - Pedido de cotação de frete</b>) e confirme que a conta do Outlook aparece ligada nos cartões de email.</li>
+ <li>Faça um pedido de teste com um cliente inventado e confirme que chega o email de confirmação.</li>
+ <li>Só quando tiver respostas reais de transportadoras e da Bárbara, ative (interruptor no topo) o <b>WF6</b>, o <b>WF8</b> e o <b>Read Outlook Messages</b>.</li></ol>
+ <p><button class="sec" onclick="window.print()">Imprimir esta lista</button></p>`}
+
+(async()=>{cfg=await api("/api/config");cfg.credenciais=cfg.credenciais||{};cfg.emails=cfg.emails||{};cfg.slack_canais=cfg.slack_canais||{};try{step=0}catch(e){}render()})();
+</script>
+</body>
+</html>

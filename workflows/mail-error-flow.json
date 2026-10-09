@@ -1,0 +1,142 @@
+{
+  "name": "Mail Error Flow",
+  "description": "Workflow de erro global: quando outro workflow falha, envia um email pelo Outlook com o nome do workflow, o nó que falhou, a mensagem de erro e o link da execução. Destinatário configurado no nó \"Preparar aviso de erro\".",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bec4c26d-4c61-4d73-a6d4-e63145069d8a",
+      "name": "Quando um workflow falha",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-destinatario",
+              "name": "destinatario",
+              "value": "REDACTED@example.invalid",
+              "type": "string"
+            },
+            {
+              "id": "cfg-workflow",
+              "name": "workflowNome",
+              "value": "={{ $json.workflow?.name ?? \"(desconhecido)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-execucao",
+              "name": "execucaoId",
+              "value": "={{ $json.execution?.id ?? \"(sem id)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-url",
+              "name": "execucaoUrl",
+              "value": "={{ $json.execution?.url ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-no",
+              "name": "ultimoNo",
+              "value": "={{ $json.execution?.lastNodeExecuted ?? \"(desconhecido)\" }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-erro",
+              "name": "mensagemErro",
+              "value": "={{ String($json.execution?.error?.message ?? \"(sem mensagem)\").replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\").replace(/>/g, \"&gt;\") }}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-quando",
+              "name": "quando",
+              "value": "={{ $now.setZone(\"Europe/Lisbon\").toFormat(\"dd/MM/yyyy HH:mm\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7a6acd55-ea76-4fca-b1c1-af4022a38edb",
+      "name": "Preparar aviso de erro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "notes": "Altere aqui o email que recebe os avisos (campo destinatario)."
+    },
+    {
+      "parameters": {
+        "toRecipients": "={{ $json.destinatario }}",
+        "subject": "=[ERRO n8n] {{ $json.workflowNome }}",
+        "bodyContent": "=<p>Um workflow falhou.</p><ul><li><b>Workflow:</b> {{ $json.workflowNome }}</li><li><b>Quando:</b> {{ $json.quando }}</li><li><b>Último nó executado:</b> {{ $json.ultimoNo }}</li><li><b>Execução:</b> {{ $json.execucaoId }}</li></ul><p><b>Erro:</b> {{ $json.mensagemErro }}</p><p><a href=\"{{ $json.execucaoUrl }}\">Abrir a execução no n8n</a></p>",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "saveToSentItems": true
+        }
+      },
+      "id": "a574e57a-85d0-42ae-84b7-476186d430fd",
+      "name": "Enviar email de erro",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Quando um workflow falha": {
+      "main": [
+        [
+          {
+            "node": "Preparar aviso de erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar aviso de erro": {
+      "main": [
+        [
+          {
+            "node": "Enviar email de erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "tags": [],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "fWXNAbhbQLuYeurE",
+    "sourceVersionId": "bbd7940f-d877-4265-8a5d-e404c5f8e334",
+    "exportedAt": "2026-10-07",
+    "sanitized": "destinatario, ids de credenciais e webhookIds removidos"
+  }
+}

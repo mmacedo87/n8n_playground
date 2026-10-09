@@ -1,0 +1,517 @@
+{
+  "name": "WF4 - Enriquecimento de proposta",
+  "description": "Para uma proposta registada (código PRP), grava em proposta_compliance o código pautal, a taxa por destino (UE por regra, EUA via USITC, restantes manual) e as notas fitossanitárias. Sem LLM. Entrada: codigo (chamado pelo WF2).",
+  "nodes": [
+    {
+      "id": "1f0dc144-21de-4353-87e7-1794aea464ca",
+      "name": "Chamado pelo WF2",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "codigo"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d4749bfb-d180-475a-b04c-a7edf5024144",
+      "name": "Normalizar código",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c-codigo",
+              "name": "codigo",
+              "type": "string",
+              "value": "={{ String($json.codigo ?? \"\").trim().toUpperCase().slice(0, 20) }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "116feb9f-1d25-44ca-9159-a232ab5ba439",
+      "name": "Ler proposta",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        }
+      },
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "47bbe85c-0446-4a8c-b34f-a15b7a8e4b5f",
+      "name": "Proposta existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.id }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "34f15b30-3941-49ee-8849-4825eb42272c",
+      "name": "Ler produto",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "getAll",
+        "tableId": "produtos",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "produto",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Ler proposta\").first().json.produto }}"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "b4d4d803-baa1-42ec-9ae7-352a6258fffe",
+      "name": "Ler regras do país",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "getAll",
+        "tableId": "requisitos_pais",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "pais_iso",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Ler proposta\").first().json.destino_pais }}"
+            }
+          ]
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "64d423cf-11cc-4c9b-b9c4-2cb7ac2fd84c",
+      "name": "Resolver regra",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const p = $('Ler proposta').first().json;\nconst prod = $('Ler produto').first().json || {};\nconst regras = $('Ler regras do país').all().map(i => i.json).filter(r => r && r.id);\nconst nc = prod.codigo_nc || null;\nconst regra = regras.find(r => r.codigo_pautal === nc) || regras.find(r => r.codigo_pautal === '*') || null;\nconst semRegra = 'Sem regra registada para este destino: verificar manualmente.';\nconst usaUsitc = !!regra && regra.metodo === 'api_usitc' && !!prod.hts_us;\nreturn [{ json: {\n  proposta_id: p.id,\n  codigo: p.codigo,\n  destino_pais: p.destino_pais,\n  produto: p.produto,\n  codigo_nc: nc,\n  hts_us: prod.hts_us || null,\n  produto_validado: prod.validado === true,\n  metodo: regra ? regra.metodo : 'tabela_manual',\n  taxa_pct: regra && regra.taxa_direitos_pct !== null && regra.taxa_direitos_pct !== undefined ? Number(regra.taxa_direitos_pct) : null,\n  notas_taxas: regra ? regra.notas_taxas : semRegra,\n  fito: regra ? regra.requisitos_fitossanitarios : semRegra,\n  fonte: regra ? regra.fonte : null,\n  usa_usitc: usaUsitc\n} }];"
+      }
+    },
+    {
+      "id": "28da7077-3025-4629-b2a6-fb60947edd06",
+      "name": "Consultar USITC?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.usa_usitc }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "e051690e-15b8-45a6-9390-26746d60a55a",
+      "name": "Consultar tabela HTS (USITC)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1792,
+        -200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hts.usitc.gov/reststop/search?keyword={{ $json.hts_us }}",
+        "authentication": "none",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d500f152-3d49-4b1e-a659-da25eb3eb87e",
+      "name": "Montar compliance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const base = $('Resolver regra').first().json;\nlet metodo = base.metodo;\nlet estado = metodo === 'tabela_manual' ? 'a_verificar_manualmente' : 'automatico';\nlet taxaPct = base.taxa_pct;\nlet taxaTexto = null;\nlet notas = base.notas_taxas;\nif (base.metodo === 'api_usitc' && !base.usa_usitc) {\n  metodo = 'tabela_manual';\n  estado = 'a_verificar_manualmente';\n  notas = 'Produto sem código HTS registado: taxa não consultada. ' + base.notas_taxas;\n}\nif (base.usa_usitc) {\n  let linha = null;\n  const itens = $input.all().map(i => i.json);\n  const lista = itens.length === 1 && Array.isArray(itens[0]) ? itens[0] : itens;\n  for (const x of lista) { if (x && x.htsno === base.hts_us) { linha = x; break; } }\n  if (linha && linha.general !== null && linha.general !== undefined && String(linha.general).trim() !== '') {\n    taxaTexto = String(linha.general).trim();\n    const m = taxaTexto.match(/^([0-9]+(?:[.][0-9]+)?)%$/);\n    taxaPct = /^free$/i.test(taxaTexto) ? 0 : (m ? Number(m[1]) : null);\n    notas = 'HTS ' + base.hts_us + ' (USITC): taxa base (coluna geral) = ' + taxaTexto + '. Não inclui direitos adicionais em vigor para a origem; confirmar com o transitário.';\n  } else {\n    metodo = 'tabela_manual';\n    estado = 'a_verificar_manualmente';\n    notas = 'Não foi possível ler a taxa no USITC para o HTS ' + base.hts_us + '. ' + base.notas_taxas;\n  }\n}\nif (!base.codigo_nc) {\n  estado = 'a_verificar_manualmente';\n  notas = 'Produto sem código pautal registado na tabela produtos. ' + notas;\n} else if (!base.produto_validado) {\n  notas = notas + ' (Código pautal ' + base.codigo_nc + ' ainda não validado pelo despachante.)';\n}\nreturn [{ json: {\n  proposta_id: base.proposta_id,\n  destino_pais: base.destino_pais,\n  codigo_nc: base.codigo_nc,\n  hts_us: base.hts_us,\n  taxa_direitos_pct: taxaPct,\n  taxa_texto: taxaTexto,\n  notas_taxas: notas,\n  requisitos_fitossanitarios: base.fito,\n  fonte: base.fonte,\n  metodo: metodo,\n  estado: estado\n} }];"
+      }
+    },
+    {
+      "id": "f9add15f-5735-47d8-9bc6-4c516d1a409e",
+      "name": "Proposta inexistente",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        896,
+        200
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Não é possível enriquecer a proposta {{ $(\"Normalizar código\").item.json.codigo }}: proposta não encontrada."
+      }
+    },
+    {
+      "id": "0d3100cd-8031-441e-8794-3ad7dc13d717",
+      "name": "Gravar compliance",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -100
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "proposta_compliance",
+        "dataToSend": "autoMapInputData"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "87c2ea62-8689-4973-9e97-bc2370de0cd4",
+      "name": "Devolver resumo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        -100
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r-ok",
+              "name": "ok",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "r-codigo",
+              "name": "codigo",
+              "type": "string",
+              "value": "={{ $(\"Normalizar código\").item.json.codigo }}"
+            },
+            {
+              "id": "r-estado",
+              "name": "estado_compliance",
+              "type": "string",
+              "value": "={{ $json.estado }}"
+            },
+            {
+              "id": "r-metodo",
+              "name": "metodo",
+              "type": "string",
+              "value": "={{ $json.metodo }}"
+            },
+            {
+              "id": "r-destino",
+              "name": "destino_pais",
+              "type": "string",
+              "value": "={{ $json.destino_pais }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5dc2e0d5-fb13-4e3b-87e5-847ab19e2528",
+      "name": "Sticky Note aecb1579",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ],
+      "parameters": {
+        "content": "## WF4 - Enriquecimento\nPor cada proposta: código pautal do produto + taxa por destino + notas fitossanitárias. UE: regra (circulação intra-UE). EUA: taxa base lida no USITC. Restantes destinos: tabela de referência com estado \"a_verificar_manualmente\". SEM LLM nesta versão: não há fonte estruturada fiável para requisitos sanitários. Tudo fica gravado em proposta_compliance, para validação da Bárbara no passo 6.",
+        "color": 3,
+        "width": 520,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Chamado pelo WF2": {
+      "main": [
+        [
+          {
+            "node": "Normalizar código",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar código": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta": {
+      "main": [
+        [
+          {
+            "node": "Proposta existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposta existe?": {
+      "main": [
+        [
+          {
+            "node": "Ler produto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Proposta inexistente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler produto": {
+      "main": [
+        [
+          {
+            "node": "Ler regras do país",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler regras do país": {
+      "main": [
+        [
+          {
+            "node": "Resolver regra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver regra": {
+      "main": [
+        [
+          {
+            "node": "Consultar USITC?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar USITC?": {
+      "main": [
+        [
+          {
+            "node": "Consultar tabela HTS (USITC)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar compliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar tabela HTS (USITC)": {
+      "main": [
+        [
+          {
+            "node": "Montar compliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar compliance": {
+      "main": [
+        [
+          {
+            "node": "Gravar compliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar compliance": {
+      "main": [
+        [
+          {
+            "node": "Devolver resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    "subworkflow",
+    "propostas",
+    "compliance"
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "ya6mCmn3qi4YE3CG",
+    "sourceVersionId": "06e985d2-f5bc-4b2c-bf55-9ba42bed26ba",
+    "exportedAt": "2026-10-08",
+    "sanitized": "ids de credenciais e errorWorkflow removidos"
+  }
+}
