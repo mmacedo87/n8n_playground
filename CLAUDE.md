@@ -22,6 +22,10 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |
 | WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | por publicar; só "OK" na 1.ª linha aprova |
+| WF9 Envio ao cliente | `UrGBkXG37To7RYMR` | sub-workflow, chamado pelo WF8; precisa de `preco_final` |
+| WF10 Confirmação da encomenda | `30Z4Nnge3BRZbU8G` | webhook GET `confirmar-proposta`, link com token |
+| WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao`; chama o WF12 |
+| WF12 Follow-up ao cliente | `ETUqp17gsET6Vc5A` | sub-workflow; marca `concluida` |
 | WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
 | Read Outlook Messages | `39zlpRbdQvI7dHGe` | inativo, manual; chama o WF1, grava lead rascunho |
 
@@ -38,4 +42,4 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 `python3 -I scripts/sanitize_workflow.py <detalhes.json>`; `settings.errorWorkflow` = `<ID do Mail Error Flow na instância de destino>`; `destinatario_teste` vazio; `meta` com exportedFrom, sourceWorkflowId, sourceVersionId, exportedAt, sanitized; correr `scripts/check_no_secrets.sh`.
 
 ## Ficheiros
-Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0004, script de limpeza não corrido).
+Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0006, script de limpeza não corrido).

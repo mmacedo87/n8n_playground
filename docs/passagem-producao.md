@@ -115,3 +115,10 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Teste real X6: um email na Folder 1 gera lead rascunho, draft em To Check, original lido e aviso Slack.
 - [ ] Os leads são rascunhos para um humano rever; ninguém cria a proposta sozinho. O nó de chamada ao WF2 fica desativado até haver decisão.
 - [ ] RGPD: o `ai_log` só leva o domínio do remetente; o texto do email vai ao LLM (confirmar zero retenção no OpenRouter) e `leads` entra na purga (`purgar_leads_antigos`).
+
+## Fases 7 a 10 (WF9-WF12)
+- [ ] Aplicar a migração `0006_fases_7_a_10.sql` (token de confirmação, tabela `expedicoes`, vista `v_expedicoes`).
+- [ ] Esvaziar `destinatario_teste` em WF9, WF10 e WF12; preencher `cc_barbara` (WF9, WF12), `email_madalena` e `email_barbara` (WF10).
+- [ ] WF10: `url_base` e `url_form` (formulário do WF11) com os URLs de produção; WF9: `url_confirmacao` com o webhook de produção.
+- [ ] Publicar o WF8 (chama o WF9). O WF9 recusa propostas sem `preco_final`: depende do Moloni ou de preenchimento manual.
+- [ ] Teste real com cliente fictício antes de usar com clientes (emails de teste já enviados para a caixa de teste na PRP-2026-0016).

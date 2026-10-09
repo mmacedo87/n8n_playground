@@ -1,4 +1,4 @@
-# Estado e tarefas (2026-10-08, fim do dia)
+# Estado e tarefas (2026-10-09)
 
 Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, ~2 pedidos/mês, humano sempre no loop).
 
@@ -10,13 +10,13 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, ~2 pedidos
 | 4. Enriquecimento | Feito (dados por validar, lista em `docs/validacao-despachante.md`) | WF4: código pautal, taxa (UE regra, EUA via USITC, resto manual) e notas fitossanitárias em `proposta_compliance`. Códigos pautais por validar pelo despachante |
 | 5. Geração de proposta (Moloni) | Bloqueado | API confirmada (`estimates/insert`), ver `docs/moloni-api.md`. Faltam Developer ID/Client Secret e decisão sobre o refresh token (14 dias) |
 | 6. Validação (Bárbara) | Parcial | WF5: email e aviso Slack com o resumo; marca a proposta `em_validacao`. WF8 (`4dU064sO0xcxkPTc`, por publicar): a resposta da Bárbara com "OK" na primeira linha aprova; qualquer outro texto é só aviso no Slack. Falta o teste real (precisa de uma proposta em `em_validacao`) e confirmar o email da Bárbara |
-| 7. Envio ao cliente | Por fazer | Email com Bárbara em CC, só depois da aprovação |
-| 8. Confirmação | Por fazer | Detetar "SIM" (resposta livre vs. link/botão) |
-| 9. Expedição | Por fazer | Tabela partilhada Bárbara + Madalena |
-| 10. Follow-up | Por fazer | Proposta final com o modo de expedição |
+| 7. Envio ao cliente | Feito (depende do Moloni para o preço) | WF9 (`UrGBkXG37To7RYMR`): email com a Bárbara em CC, chamado pelo WF8 após aprovação; recusa se não houver `preco_final` |
+| 8. Confirmação | Feito | WF10 (`30Z4Nnge3BRZbU8G`): link no email, página de resumo e botão (2 passos); token de 30 dias; avisa expedição e Slack |
+| 9. Expedição | Feito | Tabela `expedicoes` + vista `v_expedicoes`; WF11 (`P4FDjLoaiGl3XP01`): formulário do plano |
+| 10. Follow-up | Feito | WF12 (`ETUqp17gsET6Vc5A`): proposta final com modo e chegada estimada; marca `concluida` |
 
 ## Transversal (feito)
-Supabase com RLS (10 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (emails desviados), `ai_log` para uso de IA, Slack (Notificar Slack), repositório com export sanitizado e verificação de segredos, bateria de testes (`tests/BATERIA.md`).
+Supabase com RLS (11 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (emails desviados), `ai_log` para uso de IA, Slack (Notificar Slack), repositório com export sanitizado e verificação de segredos, bateria de testes (`tests/BATERIA.md`).
 
 ## Pendentes
 **Dependem de si**
@@ -30,7 +30,7 @@ Supabase com RLS (10 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (
 8. Dados de teste (PRP-2026-0001 a 0015): decisão sua, manter por agora (`supabase/limpar_dados_de_teste.sql` disponível).
 
 **Por construir**
-9. Fases 7 a 10: envio ao cliente (só depois da aprovação), confirmação, tabela de expedição e follow-up.
+9. Fases 7 a 10 construídas e testadas. Falta: preço final (Moloni) para o WF9 funcionar, publicar o WF8, e na passagem a produção esvaziar `destinatario_teste` e preencher `cc_barbara`, `email_madalena`, `email_barbara`, `url_base`, `url_form`.
 10. O briefing refere granulado de caroço de azeitona e misturas, que ainda não existem em `produtos`.
 11. Passagem a produção: ver `docs/passagem-producao.md`.
 12. Testes reais por fazer: F5 (agora X6), F6 (campos em falta no formulário), G9 (402 do OpenRouter já visto em execução real: o WF1 falhou em segurança).

@@ -29,6 +29,10 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | `wf6-ler-cotacoes.json` | Fase 3: lê as respostas das transportadoras (assunto com PRP), extrai preço, modo, prazo e validade com LLM, valida em código e grava em `cotacoes_frete` (`a_rever` se houver dúvidas). Lê também o texto de PDFs anexos; chama o WF5 quando há cotações suficientes | Inativo, trigger manual |
 | `wf1-extrair-pedido-email.json` | Sub-workflow: o LLM extrai o pedido de um email e o código valida os campos, calcula o que falta e escreve o rascunho de resposta. Nunca cria propostas | Publicado |
 | `wf8-aprovacao-barbara.json` | Fase 6: lê a resposta da Bárbara ao email do WF5; só "OK"/"aprovo" na primeira linha, de remetente autorizado e com a proposta em `em_validacao`, a passa a `aprovada`. O resto é só aviso no Slack | Por publicar |
+| `wf9-envio-cliente.json` | Fase 7: envia a proposta aprovada ao cliente (Bárbara em CC) com link de confirmação | Publicado |
+| `wf10-confirmacao-encomenda.json` | Fase 8: webhook do link de confirmação; marca `aceite` e cria a linha de expedição | Publicado |
+| `wf11-plano-expedicao.json` | Fase 9: formulário do plano de expedição (tabela `expedicoes`) | Publicado |
+| `wf12-followup-cliente.json` | Fase 10: proposta final ao cliente com modo e chegada estimada; marca `concluida` | Publicado |
 | `read-outlook-messages.json` | Fase 1: lê os emails da Folder 1, chama o WF1, grava o pedido como lead rascunho, avisa no Slack e cria o draft de resposta (não envia). A chamada ao WF2 fica desativada | Inativo, trigger manual |
 
 ## Slack
