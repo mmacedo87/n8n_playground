@@ -1,0 +1,564 @@
+{
+  "name": "WF10 - Confirmação da encomenda",
+  "description": "Webhook GET com a ligação do email da proposta: 1.º passo mostra o resumo e um botão, 2.º passo (ok=1) marca a proposta aceite, cria a linha de expedição e avisa a Madalena, a Bárbara e o Slack. Token aleatório de 64 hex com validade; ignora bots.",
+  "nodes": [
+    {
+      "name": "Cliente abre a ligação de confirmação",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "confirmar-proposta",
+        "responseMode": "responseNode",
+        "options": {
+          "ignoreBots": true
+        }
+      }
+    },
+    {
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        128
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "chave",
+              "type": "string",
+              "value": "={{ String($json.query?.t ?? \"\").trim() }}"
+            },
+            {
+              "id": "k2",
+              "name": "chave_ok",
+              "type": "boolean",
+              "value": "={{ /^[a-f0-9]{64}$/.test(String($json.query?.t ?? \"\").trim()) }}"
+            },
+            {
+              "id": "k3",
+              "name": "confirmar",
+              "type": "boolean",
+              "value": "={{ String($json.query?.ok ?? \"\") === \"1\" }}"
+            },
+            {
+              "id": "k4",
+              "name": "destinatario_teste",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "k5",
+              "name": "email_madalena",
+              "type": "string",
+              "value": "REDACTED@example.invalid"
+            },
+            {
+              "id": "k6",
+              "name": "email_barbara",
+              "type": "string",
+              "value": "REDACTED@example.invalid"
+            },
+            {
+              "id": "k7",
+              "name": "url_base",
+              "type": "string",
+              "value": "https://mmacedo87.app.n8n.cloud/webhook/confirmar-proposta"
+            },
+            {
+              "id": "k8",
+              "name": "url_form",
+              "type": "string",
+              "value": "https://mmacedo87.app.n8n.cloud/form/plano-expedicao"
+            }
+          ]
+        }
+      },
+      "notes": "DEV: destinatario_teste preenchido desvia o email interno. Em produção esvaziar destinatario_teste e preencher email_madalena e email_barbara."
+    },
+    {
+      "name": "Ler proposta pela ligação",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        496,
+        128
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token_confirmacao",
+              "condition": "eq",
+              "keyValue": "={{ $json.chave_ok ? $json.chave : \"invalido\" }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "name": "Decidir resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst resposta = (http, titulo, corpo) => [{ json: { acao: 'resposta', http, html: moldura(titulo, corpo) } }];\nconst invalida = () => resposta(404, 'Ligação inválida / Invalid link', '<p>Esta ligação não é válida ou já não está disponível. Por favor contacte-nos.</p><p>This link is not valid or is no longer available. Please contact us.</p>');\nif (!cfg.chave_ok || !p || !p.id) return invalida();\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nconst L = pt\n  ? { ja: 'Encomenda já confirmada', jaTxt: 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.', exp: 'Ligação expirada', expTxt: 'Esta ligação expirou. Por favor contacte-nos para renovar a proposta.', tit: 'Confirmar encomenda', resumo: 'Vai confirmar a seguinte proposta:', prod: 'Produto', q: 'Quantidade', dest: 'Destino', inc: 'Incoterm', tot: 'Valor total', btn: 'Confirmar encomenda', nota: 'Ao confirmar, a nossa equipa recebe a encomenda e planeia a expedição.' }\n  : { ja: 'Order already confirmed', jaTxt: 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.', exp: 'Link expired', expTxt: 'This link has expired. Please contact us to renew the proposal.', tit: 'Confirm order', resumo: 'You are about to confirm the following proposal:', prod: 'Product', q: 'Quantity', dest: 'Destination', inc: 'Incoterm', tot: 'Total amount', btn: 'Confirm order', nota: 'Once confirmed, our team receives the order and plans the shipment.' };\nif (['aceite', 'em_expedicao', 'concluida'].includes(p.estado)) return resposta(200, L.ja, '<p>' + esc(L.jaTxt) + '</p>');\nif (p.estado !== 'enviada') return invalida();\nif (new Date(p.token_expira_em) < new Date()) return resposta(410, L.exp, '<p>' + esc(L.expTxt) + '</p>');\nif (cfg.confirmar) return [{ json: { acao: 'confirmar', proposta_id: p.id, codigo: p.codigo } }];\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + esc(k) + '</b></td><td>' + esc(v) + '</td></tr>';\nconst valor = p.preco_final != null ? Number(p.preco_final).toFixed(2) + ' ' + (p.moeda || 'EUR') : '-';\nconst link = cfg.url_base + '?t=' + encodeURIComponent(cfg.chave) + '&ok=1';\nreturn resposta(200, L.tit, '<p>' + esc(L.resumo) + '</p><table>' + linha('Ref.', p.codigo) + linha(L.prod, p.produto) + linha(L.q, p.quantidade + ' ' + (p.unidade || 'kg')) + linha(L.dest, p.destino_pais) + linha(L.inc, p.incoterm) + linha(L.tot, valor) + '</table><p><a href=\"' + link + '\" style=\"display:inline-block;background:#2f6b4f;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none\">' + esc(L.btn) + '</a></p><p style=\"color:#666;font-size:13px\">' + esc(L.nota) + '</p>');"
+      }
+    },
+    {
+      "name": "Confirmar agora?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        128
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.acao }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "confirmar"
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "name": "Responder página",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1168,
+        300
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": "={{ $json.http ?? 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Marcar proposta como aceite",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.proposta_id }}"
+            },
+            {
+              "keyName": "estado",
+              "condition": "eq",
+              "keyValue": "enviada"
+            }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "aceite"
+            },
+            {
+              "fieldId": "confirmada_em",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "alwaysOutputData": true,
+      "notes": "Só atualiza se a proposta ainda estiver enviada: duas aberturas da ligação ao mesmo tempo não confirmam duas vezes."
+    },
+    {
+      "name": "Resultado da confirmação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst r = $input.first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nif (!r || !r.id) {\n  return [{ json: { confirmou: false, http: 200, html: moldura(pt ? 'Encomenda já confirmada' : 'Order already confirmed', '<p>' + esc(pt ? 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.' : 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.') + '</p>') } }];\n}\nconst teste = !!cfg.destinatario_teste;\nconst html = moldura(pt ? 'Encomenda confirmada' : 'Order confirmed', '<p>' + esc(pt ? 'Obrigado. A proposta ' + p.codigo + ' foi confirmada. A nossa equipa vai planear a expedição e enviar-lhe o plano final.' : 'Thank you. Proposal ' + p.codigo + ' has been confirmed. Our team will plan the shipment and send you the final plan.') + '</p>');\nconst link = cfg.url_form + '?codigo=' + encodeURIComponent(p.codigo);\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Encomenda confirmada - planear expedição';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>O cliente confirmou a proposta <b>' + esc(p.codigo) + '</b>. Falta planear a expedição.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><p>Preencha o plano (tempo de produção, stock, data de recolha, modo e transportadora) neste formulário: <a href=\"' + link + '\">' + esc(link) + '</a></p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '✅ Proposta *' + p.codigo + '* confirmada pelo cliente · ' + p.produto + ' · destino ' + p.destino_pais + ' · expedição por planear' + (teste ? ' · (teste)' : '');\nreturn [{ json: { confirmou: true, http: 200, html, codigo: p.codigo, proposta_id: p.id, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : cfg.email_madalena, cc: teste ? cfg.destinatario_teste : cfg.email_barbara, slack_texto: slack } }];"
+      }
+    },
+    {
+      "name": "Confirmou agora?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.confirmou }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "name": "Criar linha de expedição",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "expedicoes",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "proposta_id",
+              "fieldValue": "={{ $(\"Resultado da confirmação\").first().json.proposta_id }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "name": "Responder confirmação",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2064,
+        0
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $(\"Resultado da confirmação\").first().json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Avisar expedição por email",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $(\"Resultado da confirmação\").first().json.para }}",
+        "subject": "={{ $(\"Resultado da confirmação\").first().json.assunto }}",
+        "bodyContent": "={{ $(\"Resultado da confirmação\").first().json.corpo_html }}",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "ccRecipients": "={{ $(\"Resultado da confirmação\").first().json.cc }}"
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "name": "Avisar Slack: proposta confirmada",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2512,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "N7BZddGLl0WlSl9Q"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $(\"Resultado da confirmação\").first().json.slack_texto }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "executeOnce": true,
+      "notes": "Aviso curto no Slack (#novas-propostas). Não espera."
+    }
+  ],
+  "connections": {
+    "Cliente abre a ligação de confirmação": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta pela ligação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta pela ligação": {
+      "main": [
+        [
+          {
+            "node": "Decidir resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir resposta": {
+      "main": [
+        [
+          {
+            "node": "Confirmar agora?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar agora?": {
+      "main": [
+        [
+          {
+            "node": "Marcar proposta como aceite",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar proposta como aceite": {
+      "main": [
+        [
+          {
+            "node": "Resultado da confirmação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resultado da confirmação": {
+      "main": [
+        [
+          {
+            "node": "Confirmou agora?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmou agora?": {
+      "main": [
+        [
+          {
+            "node": "Criar linha de expedição",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar linha de expedição": {
+      "main": [
+        [
+          {
+            "node": "Responder confirmação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder confirmação": {
+      "main": [
+        [
+          {
+            "node": "Avisar expedição por email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar expedição por email": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: proposta confirmada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "<ID do Mail Error Flow na instância de destino>",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "tags": [
+    {
+      "name": "propostas"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "30Z4Nnge3BRZbU8G",
+    "sourceVersionId": "0a40b5ee-94f5-40fc-8747-439b7272fe7c",
+    "exportedAt": "2026-10-09",
+    "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
+  }
+}
