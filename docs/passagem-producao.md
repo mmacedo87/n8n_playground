@@ -122,3 +122,18 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] WF10: `url_base` e `url_form` (formulário do WF11) com os URLs de produção; WF9: `url_confirmacao` com o webhook de produção.
 - [ ] Publicar o WF8 (chama o WF9). O WF9 recusa propostas sem `preco_final`: depende do Moloni ou de preenchimento manual.
 - [ ] Teste real com cliente fictício antes de usar com clientes (emails de teste já enviados para a caixa de teste na PRP-2026-0016).
+
+## Custos mensais (30 a 35 encomendas, sem IVA)
+| Serviço | Hoje (testes) | Produção |
+| --- | --- | --- |
+| n8n Cloud | Starter, 20 € | Starter, 20 € (2.500 execuções; uso previsto 1.000 a 1.800); Pro 50 € se crescer |
+| Supabase | Free, 0 € | Pro, 25 $ (~23 €): backups diários, sem pausa por inatividade |
+| IA (OpenRouter, Haiku 4.5) | créditos de teste | 2 a 5 € |
+| Moloni | não ligado | Flex, 10,90 € (API), se ainda não tiverem |
+| Outlook, Slack | contas de teste | já existentes no cliente (a confirmar) |
+| **Total** | **~20 €** | **~57 a 59 €** (~47 a 49 € sem Moloni), ~1,6 € por encomenda |
+
+- [ ] Fazer upgrade do Supabase para Pro antes de dados reais (backups e RGPD).
+- [ ] Acompanhar as execuções do n8n nos primeiros meses; acima de 80 % de 2.500, subir para o Pro.
+- [ ] Confirmar licenças de Outlook/Slack no cliente e faturação mensal ou anual de n8n e Moloni.
+- [ ] Modelo de IA: manter Haiku 4.5.

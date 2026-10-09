@@ -61,7 +61,7 @@
   }
 </style>
 <style>
-/* Tema cortiça (v0.5) */
+/* Tema cortiça (v0.6) */
 :root{
   --bg:#ead9bd; --card:#fbf5e9; --ink:#3a2817; --muted:#6e5a44; --line:#d6bf98;
   --green:#8a5a2b; --green-soft:#f3e4cb;
@@ -123,7 +123,7 @@ svg .ar{stroke:#6e5130}
 <header>
   <svg class="brand" viewBox="0 0 84 84" role="img" aria-label="Rolha de cortiça"><defs><radialGradient id="rl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#e6bf88"/><stop offset="1" stop-color="#b98a52"/></radialGradient></defs><circle cx="42" cy="42" r="38" fill="url(#rl)" stroke="#fbeccd" stroke-width="3"/><g fill="#7a4d22" opacity=".55"><circle cx="26" cy="28" r="2.4"/><circle cx="52" cy="22" r="1.8"/><circle cx="60" cy="46" r="2.6"/><circle cx="34" cy="54" r="2"/><circle cx="46" cy="64" r="1.6"/><circle cx="22" cy="46" r="1.5"/><circle cx="48" cy="40" r="1.4"/></g><g fill="#fff3d6" opacity=".6"><circle cx="38" cy="30" r="1.4"/><circle cx="56" cy="34" r="1.2"/><circle cx="30" cy="42" r="1.3"/><circle cx="44" cy="52" r="1.2"/></g></svg>
   <div class="txt">
-  <span class="tag">Versão 0.5 · Semana 1 (atualizado a 8 de outubro)</span>
+  <span class="tag">Versão 0.6 · Semana 1 (atualizado a 8 de outubro)</span>
   <h1>Automação de propostas comerciais</h1>
   <p>Resumo do que está construído · atualizado a 8 de outubro de 2026</p>
   </div>
@@ -181,7 +181,7 @@ svg .ar{stroke:#6e5130}
     <path class="ar" d="M505 124V150" />
     <path class="ar" d="M647 124V150" />
     <text x="220" y="30" class="lab">Etapa 1</text>
-    <text x="505" y="30" class="lab">Etapas automatizadas (v0.5)</text>
+    <text x="505" y="30" class="lab">Etapas automatizadas (v0.6)</text>
     <text x="860" y="30" class="lab">Próximas etapas</text>
   </svg>
   </div>
@@ -464,6 +464,23 @@ svg .ar{stroke:#6e5130}
 </section>
 
 <section>
+  <h2>Custos mensais</h2>
+  <p class="lead">Estimativa para 30 a 35 encomendas por mês, sem IVA. Valores dos planos de fontes públicas, a confirmar nos sites dos fornecedores.</p>
+  <table>
+    <thead><tr><th>Serviço</th><th>Hoje (testes)</th><th>Produção</th></tr></thead>
+    <tbody>
+      <tr><td>n8n Cloud</td><td>Starter · 20 €</td><td>Starter · 20 € (2.500 execuções; uso previsto 1.000 a 1.800). Pro, 50 €, se o volume crescer</td></tr>
+      <tr><td>Supabase (base de dados)</td><td>Free · 0 €</td><td>Pro · 25 $ (~23 €): cópias de segurança diárias e sem pausa por inatividade</td></tr>
+      <tr><td>IA (OpenRouter, Claude Haiku 4.5)</td><td>créditos de teste, cêntimos</td><td>2 a 5 €</td></tr>
+      <tr><td>Moloni (propostas)</td><td>não ligado</td><td>Flex · 10,90 € (único plano onde a API aparece), se ainda não tiverem API</td></tr>
+      <tr><td>Outlook e Slack</td><td>contas de teste</td><td>já existentes no cliente (a confirmar)</td></tr>
+      <tr><td><b>Total</b></td><td><b>~20 €</b></td><td><b>~57 a 59 €</b> (~47 a 49 € sem Moloni), cerca de 1,6 € por encomenda</td></tr>
+    </tbody>
+  </table>
+  <div class="card"><p style="margin:0">Mudar para um modelo de IA mais barato pouparia menos de 3 € por mês e aumentaria o risco com dados pessoais, por isso mantém-se o Haiku 4.5. Acompanhar o consumo de execuções do n8n nos primeiros meses; acima de 80 % do limite, subir para o Pro.</p></div>
+</section>
+
+<section>
   <h2>Próximos passos</h2>
   <table>
     <thead><tr><th>Etapa</th><th>Descrição</th><th>Estado</th></tr></thead>
@@ -477,7 +494,7 @@ svg .ar{stroke:#6e5130}
   </table>
 </section>
 
-<footer>Versão 0.5 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 9 de outubro de 2026.</footer>
+<footer>Versão 0.6 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 9 de outubro de 2026.</footer>
 
 </div>
 </body>
