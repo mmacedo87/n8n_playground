@@ -158,7 +158,7 @@
         "workflowId": {
           "__rl": true,
           "mode": "id",
-          "value": "<ID do WF2 na instância de destino>"
+          "value": "{{WF:WF2 - Pedido de proposta}}"
         },
         "workflowInputs": {
           "attemptToConvertTypes": false,
@@ -313,7 +313,7 @@
         "workflowId": {
           "__rl": true,
           "mode": "id",
-          "value": "t7cjKbq4VKfx44Fv"
+          "value": "{{WF:WF1 - Extrair pedido do email}}"
         },
         "workflowInputs": {
           "attemptToConvertTypes": false,
@@ -540,7 +540,7 @@
         "workflowId": {
           "__rl": true,
           "mode": "id",
-          "value": "N7BZddGLl0WlSl9Q"
+          "value": "{{WF:Notificar Slack}}"
         },
         "workflowInputs": {
           "attemptToConvertTypes": false,
@@ -709,7 +709,7 @@
     "binaryMode": "separate",
     "availableInMCP": true,
     "timeSavedMode": "fixed",
-    "errorWorkflow": "<ID do Mail Error Flow na instância de destino>",
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
     "callerPolicy": "workflowsFromSameOwner",
     "saveDataSuccessExecution": "none",
     "saveDataErrorExecution": "all"
