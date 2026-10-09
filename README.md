@@ -13,7 +13,8 @@ Este repositório guarda o histórico dos workflows n8n, do SQL do Supabase, dos
 | `supabase/` | `schema.sql` (estado atual) e `migrations/` (alterações numeradas) |
 | `tests/` | Descrição da bateria de testes |
 | `docs/` | Plano de versionamento e checklist de passagem a produção |
-| `scripts/` | Sanitização de exportações e verificação de segredos |
+| `scripts/` | Sanitização de exportações, verificação de segredos, deploy no n8n e criação do repositório GitHub (`github_setup.py`) |
+| `.github/workflows/` | Action `main-so-por-pr`: `main` só por pull request |
 
 ## Workflows
 

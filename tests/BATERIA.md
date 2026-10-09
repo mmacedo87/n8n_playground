@@ -190,3 +190,9 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 
 ### E.2 Cenários de ecrã (`tests/e2e_app_cenarios.py`, Playwright)
 S01 chave errada → certa · S02 endereço inexistente / barra final · S03 editar endereço invalida a ligação · S04 formatos de credenciais · S05 emails e canais inválidos · S06 recarregar (chave não persiste) · S07 falha 500 a meio + repetir sem duplicar · S08 duplo clique em Instalar · S09 teclado · S10 360 px sem scroll horizontal · S11 modo escuro/desktop · S12 copiar SQL (+ recurso) · S13 verificação falha com mensagem clara · S14 Voltar mantém dados · S15 sem erros de página. Resultado: 15/15.
+
+### E.3 Repositório GitHub (`tests/test_github.py`, `tests/test_app.py` A11-A15, `tests/e2e_app_cenarios.py` S16-S21)
+G1 três branches no mesmo commit, filho do commit inicial · G2 conteúdo (Action, 16 workflows, sem segredos/config) · G3 ruleset (só PR, check certo, sem bypass) · G4 organização · G5 token inválido · G6 nome com conteúdo alheio recusado · G7 repetir não duplica · G8 falha a meio e repetir · G9 plano gratuito dá aviso · G10 scopes · G11 modos executáveis.
+A11-A15 endpoints, validação de nomes, chave sem permissões, token fora do disco, mensagens em PT. K5: o `repositorio/` do kit passa os mesmos testes que a Action corre.
+S16 caminho completo · S17 chave sem permissões · S18 nomes inválidos · S19 aviso plano gratuito · S20 duplo clique + falha a meio · S21 token não persiste e 360 px.
+Pendente: T-github, teste real com conta GitHub de teste.
