@@ -61,7 +61,7 @@
   }
 </style>
 <style>
-/* Tema cortiça (v0.6) */
+/* Tema cortiça (v0.7) */
 :root{
   --bg:#ead9bd; --card:#fbf5e9; --ink:#3a2817; --muted:#6e5a44; --line:#d6bf98;
   --green:#8a5a2b; --green-soft:#f3e4cb;
@@ -123,9 +123,9 @@ svg .ar{stroke:#6e5130}
 <header>
   <svg class="brand" viewBox="0 0 84 84" role="img" aria-label="Rolha de cortiça"><defs><radialGradient id="rl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#e6bf88"/><stop offset="1" stop-color="#b98a52"/></radialGradient></defs><circle cx="42" cy="42" r="38" fill="url(#rl)" stroke="#fbeccd" stroke-width="3"/><g fill="#7a4d22" opacity=".55"><circle cx="26" cy="28" r="2.4"/><circle cx="52" cy="22" r="1.8"/><circle cx="60" cy="46" r="2.6"/><circle cx="34" cy="54" r="2"/><circle cx="46" cy="64" r="1.6"/><circle cx="22" cy="46" r="1.5"/><circle cx="48" cy="40" r="1.4"/></g><g fill="#fff3d6" opacity=".6"><circle cx="38" cy="30" r="1.4"/><circle cx="56" cy="34" r="1.2"/><circle cx="30" cy="42" r="1.3"/><circle cx="44" cy="52" r="1.2"/></g></svg>
   <div class="txt">
-  <span class="tag">Versão 0.6 · Semana 1 (atualizado a 8 de outubro)</span>
+  <span class="tag">Versão 0.7 · Semana 1 (atualizado a 9 de outubro)</span>
   <h1>Automação de propostas comerciais</h1>
-  <p>Resumo do que está construído · atualizado a 8 de outubro de 2026</p>
+  <p>Resumo do que está construído · atualizado a 9 de outubro de 2026</p>
   </div>
 </header>
 
@@ -144,46 +144,9 @@ svg .ar{stroke:#6e5130}
 
 <section>
   <h2>Visão geral do fluxo</h2>
-  <p class="lead">A castanho (cortiça) o que já está construído (o WF4 de enriquecimento corre em paralelo ao WF3); a tracejado o que está planeado.</p>
+  <p class="lead">Todos os workflows construídos e como se ligam. A tracejado vermelho a decisão humana; a cinzento tracejado o que está planeado (Moloni).</p>
   <div class="diagram">
-  <svg viewBox="0 0 1000 270" role="img" aria-label="Visão geral do fluxo de propostas">
-    <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#55645d"/></marker></defs>
-    <!-- boxes -->
-    <rect class="t" x="20" y="50" width="118" height="74" rx="9"/>
-    <text x="79" y="82">Email do</text><text x="79" y="99">cliente</text>
-    <rect class="llm" x="162" y="50" width="118" height="74" rx="9"/>
-    <text x="221" y="70">Leitura de emails</text><text x="221" y="86" style="font-weight:600">WF1</text><text x="221" y="102">pedido em</text><text x="221" y="116" class="small">rascunho</text>
-    <rect class="n" x="304" y="50" width="118" height="74" rx="9"/>
-    <text x="363" y="76" style="font-weight:600">WF2</text><text x="363" y="92">Pedido de</text><text x="363" y="108">proposta</text>
-    <rect class="n" x="446" y="50" width="118" height="74" rx="9"/>
-    <text x="505" y="76" style="font-weight:600">WF3</text><text x="505" y="92">Cotação</text><text x="505" y="108">de frete</text>
-    <rect class="n" x="588" y="50" width="118" height="74" rx="9"/>
-    <text x="647" y="76" style="font-weight:600">WF6</text><text x="647" y="92">Receção das</text><text x="647" y="108">cotações</text>
-    <rect class="plan" x="730" y="50" width="118" height="74" rx="9"/>
-    <text x="789" y="82">Proposta</text><text x="789" y="99">(Moloni)</text>
-    <rect class="plan" x="872" y="50" width="118" height="74" rx="9"/>
-    <text x="931" y="76">Validação</text><text x="931" y="92">e envio</text><text x="931" y="108" class="small">(WF5 e WF8 feitos)</text>
-    <!-- arrows -->
-    <path class="ar" d="M138 87H160" marker-end="url(#a1)"/>
-    <path class="ar" d="M280 87H302" marker-end="url(#a1)"/>
-    <path class="ar" d="M422 87H444" marker-end="url(#a1)"/>
-    <path class="ar" d="M564 87H586" marker-end="url(#a1)"/>
-    <path class="ar" d="M706 87H728" marker-end="url(#a1)"/>
-    <path class="ar" d="M848 87H870" marker-end="url(#a1)"/>
-    <!-- bands -->
-    <rect class="band" x="304" y="150" width="260" height="38" rx="8"/>
-    <text x="434" y="174" class="small">Base de dados (Supabase)</text>
-    <rect class="band" x="588" y="150" width="402" height="38" rx="8"/>
-    <text x="789" y="174" class="small">Avisos no Slack (propostas e cotações)</text>
-    <rect class="band" x="162" y="204" width="402" height="38" rx="8"/>
-    <text x="363" y="228" class="small">Avisos de erro por email (Outlook)</text>
-    <path class="ar" d="M363 124V150" />
-    <path class="ar" d="M505 124V150" />
-    <path class="ar" d="M647 124V150" />
-    <text x="220" y="30" class="lab">Etapa 1</text>
-    <text x="505" y="30" class="lab">Etapas automatizadas (v0.6)</text>
-    <text x="860" y="30" class="lab">Próximas etapas</text>
-  </svg>
+  <svg viewBox="0 0 1000 570" role="img" aria-label="Fluxo geral de todos os workflows"><defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6e5130"/></marker></defs><text x="500" y="20" class="lab">Fase 1 · entrada por email (rascunho, pessoa decide)</text><rect class="t" x="20" y="34" width="100" height="60" rx="9"/><text x="70.0" y="60.0">Email do</text><text x="70.0" y="76.0">cliente</text><rect class="llm" x="160" y="34" width="100" height="60" rx="9"/><text x="210.0" y="60.0">Read Outlook</text><text x="210.0" y="76.0" style="font-weight:600">+ WF1 (IA)</text><rect class="n" x="300" y="34" width="100" height="60" rx="9"/><text x="350.0" y="60.0">Lead</text><text x="350.0" y="76.0" class="small">rascunho</text><path class="ar" d="M120 64H158" marker-end="url(#a1)"/><path class="ar" d="M260 64H298" marker-end="url(#a1)"/><path class="ard" d="M350 94V112H210V138" marker-end="url(#a1)"/><text x="420" y="110" class="lab" style="text-anchor:start">pessoa revê e cria o pedido</text><rect class="t" x="20" y="140" width="100" height="70" rx="9"/><text x="70.0" y="171.0">Formulário</text><text x="70.0" y="187.0" class="small">de pedido</text><rect class="n" x="160" y="140" width="100" height="70" rx="9"/><text x="210.0" y="163.0" style="font-weight:600">WF2</text><text x="210.0" y="179.0">Pedido de</text><text x="210.0" y="195.0">proposta</text><rect class="n" x="300" y="140" width="100" height="70" rx="9"/><text x="350.0" y="163.0" style="font-weight:600">WF3</text><text x="350.0" y="179.0">Cotação</text><text x="350.0" y="195.0">de frete</text><rect class="llm" x="440" y="140" width="100" height="70" rx="9"/><text x="490.0" y="163.0" style="font-weight:600">WF6</text><text x="490.0" y="179.0">Ler cotações</text><text x="490.0" y="195.0" class="small">(texto e PDF)</text><rect class="plan" x="580" y="140" width="100" height="70" rx="9"/><text x="630.0" y="163.0" style="font-weight:600">Moloni</text><text x="630.0" y="179.0" class="small">preço final</text><text x="630.0" y="195.0" class="small">(planeado)</text><rect class="n" x="720" y="140" width="100" height="70" rx="9"/><text x="770.0" y="163.0" style="font-weight:600">WF5</text><text x="770.0" y="179.0">Resumo para</text><text x="770.0" y="195.0">validação</text><rect class="n" x="860" y="140" width="100" height="70" rx="9"/><text x="910.0" y="163.0" style="font-weight:600">WF8</text><text x="910.0" y="179.0">Aprovação</text><text x="910.0" y="195.0">da Bárbara</text><path class="ar" d="M120 175H158" marker-end="url(#a1)"/><path class="ar" d="M260 175H298" marker-end="url(#a1)"/><path class="ar" d="M400 175H438" marker-end="url(#a1)"/><path class="ar" d="M540 175H578" marker-end="url(#a1)"/><path class="ar" d="M680 175H718" marker-end="url(#a1)"/><path class="ar" d="M820 175H858" marker-end="url(#a1)"/><rect class="n" x="160" y="250" width="160" height="50" rx="9"/><text x="240.0" y="271.0" style="font-weight:600">WF4 · Enriquecimento</text><text x="240.0" y="287.0" class="small">compliance, sem IA</text><path class="ar" d="M210 210V248" marker-end="url(#a1)"/><text x="222" y="232" class="lab" style="text-anchor:start">em paralelo</text><text x="500" y="332" class="lab">Fases 7 a 10 · depois da aprovação</text><rect class="n" x="20" y="346" width="100" height="70" rx="9"/><text x="70.0" y="369.0" style="font-weight:600">WF9</text><text x="70.0" y="385.0">Envio ao</text><text x="70.0" y="401.0">cliente</text><rect class="n" x="160" y="346" width="100" height="70" rx="9"/><text x="210.0" y="369.0" style="font-weight:600">WF10</text><text x="210.0" y="385.0">Cliente confirma</text><text x="210.0" y="401.0" class="small">(link no email)</text><rect class="n" x="300" y="346" width="100" height="70" rx="9"/><text x="350.0" y="369.0" style="font-weight:600">WF11</text><text x="350.0" y="385.0">Plano de</text><text x="350.0" y="401.0">expedição</text><rect class="n" x="440" y="346" width="100" height="70" rx="9"/><text x="490.0" y="369.0" style="font-weight:600">WF12</text><text x="490.0" y="385.0">Follow-up</text><text x="490.0" y="401.0">ao cliente</text><rect class="t" x="580" y="346" width="100" height="70" rx="9"/><text x="630.0" y="369.0">Proposta</text><text x="630.0" y="385.0">concluída</text><text x="630.0" y="401.0" class="small">(concluida)</text><path class="ar" d="M120 381H158" marker-end="url(#a1)"/><path class="ar" d="M260 381H298" marker-end="url(#a1)"/><path class="ar" d="M400 381H438" marker-end="url(#a1)"/><path class="ar" d="M540 381H578" marker-end="url(#a1)"/><path class="ar" d="M910 210V312H70V344" marker-end="url(#a1)"/><text x="500" y="438" class="small">O WF9 só envia se a proposta tiver preço final (vem do Moloni).</text><rect class="band" x="20" y="452" width="960" height="30" rx="8"/><text x="500" y="472" class="small">Base de dados (Supabase, 11 tabelas): todos os workflows leem e gravam aqui</text><rect class="band" x="20" y="490" width="960" height="30" rx="8"/><text x="500" y="510" class="small">Notificar Slack (sub-workflow): avisos de propostas, cotações e confirmações</text><rect class="band" x="20" y="528" width="960" height="30" rx="8"/><text x="500" y="548" class="small">Mail Error Flow e WF2 Error Flow: aviso por email quando um workflow falha</text></svg>
   </div>
   <div class="legend">
     <span><i class="l-std"></i>Passo automático</span>
@@ -192,6 +155,22 @@ svg .ar{stroke:#6e5130}
     <span><i class="l-err"></i>Erro / aviso</span>
     <span><i class="l-plan"></i>Planeado / em pausa</span>
   </div>
+  <table>
+    <thead><tr><th>De</th><th>Para</th><th>Como se ligam</th></tr></thead>
+    <tbody>
+      <tr><td>Read Outlook Messages</td><td>WF1</td><td>chama o WF1 para cada email; grava um lead rascunho e avisa no Slack. Nunca cria a proposta</td></tr>
+      <tr><td>Formulário / pessoa</td><td>WF2</td><td>grava a proposta (PRP-AAAA-NNNN) e confirma por email</td></tr>
+      <tr><td>WF2</td><td>WF3 e WF4</td><td>chama os dois sem esperar: cotação de frete e compliance em paralelo</td></tr>
+      <tr><td>WF3</td><td>WF6</td><td>o WF3 envia o pedido às transportadoras; o WF6 lê as respostas</td></tr>
+      <tr><td>WF6</td><td>WF5</td><td>com cotações suficientes, chama o WF5 (resumo à Bárbara, proposta em validação)</td></tr>
+      <tr><td>WF5</td><td>WF8</td><td>a Bárbara responde «OK» ao email; o WF8 lê a resposta e aprova</td></tr>
+      <tr><td>WF8</td><td>WF9</td><td>depois de aprovar, chama o WF9 sem esperar</td></tr>
+      <tr><td>WF9</td><td>WF10</td><td>o email ao cliente leva um link; ao confirmar, o WF10 marca a proposta aceite e cria a linha de expedição</td></tr>
+      <tr><td>WF10</td><td>WF11</td><td>avisa a expedição por email, com o link do formulário do WF11</td></tr>
+      <tr><td>WF11</td><td>WF12</td><td>grava o plano e chama o WF12, que envia a proposta final e conclui</td></tr>
+      <tr><td>Todos</td><td>Slack e erros</td><td>usam o Notificar Slack e, se falharem, o Mail Error Flow (WF2 tem o seu próprio)</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <section>
@@ -494,7 +473,7 @@ svg .ar{stroke:#6e5130}
   </table>
 </section>
 
-<footer>Versão 0.6 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 9 de outubro de 2026.</footer>
+<footer>Versão 0.7 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 9 de outubro de 2026.</footer>
 
 </div>
 </body>
