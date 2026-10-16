@@ -422,7 +422,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8xj41URokjCimmon",
-    "sourceVersionId": "89b16da8-502d-41fb-8e14-e3bc9fd93bb9",
+    "sourceVersionId": "443929eb-d796-4500-bb24-140fdaef39dc",
     "exportedAt": "2026-10-16",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }
