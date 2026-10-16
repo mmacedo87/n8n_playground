@@ -50,7 +50,7 @@ td.o{font-size:14px}
 <span><b>Real</b> = com serviços e dados reais · <b>Funcionalidade</b> = com dados fixados</span>
 </div>
 <div class="count">
-<div><b>14</b>DONE</div><div><b>4</b>IN DEVELOPMENT</div><div><b>1</b>TO BE DONE</div>
+<div><b>15</b>DONE</div><div><b>3</b>IN DEVELOPMENT</div><div><b>1</b>TO BE DONE</div>
 </div>
 
 <h2>As 10 fases</h2>
@@ -64,9 +64,9 @@ td.o{font-size:14px}
 <tr><td class="t"><b>3 · Ler cotações das transportadoras</b><small>WF6 (inativo)</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Resposta real com PDF lida (PRP-2026-0017). Reler com duas transportadoras (Lusovia e Vale do Ave) fez o WF6 enviar o resumo à Bárbara, sem mínimo de cotações. Falta ativar o trigger de produção.</td></tr>
 <tr><td class="t"><b>4 · Enriquecimento (compliance)</b><small>WF4</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Códigos pautais por validar pelo despachante. Faltam os produtos de azeitona.</td></tr>
 <tr><td class="t"><b>5 · Gerar proposta no Moloni</b><small>por criar</small></td><td data-l="Estado"><span class="badge TODO">TO BE DONE</span></td><td data-l="Real" class="na">— sem credenciais</td><td data-l="Funcionalidade" class="na">— por construir</td><td class="o">Faltam Developer ID e Client Secret, e decidir sobre o refresh token (14 dias).</td></tr>
-<tr><td class="t"><b>6 · Resumo para validação</b><small>WF5</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Email real com a coluna Transportadora feito. Nova versão (confiança do LLM em % nas cotações automáticas) testada com dados fixados: <b>falta publicar o WF5</b> e repetir o real.</td></tr>
-<tr><td class="t"><b>6 · Aprovação da Bárbara</b><small>WF8 (publicado)</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Publicado a 16/10. Falta a resposta «OK» real (M5). Sem preço final o WF9 falha.</td></tr>
-<tr><td class="t"><b>7 · Envio ao cliente</b><small>WF9</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">O real foi feito com preço posto à mão. O preço final vem do Moloni.</td></tr>
+<tr><td class="t"><b>6 · Resumo para validação</b><small>WF5</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Email real feito com a coluna Transportadora e a confiança do LLM em % nas cotações automáticas (publicado). Rascunho posterior só retira o segundo destinatário de teste: republicar.</td></tr>
+<tr><td class="t"><b>6 · Aprovação da Bárbara</b><small>WF8 (publicado)</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Publicado a 16/10. Resposta «OK» real feita (M5): aprova e chama o WF9.</td></tr>
+<tr><td class="t"><b>7 · Envio ao cliente</b><small>WF9</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Envio real feito (M6) com preço de teste posto à mão (1500 EUR). O preço final vem do Moloni.</td></tr>
 <tr><td class="t"><b>8 · Confirmação da encomenda</b><small>WF10</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
 <tr><td class="t"><b>9 · Plano de expedição</b><small>WF11</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
 <tr><td class="t"><b>10 · Follow-up ao cliente</b><small>WF12</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
@@ -87,7 +87,7 @@ td.o{font-size:14px}
 </table>
 
 <h2>Nota</h2>
-<p>WF6, WF5 e WF8 estão encadeados: um só caso real de ponta a ponta, com uma resposta de transportadora de teste, fecha os três testes reais.</p>
+<p>WF6, WF5 e WF8 estão encadeados: o caso real de ponta a ponta (PRP-2026-0017) passou: respostas de transportadoras → resumo → «OK» → envio ao cliente (modo teste).</p>
 </main>
 </body>
 </html>
