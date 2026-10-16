@@ -104,7 +104,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 
 ## 15. WF5, WF6, WF8 (validação e leitura de cotações)
 - [ ] Definir o email da Bárbara no WF5 (destinatário do resumo) e a lista `AUTORIZADOS` no código do WF8 (hoje só o email de teste). O WF8 só aprova com "OK"/"aprovo" na primeira linha, de um remetente autorizado, numa proposta em `em_validacao`.
-- [ ] Confirmar a regra de arranque do WF5 no WF6 (`MAX_EXIGIDAS=3`: com 3 cotações, ou todas as pedidas se forem menos).
+- [x] Regra de arranque do WF5 no WF6 definida a 2026-10-16: sempre que há cotações novas a Bárbara recebe o resumo atualizado (sem mínimo). O assunto é fixo por proposta e o WF6 aceita propostas `a_cotar` e `em_validacao`.
 - [ ] Publicar o WF8 (poll de 2 minutos ao Outlook) só quando houver uma proposta real em `em_validacao`; ativar o WF6 com o trigger de produção.
 - [ ] Testes reais por fazer: M5 (resposta real da Bárbara), uma resposta real de transportadora para o WF6 (texto e PDF).
 - [ ] Confirmar os IDs do WF5 (no WF6) e do Mail Error Flow como Error Workflow do WF5, WF6 e WF8 na instância de destino.

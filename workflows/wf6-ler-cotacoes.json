@@ -1,6 +1,6 @@
 {
   "name": "WF6 - Ler cotações das transportadoras",
-  "description": "Lê na caixa Outlook as respostas das transportadoras (assunto com código PRP), extrai preço, modo, prazo e validade com LLM, valida e grava em cotacoes_frete (a_rever quando houver dúvidas). Lê também o texto de PDFs anexos (PDFs digitalizados ficam a rever).",
+  "description": "Lê respostas das transportadoras (texto e PDFs), grava cada cotação e envia sempre à Bárbara o resumo atualizado da proposta (WF5), com assunto fixo por proposta para agrupar a conversa. Aceita propostas a_cotar e em_validacao.",
   "nodes": [
     {
       "name": "Ler respostas das transportadoras",
@@ -82,13 +82,18 @@
         "operation": "getAll",
         "tableId": "propostas",
         "returnAll": true,
-        "matchType": "allFilters",
+        "matchType": "anyFilter",
         "filters": {
           "conditions": [
             {
               "keyName": "estado",
               "condition": "eq",
               "keyValue": "a_cotar"
+            },
+            {
+              "keyName": "estado",
+              "condition": "eq",
+              "keyValue": "em_validacao"
             }
           ]
         }
@@ -133,9 +138,9 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const msgs = $('Ler emails não lidos com código PRP').all().map(i => i.json).filter(m => m && m.id);\nconst transp = $('Ler transportadoras').all().map(i => i.json).filter(t => t && t.id);\nconst props = $('Ler propostas a cotar').all().map(i => i.json).filter(p => p && p.id);\nconst vistos = new Set($('Ler cotações já registadas').all().map(i => i.json.email_origem_id).filter(Boolean));\nconst out = [];\nconst ignoradas = [];\nfor (const m of msgs) {\n  const assunto = String(m.subject || '');\n  const cod = (assunto.match(/PRP-\\d{4}-\\d{4}/i) || [])[0];\n  const de = String(((m.from || {}).emailAddress || {}).address || '').toLowerCase();\n  if (!cod) { ignoradas.push({ id: m.id, motivo: 'sem código PRP' }); continue; }\n  if (/^\\s*(\\[teste\\]\\s*)?\\[?PRP-\\d{4}-\\d{4}\\]?\\s*pedido de cota/i.test(assunto) || /^\\s*\\[teste\\]/i.test(assunto)) { ignoradas.push({ id: m.id, motivo: 'é o nosso pedido' }); continue; }\n  if (vistos.has(m.id)) { ignoradas.push({ id: m.id, motivo: 'já registada' }); continue; }\n  const p = props.find(x => x.codigo === cod.toUpperCase());\n  const t = transp.find(x => String(x.email || '').toLowerCase() === de);\n  if (!p) { ignoradas.push({ id: m.id, motivo: 'proposta não está a_cotar' }); continue; }\n  if (!t) { ignoradas.push({ id: m.id, motivo: 'remetente não é transportadora conhecida' }); continue; }\n  const corpo = String((m.body && m.body.content) || m.bodyPreview || '').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, 6000);\n  out.push({ json: { email_id: m.id, codigo: p.codigo, proposta_id: p.id, transportadora_id: t.id, transportadora_nome: t.nome, assunto, texto: corpo, tem_anexos: !!m.hasAttachments, recebida_em: m.receivedDateTime || null } });\n}\nreturn out;"
+        "jsCode": "const msgs = $('Ler emails não lidos com código PRP').all().map(i => i.json).filter(m => m && m.id);\nconst transp = $('Ler transportadoras').all().map(i => i.json).filter(t => t && t.id);\n// propostas a_cotar ou em_validacao: respostas tardias continuam a ser aceites até a Bárbara aprovar\nconst props = $('Ler propostas a cotar').all().map(i => i.json).filter(p => p && p.id);\nconst vistos = new Set($('Ler cotações já registadas').all().map(i => i.json.email_origem_id).filter(Boolean));\nconst out = [];\nconst ignoradas = [];\nfor (const m of msgs) {\n  const assunto = String(m.subject || '');\n  const cod = (assunto.match(/PRP-\\d{4}-\\d{4}/i) || [])[0];\n  const de = String(((m.from || {}).emailAddress || {}).address || '').toLowerCase();\n  if (!cod) { ignoradas.push({ id: m.id, motivo: 'sem código PRP' }); continue; }\n  if (/^\\s*(\\[teste\\]\\s*)?\\[?PRP-\\d{4}-\\d{4}\\]?\\s*pedido de cota/i.test(assunto) || /^\\s*\\[teste\\]/i.test(assunto)) { ignoradas.push({ id: m.id, motivo: 'é o nosso pedido' }); continue; }\n  if (vistos.has(m.id)) { ignoradas.push({ id: m.id, motivo: 'já registada' }); continue; }\n  const p = props.find(x => x.codigo === cod.toUpperCase());\n  const t = transp.find(x => String(x.email || '').toLowerCase() === de);\n  if (!p) { ignoradas.push({ id: m.id, motivo: 'proposta não está a_cotar nem em_validacao' }); continue; }\n  if (!t) { ignoradas.push({ id: m.id, motivo: 'remetente não é transportadora conhecida' }); continue; }\n  const corpo = String((m.body && m.body.content) || m.bodyPreview || '').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, 6000);\n  out.push({ json: { email_id: m.id, codigo: p.codigo, proposta_id: p.id, transportadora_id: t.id, transportadora_nome: t.nome, assunto, texto: corpo, tem_anexos: !!m.hasAttachments, recebida_em: m.receivedDateTime || null } });\n}\nreturn out;"
       },
-      "notes": "Só aceita emails de transportadoras conhecidas, com código PRP de uma proposta a_cotar, e ainda não registados. O resto é ignorado (fica por ler na caixa)."
+      "notes": "Só aceita emails de transportadoras conhecidas, com código PRP de uma proposta a_cotar ou em_validacao, e ainda não registados. O resto é ignorado (fica por ler na caixa)."
     },
     {
       "name": "Extrair cotação (LLM)",
@@ -392,11 +397,11 @@
         2272,
         224
       ],
-      "notes": "Regra (a confirmar com o utilizador): a proposta segue para a Bárbara quando há cotações em número igual ao menor de 3 e dos pedidos enviados. Cotações a_rever contam, aparecem marcadas no email.",
+      "notes": "Regra definida pelo utilizador (2026-10-16): sempre que há cotações novas, a Bárbara recebe o resumo atualizado da proposta, sem mínimo de cotações. Cotações a_rever contam e aparecem marcadas no email.",
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const MAX_EXIGIDAS = 3;\nconst novas = $('Validar extração').all().map(i => i.json).filter(c => c && c.proposta_id);\nif (!novas.length) return [];\nconst antigas = $('Ler cotações já registadas').all().map(i => i.json).filter(c => c && c.proposta_id);\nconst pedidos = $('Ler pedidos de cotação enviados').all().map(i => i.json).filter(p => p && p.proposta_id);\nconst out = [];\nfor (const pid of [...new Set(novas.map(c => c.proposta_id))]) {\n  const total = antigas.filter(c => c.proposta_id === pid).length + novas.filter(c => c.proposta_id === pid).length;\n  const enviados = pedidos.filter(p => p.proposta_id === pid).length;\n  const exigidas = Math.max(1, Math.min(MAX_EXIGIDAS, enviados));\n  if (total >= exigidas) out.push({ json: { proposta_id: pid, codigo: novas.find(c => c.proposta_id === pid).codigo, cotacoes: total, pedidos_enviados: enviados } });\n}\nreturn out;"
+        "jsCode": "// Regra: sempre que há cotações novas, a Bárbara recebe o resumo atualizado dessa proposta (sem mínimo de cotações).\n// O assunto do WF5 é fixo por proposta ([PRP-...] Proposta para validação - produto - destino), por isso as atualizações agrupam-se na mesma conversa.\nconst novas = $('Validar extração').all().map(i => i.json).filter(c => c && c.proposta_id);\nif (!novas.length) return [];\nconst antigas = $('Ler cotações já registadas').all().map(i => i.json).filter(c => c && c.proposta_id);\nconst pedidos = $('Ler pedidos de cotação enviados').all().map(i => i.json).filter(p => p && p.proposta_id);\nconst out = [];\nfor (const pid of [...new Set(novas.map(c => c.proposta_id))]) {\n  const total = antigas.filter(c => c.proposta_id === pid).length + novas.filter(c => c.proposta_id === pid).length;\n  const enviados = pedidos.filter(p => p.proposta_id === pid).length;\n  out.push({ json: { proposta_id: pid, codigo: novas.find(c => c.proposta_id === pid).codigo, cotacoes: total, pedidos_enviados: enviados } });\n}\nreturn out;"
       }
     },
     {
@@ -407,7 +412,7 @@
         2496,
         224
       ],
-      "notes": "Chama o WF5 uma vez por proposta pronta. Não espera: o WF5 tem o seu próprio Error Workflow e passa a proposta a em_validacao, por isso o WF6 não a volta a chamar.",
+      "notes": "Chama o WF5 uma vez por proposta com cotações novas, em cada execução do WF6. O assunto do email é fixo por proposta, por isso as atualizações ficam agrupadas na caixa da Bárbara. Não espera pelo WF5.",
       "parameters": {
         "mode": "each",
         "source": "database",
@@ -748,8 +753,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "HErViy6cNVrTIH7A",
-    "sourceVersionId": "(rascunho, inativo)",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "e60094c3-4132-4c0c-a005-0b4735daa4c7",
+    "exportedAt": "2026-10-16",
     "sanitized": "ids de credenciais e errorWorkflow removidos"
   }
 }
