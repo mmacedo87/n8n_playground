@@ -21,7 +21,7 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF6 Ler cotações | `HErViy6cNVrTIH7A` | inativo, manual; texto e PDFs; chama o WF5 |
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |
-| WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | por publicar; só "OK" na 1.ª linha aprova |
+| WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | publicado (2026-10-16); só "OK" na 1.ª linha aprova |
 | WF9 Envio ao cliente | `UrGBkXG37To7RYMR` | sub-workflow, chamado pelo WF8; precisa de `preco_final` |
 | WF10 Confirmação da encomenda | `30Z4Nnge3BRZbU8G` | webhook GET `confirmar-proposta`, link com token |
 | WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao`; chama o WF12 |
