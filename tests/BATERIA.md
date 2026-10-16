@@ -148,7 +148,7 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | M3 | Remetente desconhecido → ignorado, nada acontece (exec. 123) | Passa |
 | M4 | Proposta já `aprovada` → aprovação ignorada, aviso Slack (exec. 124) | Passa |
 | M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | **Passa** (2026-10-16 ~19:06): resposta «OK» real ao email de validação da PRP-2026-0017 → WF8 marcou `aprovada` e chamou o WF9, que falhou 0,2 s depois por falta de `preco_final` (exec. 242), sem enviar nada ao cliente. Repetição com `preco_final` de teste: ver M6 |
-| M6 | WF9 real após aprovação, com `preco_final` 1500 EUR, contacto de teste e proposta de novo `em_validacao` (modo teste: email redirecionado para a caixa de teste) | Pendente: falta nova resposta «OK» |
+| M6 | WF9 real após aprovação, com `preco_final` 1500 EUR, contacto de teste e proposta de novo `em_validacao` (modo teste: email redirecionado para a caixa de teste) | **Passa** (2026-10-16 19:10): resposta «OK» real → WF8 aprovou → WF9 enviou e marcou `enviada` (`enviada_em` 18:10:42Z). Receção e aspeto do email: confirmação do utilizador |
 
 ## X. WF1 Extração do pedido e «Read Outlook Messages» (dados fixados; Code e If correm a sério)
 | Id | Verifica | Resultado |
