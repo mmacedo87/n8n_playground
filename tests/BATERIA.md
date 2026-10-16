@@ -129,6 +129,7 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | L13 | Proposta `em_validacao` aceita resposta tardia: 2 cotações antigas + 1 nova → WF5 chamado de novo com `cotacoes=3` (exec. 220) | Passa |
 | L14 | Regressão: pedido nosso (`[TESTE]`), remetente desconhecido e proposta que não está `a_cotar`/`em_validacao` são ignorados, sem chamar o WF5 (exec. 221) | Passa |
 | L15 | Estrutural (WF5): o assunto `[PRP-...] Proposta para validação - produto - destino` não depende do número de cotações, por isso as atualizações agrupam-se na mesma conversa | Estrutural |
+| L16 | WF5: cotação `automatica` mostra «automática (confiança 95 %)»; `a_rever` mostra «a rever»; sem confiança, só «automática» (exec. 233, com pins; rascunho 89b16da8, por publicar) | Passa |
 | L4 | Passagem ao WF5: 1 cotação nova + 1 já registada, 2 pedidos enviados → a proposta segue (cotações 2, pedidos 2) (exec. 130) | Passa |
 | L6 | Estrutural: «Ler pedidos de cotação enviados» com `executeOnce` e `alwaysOutputData` (o `addNode` ignorava-os; corrigido com `setNodeSettings`). O nó é fixado nos testes, por isso só a primeira execução real confirma | Estrutural |
 | L7 | PDF com texto anexo (exec. 132): «Escolher o PDF» + «Extrair texto do PDF» (a sério, PDF real de teste) leem «frete maritimo 950 EUR, 8 dias»; texto do email + PDF vai ao LLM; confiança 0,95 → `automatica` com a nota «dados também lidos do PDF anexo» | Passa |
@@ -145,7 +146,7 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | M2 | «OK mas muda o frete» → comentário: NÃO aprova, aviso Slack com o comentário (exec. 122) | Passa |
 | M3 | Remetente desconhecido → ignorado, nada acontece (exec. 123) | Passa |
 | M4 | Proposta já `aprovada` → aprovação ignorada, aviso Slack (exec. 124) | Passa |
-| M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | Pendente: WF8 publicado a 2026-10-16 (versão ativa 350ad425); a PRP-2026-0017 está `em_validacao`. Falta a resposta «OK» real, enviada de `mm.n8n.wflow@gmail.com` (único remetente autorizado) ao email de validação. Sem `preco_final` o WF9 falha e o Mail Error Flow avisa |
+| M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | Pendente: WF8 publicado a 2026-10-16 (versão ativa 350ad425); a PRP-2026-0017 está `em_validacao`. Falta a resposta «OK» real, enviada do email de teste (único remetente autorizado em AUTORIZADOS) ao email de validação. Sem `preco_final` o WF9 falha e o Mail Error Flow avisa |
 
 ## X. WF1 Extração do pedido e «Read Outlook Messages» (dados fixados; Code e If correm a sério)
 | Id | Verifica | Resultado |
