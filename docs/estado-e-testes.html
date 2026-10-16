@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estado e testes por tarefa</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2420;--mute:#7a6e64;--line:#e6ddd0;--ok:#2f7d4f;--okbg:#e3f3ea;--wip:#9a6a00;--wipbg:#fdf0cf;--todo:#a63d2f;--todobg:#fbe3df;--head:#efe6d8}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1a17;--card:#26221e;--ink:#efe8de;--mute:#a79b8d;--line:#3b342d;--ok:#7bd1a0;--okbg:#1f3a2b;--wip:#f0c25a;--wipbg:#3d3213;--todo:#f09a8e;--todobg:#42231e;--head:#2f2a24}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 16px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--mute);margin-bottom:20px}
+.count{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.count div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.count b{font-size:22px;display:block}
+h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:26px 0 8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{background:var(--head);text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);padding:9px 12px}
+td{padding:11px 12px;border-top:1px solid var(--line);vertical-align:top}
+td.t b{display:block}
+td.t small{color:var(--mute)}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.DONE{background:var(--okbg);color:var(--ok)}
+.DEV{background:var(--wipbg);color:var(--wip)}
+.TODO{background:var(--todobg);color:var(--todo)}
+.y{color:var(--ok);font-weight:600;white-space:nowrap}
+.n{color:var(--todo);font-weight:600;white-space:nowrap}
+.na{color:var(--mute);white-space:nowrap}
+td.o{font-size:14px}
+@media (max-width:760px){
+ table,thead,tbody,tr,td{display:block}
+ thead{display:none}
+ tr{border-top:1px solid var(--line);padding:10px 12px}
+ td{border:0;padding:3px 0}
+ td[data-l]::before{content:attr(data-l) ": ";color:var(--mute);font-size:12px}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Estado e testes por tarefa</h1>
+<p class="sub">Automação de propostas · 16 de outubro de 2026</p>
+<div class="legend">
+<span><span class="y">✔ feito</span></span>
+<span><span class="n">✘ por fazer (é possível)</span></span>
+<span><span class="na">— não é possível ainda</span></span>
+<span><b>Real</b> = com serviços e dados reais · <b>Funcionalidade</b> = com dados fixados</span>
+</div>
+<div class="count">
+<div><b>14</b>DONE</div><div><b>4</b>IN DEVELOPMENT</div><div><b>1</b>TO BE DONE</div>
+</div>
+
+<h2>As 10 fases</h2>
+<table>
+<thead><tr><th>Tarefa</th><th>Estado</th><th>Teste real</th><th>Teste funcionalidade</th><th>Observação</th></tr></thead>
+<tbody>
+<tr><td class="t"><b>1 · Extrair o pedido do email</b><small>WF1</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">O LLM real passou (X7). Falta um email real na Folder 1 (X6).</td></tr>
+<tr><td class="t"><b>1 · Ler Outlook e gravar lead</b><small>Read Outlook Messages (inativo)</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Falta X6. Decidir se o lead alimenta o WF2.</td></tr>
+<tr><td class="t"><b>2 · Pedido de proposta</b><small>WF2</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Falta o teste real F6 (campos em falta no formulário).</td></tr>
+<tr><td class="t"><b>3 · Pedido de cotação de frete</b><small>WF3</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Falta Basic Auth no formulário manual (ou desativar o trigger).</td></tr>
+<tr><td class="t"><b>3 · Ler cotações das transportadoras</b><small>WF6 (inativo)</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Precisa de uma resposta real, de preferência com PDF. Confirmar a regra das 3 cotações.</td></tr>
+<tr><td class="t"><b>4 · Enriquecimento (compliance)</b><small>WF4</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Códigos pautais por validar pelo despachante. Faltam os produtos de azeitona.</td></tr>
+<tr><td class="t"><b>5 · Gerar proposta no Moloni</b><small>por criar</small></td><td data-l="Estado"><span class="badge TODO">TO BE DONE</span></td><td data-l="Real" class="na">— sem credenciais</td><td data-l="Funcionalidade" class="na">— por construir</td><td class="o">Faltam Developer ID e Client Secret, e decidir sobre o refresh token (14 dias).</td></tr>
+<tr><td class="t"><b>6 · Resumo para validação</b><small>WF5</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Falta W4. Depende do WF6 com cotações reais.</td></tr>
+<tr><td class="t"><b>6 · Aprovação da Bárbara</b><small>WF8 (por publicar)</small></td><td data-l="Estado"><span class="badge DEV">IN DEVELOPMENT</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">M5 precisa de uma proposta real em <code>em_validacao</code> e do email da Bárbara.</td></tr>
+<tr><td class="t"><b>7 · Envio ao cliente</b><small>WF9</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">O real foi feito com preço posto à mão. O preço final vem do Moloni.</td></tr>
+<tr><td class="t"><b>8 · Confirmação da encomenda</b><small>WF10</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
+<tr><td class="t"><b>9 · Plano de expedição</b><small>WF11</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
+<tr><td class="t"><b>10 · Follow-up ao cliente</b><small>WF12</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
+</tbody>
+</table>
+
+<h2>Transversal</h2>
+<table>
+<thead><tr><th>Tarefa</th><th>Estado</th><th>Teste real</th><th>Teste funcionalidade</th><th>Observação</th></tr></thead>
+<tbody>
+<tr><td class="t"><b>Avisos Slack</b><small>Notificar Slack</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">A app tem de ser membro de cada canal privado.</td></tr>
+<tr><td class="t"><b>Avisos de erro</b><small>Mail Error Flow, WF2 Error Flow</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">—</td></tr>
+<tr><td class="t"><b>Base de dados</b><small>Supabase (RLS, migrações)</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Bateria A1-A27 passa. Dados de teste mantidos.</td></tr>
+<tr><td class="t"><b>Deploy automático</b><small>deploy_workflows.py</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">D10: falta um deploy real (chave de API e config).</td></tr>
+<tr><td class="t"><b>Assistente de instalação</b><small>app/ e kit</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="n">✘ por fazer</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">E3 (n8n real) e T-github (conta de teste) por fazer.</td></tr>
+<tr><td class="t"><b>Proteção do main</b><small>Action e rulesets</small></td><td data-l="Estado"><span class="badge DONE">DONE</span></td><td data-l="Real" class="y">✔ feito</td><td data-l="Funcionalidade" class="y">✔ feito</td><td class="o">Push direto rejeitado. PR #2 por fazer merge.</td></tr>
+</tbody>
+</table>
+
+<h2>Nota</h2>
+<p>WF6, WF5 e WF8 estão encadeados: um só caso real de ponta a ponta, com uma resposta de transportadora de teste, fecha os três testes reais.</p>
+</main>
+</body>
+</html>
