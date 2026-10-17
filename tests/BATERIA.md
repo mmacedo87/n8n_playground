@@ -43,6 +43,9 @@ Corre-se com `tests/supabase_bateria.sql` (uma só instrução, termina sempre c
 | D11 | WF2 com `n_paletes=0` e palete de 9 m: `carga_ok=false` → «Pedido inválido» (exec. 253) | Passa |
 | D12 | WF2 chamado sem campos de carga (como o Read Outlook): segue e grava com valores vazios (exec. 254) | Passa |
 | D13 | Estrutural (`tests/test_wf2_wf3_estrutura.py`): os 10 campos existem no formulário (opcionais), na normalização, na gravação, na entrada do sub-workflow e em `schema.sql`; `destinatario_confirmacao` continua oculto no export | Passa |
+| F1 | WF3 código offline (`tests/test_wf3_code.py`, `tests/fixtures/wf3/casos.json`): candidatas (novo e atualização), escolha, assunto «Cotação Portugal/CP – País [PRP]», tabela com campos opcionais, escape HTML, atualização com versão+1 | Passa |
+| F2 | WF3 `test_workflow` (execução 255, tudo fixado): modo atualizar com proposta `em_validacao`, 2 transportadoras com pedido v1 → 2 pedidos v2 com `substitui_id`, assunto «[TESTE] Atualização: Cotação Portugal/28001 – Espanha [PRP-…]», proposta mantém `em_validacao` | Passa |
+| F3 | Export do WF3 igual aos ficheiros `scripts/wf3_code/` (deriva) e sem segredos | Passa |
 | D7 | 'Criar proposta no Supabase' sem retry |
 | D8 | Saída de erro do email ligada a 'Email falhou depois de gravar' |
 | B7 | WF2 e Read Outlook não guardam execuções bem-sucedidas |

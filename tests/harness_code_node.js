@@ -9,6 +9,11 @@ const $ = (nome) => {
   return { all: () => items(dados.nodes[nome]), first: () => items(dados.nodes[nome])[0] };
 };
 const $input = { all: () => items(dados.input), first: () => items(dados.input)[0] };
-const fn = new Function('$', '$input', '"use strict";' + fs.readFileSync(ficheiro, 'utf8'));
-const r = fn($, $input);
-process.stdout.write(JSON.stringify(r.map(x => x.json)));
+const $json = (dados.input || [{}])[0] || {};
+const fn = new Function('$', '$input', '$json', '"use strict";' + fs.readFileSync(ficheiro, 'utf8'));
+try {
+  const r = fn($, $input, $json);
+  process.stdout.write(JSON.stringify(r.map(x => x.json)));
+} catch (e) {
+  process.stdout.write(JSON.stringify({ __erro: String(e.message) }));
+}

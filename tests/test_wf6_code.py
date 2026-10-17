@@ -4,7 +4,7 @@ import json, subprocess, tempfile, unittest
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-HARNESS = RAIZ / 'tests' / 'wf6_harness.js'
+HARNESS = RAIZ / 'tests' / 'harness_code_node.js'
 FIX = RAIZ / 'tests' / 'fixtures' / 'wf6'
 
 
