@@ -94,6 +94,13 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Garantir que a Bárbara vê `proposta_compliance` (linhas `a_verificar_manualmente`) antes de validar a proposta (passo 6).
 - [ ] Apagar os dados de teste de `proposta_compliance` antes de começar. (O índice duplicado `requisitos_pais_pais_nc_uq` já foi removido pela migração 0004; aplicar a 0004 também em produção.)
 
+## 13b. Cotações reais e WF13 (2026-10-17)
+- [ ] Aplicar a migração `0007_cotacoes_reais.sql` (carga e moradas em `propostas`, versões e referências em `pedidos_cotacao`, condições e `estado_reserva` em `cotacoes_frete`, `dominios_aceites` em `transportadoras`); reversão em `supabase/rollbacks/0007_rollback.sql`.
+- [ ] Preencher `transportadoras.dominios_aceites` (ex. `pt.dsv.com`) para aceitar caixas partilhadas.
+- [ ] WF13 (confirmação de reserva): `publish:false` no manifest. No nó «Normalizar pedido» esvaziar `destinatario_teste` em produção; só cria rascunhos no Outlook, nunca envia. Proteger o formulário (Basic Auth) ou desativar o trigger quando não for usado.
+- [ ] Rever com o cliente se a morada exata de descarga pode ir no pedido às transportadoras.
+- [ ] Volume: até 30 propostas/mês. Contar as execuções do n8n (pedidos, respostas, polls) face ao limite do plano.
+
 ## 14. Slack (avisos de propostas e cotações)
 - [ ] Criar (ou reutilizar) os canais de produção e **convidar a app do Slack** (`/invite @status_notifications`) para cada um; sem isso o aviso falha com `channel_not_found`.
 - [ ] Substituir os IDs dos canais no código do nó "Escolher canal e texto" do workflow "Notificar Slack" (`propostas`, `cotacoes`, `estado`).
