@@ -227,7 +227,7 @@ def S07_falha_a_meio_e_repetir(b):
         assert 0 < antes < 15
         pg.click('button:has-text("Instalar agora")')
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
-        assert len(e.mock.store) == 15, len(e.mock.store)
+        assert len(e.mock.store) == 16, len(e.mock.store)
 
 
 def S08_duplo_clique_em_instalar(b):
@@ -236,8 +236,8 @@ def S08_duplo_clique_em_instalar(b):
         to_step6(pg, e)
         pg.dblclick('button:has-text("Instalar agora")')
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
-        assert len(e.mock.store) == 15
-        assert sum(1 for x in e.mock.log if x[0] == "POST" and not x[1].endswith("/activate")) == 15
+        assert len(e.mock.store) == 16
+        assert sum(1 for x in e.mock.log if x[0] == "POST" and not x[1].endswith("/activate")) == 16
 
 
 def S09_teclado(b):

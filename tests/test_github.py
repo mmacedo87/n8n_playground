@@ -151,7 +151,7 @@ class T(unittest.TestCase):
     def test_G2_conteudo_inclui_action_e_exclui_segredos(self):
         self.assertIn(".github/workflows/main-so-por-pr.yml", FILES)
         self.assertIn("workflows/manifest.json", FILES)
-        self.assertEqual(len([p for p in FILES if p.startswith("workflows/") and p.endswith(".json")]), 16)
+        self.assertEqual(len([p for p in FILES if p.startswith("workflows/") and p.endswith(".json")]), 17)
         for bad in ("deploy/config.json", "CLAUDE.md", "dist/Kit-de-instalacao.zip"):
             self.assertNotIn(bad, FILES)
         txt = b"".join(FILES.values()).decode(errors="ignore")

@@ -86,7 +86,7 @@ class T(unittest.TestCase):
         req(self.base, "/api/config", self.cfg)
         r = json.loads(req(self.base, "/api/check", {})[1])
         self.assertTrue(r["ok"])
-        self.assertEqual(r["total"], 15)
+        self.assertEqual(r["total"], 16)
 
     def test_A6_instalar_sem_ligar_recusa(self):
         req(self.base, "/api/config", self.cfg)
@@ -104,8 +104,8 @@ class T(unittest.TestCase):
                 break
             time.sleep(0.1)
         self.assertEqual(s["state"], "done")
-        self.assertEqual(len(s["steps"]), 15)
-        self.assertEqual(len(self.mock.store), 15)
+        self.assertEqual(len(s["steps"]), 16)
+        self.assertEqual(len(self.mock.store), 16)
 
     def test_A8_erro_de_chave_traduzido(self):
         self.assertIn("chave de API", A.friendly("GET /workflows -> HTTP 401 x"))
