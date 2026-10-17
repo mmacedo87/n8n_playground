@@ -14,7 +14,7 @@
       "parameters": {
         "authentication": "none",
         "formTitle": "Pedido de proposta",
-        "formDescription": "Preencha os dados do pedido. Todos os campos são obrigatórios.",
+        "formDescription": "Preencha os dados do pedido. Os dados da carga e as moradas são opcionais, mas são precisos para pedir cotações de frete às transportadoras.",
         "responseMode": "onReceived",
         "formFields": {
           "values": [
@@ -205,6 +205,85 @@
                   }
                 ]
               }
+            },
+            {
+              "fieldName": "tipo_carga",
+              "fieldLabel": "Tipo de carga",
+              "fieldType": "dropdown",
+              "requiredField": false,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Camião completo"
+                  },
+                  {
+                    "option": "Grupagem"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldName": "n_camioes",
+              "fieldLabel": "Nº de camiões",
+              "fieldType": "number",
+              "placeholder": "ex. 1",
+              "requiredField": false
+            },
+            {
+              "fieldName": "n_paletes",
+              "fieldLabel": "Nº de paletes",
+              "fieldType": "number",
+              "placeholder": "ex. 24",
+              "requiredField": false
+            },
+            {
+              "fieldName": "peso_palete_kg",
+              "fieldLabel": "Peso por palete (kg)",
+              "fieldType": "number",
+              "placeholder": "ex. 600",
+              "requiredField": false
+            },
+            {
+              "fieldName": "palete_c_m",
+              "fieldLabel": "Palete: comprimento (m)",
+              "fieldType": "number",
+              "placeholder": "ex. 1.2",
+              "requiredField": false
+            },
+            {
+              "fieldName": "palete_l_m",
+              "fieldLabel": "Palete: largura (m)",
+              "fieldType": "number",
+              "placeholder": "ex. 0.8",
+              "requiredField": false
+            },
+            {
+              "fieldName": "palete_a_m",
+              "fieldLabel": "Palete: altura (m)",
+              "fieldType": "number",
+              "placeholder": "ex. 1.5",
+              "requiredField": false
+            },
+            {
+              "fieldName": "morada_carga",
+              "fieldLabel": "Morada de carga",
+              "fieldType": "text",
+              "placeholder": "Local e código postal",
+              "requiredField": false
+            },
+            {
+              "fieldName": "morada_descarga",
+              "fieldLabel": "Morada de descarga",
+              "fieldType": "text",
+              "placeholder": "Local e código postal",
+              "requiredField": false
+            },
+            {
+              "fieldName": "cp_descarga",
+              "fieldLabel": "Código postal de descarga",
+              "fieldType": "text",
+              "placeholder": "ex. 28100",
+              "requiredField": false
             }
           ]
         },
@@ -287,6 +366,72 @@
               "name": "destinatario_confirmacao",
               "type": "string",
               "value": "REDACTED@example.invalid"
+            },
+            {
+              "id": "n-tipo-carga",
+              "name": "tipo_carga",
+              "type": "string",
+              "value": "={{ ((t) => /compl|cami/.test(t) ? \"completa\" : /grup/.test(t) ? \"grupagem\" : \"\")(String($json.tipo_carga ?? $json[\"Tipo de carga\"] ?? \"\").toLowerCase()) }}"
+            },
+            {
+              "id": "n-n-camioes",
+              "name": "n_camioes",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.n_camioes ?? $json[\"Nº de camiões\"]) }}"
+            },
+            {
+              "id": "n-n-paletes",
+              "name": "n_paletes",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.n_paletes ?? $json[\"Nº de paletes\"]) }}"
+            },
+            {
+              "id": "n-peso-palete",
+              "name": "peso_palete_kg",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.peso_palete_kg ?? $json[\"Peso por palete (kg)\"]) }}"
+            },
+            {
+              "id": "n-palete-c",
+              "name": "palete_c_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_c_m ?? $json[\"Palete: comprimento (m)\"]) }}"
+            },
+            {
+              "id": "n-palete-l",
+              "name": "palete_l_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_l_m ?? $json[\"Palete: largura (m)\"]) }}"
+            },
+            {
+              "id": "n-palete-a",
+              "name": "palete_a_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_a_m ?? $json[\"Palete: altura (m)\"]) }}"
+            },
+            {
+              "id": "n-morada-carga",
+              "name": "morada_carga",
+              "type": "string",
+              "value": "={{ String($json.morada_carga ?? $json[\"Morada de carga\"] ?? \"\").trim().slice(0, 300) }}"
+            },
+            {
+              "id": "n-morada-descarga",
+              "name": "morada_descarga",
+              "type": "string",
+              "value": "={{ String($json.morada_descarga ?? $json[\"Morada de descarga\"] ?? \"\").trim().slice(0, 300) }}"
+            },
+            {
+              "id": "n-cp-descarga",
+              "name": "cp_descarga",
+              "type": "string",
+              "value": "={{ String($json.cp_descarga ?? $json[\"Código postal de descarga\"] ?? \"\").trim().toUpperCase().slice(0, 12) }}"
+            },
+            {
+              "id": "n-carga-ok",
+              "name": "carga_ok",
+              "type": "boolean",
+              "value": "={{ (() => { const g = (k, l) => $json[k] ?? $json[l]; const num = (k, l, max, int) => { const v = g(k, l); if (v === undefined || v === null || v === \"\") return true; const n = Number(v); return Number.isFinite(n) && n > 0 && n <= max && (!int || Number.isInteger(n)); }; const t = String(g(\"tipo_carga\", \"Tipo de carga\") ?? \"\").toLowerCase(); return (t === \"\" || /compl|cami|grup/.test(t)) && num(\"n_camioes\", \"Nº de camiões\", 50, true) && num(\"n_paletes\", \"Nº de paletes\", 2000, true) && num(\"peso_palete_kg\", \"Peso por palete (kg)\", 2000) && num(\"palete_c_m\", \"Palete: comprimento (m)\", 3) && num(\"palete_l_m\", \"Palete: largura (m)\", 3) && num(\"palete_a_m\", \"Palete: altura (m)\", 4); })() }}"
             }
           ]
         }
@@ -312,7 +457,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) }}",
+              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) && $json.carga_ok === true }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -371,6 +516,46 @@
             {
               "fieldId": "destino_pais",
               "fieldValue": "={{ $json.destino }}"
+            },
+            {
+              "fieldId": "tipo_carga",
+              "fieldValue": "={{ $json.tipo_carga || null }}"
+            },
+            {
+              "fieldId": "n_camioes",
+              "fieldValue": "={{ $json.n_camioes === \"\" ? null : Number($json.n_camioes) }}"
+            },
+            {
+              "fieldId": "n_paletes",
+              "fieldValue": "={{ $json.n_paletes === \"\" ? null : Number($json.n_paletes) }}"
+            },
+            {
+              "fieldId": "peso_palete_kg",
+              "fieldValue": "={{ $json.peso_palete_kg === \"\" ? null : Number($json.peso_palete_kg) }}"
+            },
+            {
+              "fieldId": "palete_c_m",
+              "fieldValue": "={{ $json.palete_c_m === \"\" ? null : Number($json.palete_c_m) }}"
+            },
+            {
+              "fieldId": "palete_l_m",
+              "fieldValue": "={{ $json.palete_l_m === \"\" ? null : Number($json.palete_l_m) }}"
+            },
+            {
+              "fieldId": "palete_a_m",
+              "fieldValue": "={{ $json.palete_a_m === \"\" ? null : Number($json.palete_a_m) }}"
+            },
+            {
+              "fieldId": "morada_carga",
+              "fieldValue": "={{ $json.morada_carga || null }}"
+            },
+            {
+              "fieldId": "morada_descarga",
+              "fieldValue": "={{ $json.morada_descarga || null }}"
+            },
+            {
+              "fieldId": "cp_descarga",
+              "fieldValue": "={{ $json.cp_descarga || null }}"
             }
           ]
         }
@@ -512,6 +697,46 @@
             },
             {
               "name": "destino",
+              "type": "string"
+            },
+            {
+              "name": "tipo_carga",
+              "type": "string"
+            },
+            {
+              "name": "n_camioes",
+              "type": "number"
+            },
+            {
+              "name": "n_paletes",
+              "type": "number"
+            },
+            {
+              "name": "peso_palete_kg",
+              "type": "number"
+            },
+            {
+              "name": "palete_c_m",
+              "type": "number"
+            },
+            {
+              "name": "palete_l_m",
+              "type": "number"
+            },
+            {
+              "name": "palete_a_m",
+              "type": "number"
+            },
+            {
+              "name": "morada_carga",
+              "type": "string"
+            },
+            {
+              "name": "morada_descarga",
+              "type": "string"
+            },
+            {
+              "name": "cp_descarga",
               "type": "string"
             }
           ]
@@ -788,8 +1013,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "424506e2-1f0e-4a56-a4ce-38acc8b60614",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "9b8d75ae-ffa9-4f5c-97a6-920f75047dd3",
+    "exportedAt": "2026-10-17",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
 }

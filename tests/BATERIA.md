@@ -39,6 +39,10 @@ Corre-se com `tests/supabase_bateria.sql` (uma só instrução, termina sempre c
 | D5 | Cliente com `<script>` e mais de 200 caracteres: fica truncado a 200 e o fluxo conclui |
 | D6 | Email de confirmação escapa HTML (verificação estrutural; o nó de email está fixado nos testes) |
 | D9 | Email de confirmação com assunto "Pedido de proposta registado – código – cliente", saudação, próximo passo e assinatura automática (estrutural + execução 29 sem erros) |
+| D10 | WF2 com carga completa (formulário com etiquetas, exec. 252, versão 9b8d75ae): normaliza tipo `completa`, números como texto, CP em maiúsculas e sem espaços, `carga_ok=true`, segue para gravar | Passa |
+| D11 | WF2 com `n_paletes=0` e palete de 9 m: `carga_ok=false` → «Pedido inválido» (exec. 253) | Passa |
+| D12 | WF2 chamado sem campos de carga (como o Read Outlook): segue e grava com valores vazios (exec. 254) | Passa |
+| D13 | Estrutural (`tests/test_wf2_wf3_estrutura.py`): os 10 campos existem no formulário (opcionais), na normalização, na gravação, na entrada do sub-workflow e em `schema.sql`; `destinatario_confirmacao` continua oculto no export | Passa |
 | D7 | 'Criar proposta no Supabase' sem retry |
 | D8 | Saída de erro do email ligada a 'Email falhou depois de gravar' |
 | B7 | WF2 e Read Outlook não guardam execuções bem-sucedidas |
