@@ -75,6 +75,8 @@ create table transportadoras (
                  check (modos <@ array['rodoviario','maritimo','aereo','ferroviario']),
   rotas          text[] not null default '{}',   -- países de destino que servem (ex. 'DE','US')
   ativa          boolean not null default true,
+  dominios_aceites text[] not null default '{}'   -- migração 0007: domínios das respostas (minúsculas, sem @)
+                 check (array_to_string(dominios_aceites, ',') !~ '[@A-Z ]'),
   criado_em      timestamptz not null default now(),
   atualizado_em  timestamptz not null default now()
 );
@@ -98,6 +100,18 @@ create table propostas (
                        check (incoterm in ('EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP')),
   destino_pais         text not null,
   destino_local        text,
+
+  -- carga e moradas (migração 0007)
+  tipo_carga           text check (tipo_carga is null or tipo_carga in ('completa','grupagem')),
+  n_camioes            smallint check (n_camioes is null or n_camioes > 0),
+  n_paletes            int check (n_paletes is null or n_paletes > 0),
+  peso_palete_kg       numeric(8,2) check (peso_palete_kg is null or peso_palete_kg > 0),
+  palete_c_m           numeric(4,2) check (palete_c_m is null or palete_c_m > 0),
+  palete_l_m           numeric(4,2) check (palete_l_m is null or palete_l_m > 0),
+  palete_a_m           numeric(4,2) check (palete_a_m is null or palete_a_m > 0),
+  morada_carga         text,
+  morada_descarga      text,
+  cp_descarga          text,
 
   -- valores calculados em código (WF5), nunca pelo modelo
   moeda                text not null default 'EUR',
@@ -231,15 +245,32 @@ create table pedidos_cotacao (
   gerado_por text not null default 'llm' check (gerado_por in ('llm','modelo_fixo')),
   modelo text,
   tentativas smallint not null default 1,
+  versao smallint not null default 1 check (versao >= 1),          -- migração 0007: atualizações de cotação
+  substitui_id uuid references pedidos_cotacao (id) on delete set null,
+  conversation_id text,                                             -- conversa do Outlook
+  ref_transportadora text,                                          -- referência da transportadora
   criado_em timestamptz not null default now(),
   enviado_em timestamptz,
   atualizado_em timestamptz not null default now(),
-  unique (proposta_id, transportadora_id)
+  constraint pedidos_cotacao_proposta_transp_versao_key unique (proposta_id, transportadora_id, versao)
 );
 create index pedidos_cotacao_proposta_idx on pedidos_cotacao (proposta_id);
+create index pedidos_cotacao_conversation_idx on pedidos_cotacao (conversation_id) where conversation_id is not null;
 alter table pedidos_cotacao enable row level security;
 create trigger pedidos_cotacao_atualizado_em before update on pedidos_cotacao
   for each row execute function set_atualizado_em();
+
+-- Condições de cada cotação e estado da reserva (migração 0007; fica aqui porque refere pedidos_cotacao).
+alter table cotacoes_frete
+  add column pedido_cotacao_id   uuid references pedidos_cotacao (id) on delete set null,
+  add column ref_transportadora  text,
+  add column tipo_entrega        text check (tipo_entrega is null or tipo_entrega in ('fixa','janela','sem_data','nao_claro')),
+  add column data_entrega_pedida date,
+  add column preco_por           text check (preco_por is null or preco_por in ('camiao','total','palete','nao_claro')),
+  add column n_camioes_incluidos smallint check (n_camioes_incluidos is null or n_camioes_incluidos > 0),
+  add column conversation_id     text,
+  add column estado_reserva      text not null default 'nenhuma'
+             check (estado_reserva in ('nenhuma','standby','rascunho','confirmada','cancelada'));
 
 -- ---------- Produtos e enriquecimento de proposta (WF4) ----------
 -- Códigos pautais por produto (a validar pelo despachante).
