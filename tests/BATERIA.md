@@ -46,6 +46,9 @@ Corre-se com `tests/supabase_bateria.sql` (uma só instrução, termina sempre c
 | F1 | WF3 código offline (`tests/test_wf3_code.py`, `tests/fixtures/wf3/casos.json`): candidatas (novo e atualização), escolha, assunto «Cotação Portugal/CP – País [PRP]», tabela com campos opcionais, escape HTML, atualização com versão+1 | Passa |
 | F2 | WF3 `test_workflow` (execução 255, tudo fixado): modo atualizar com proposta `em_validacao`, 2 transportadoras com pedido v1 → 2 pedidos v2 com `substitui_id`, assunto «[TESTE] Atualização: Cotação Portugal/28001 – Espanha [PRP-…]», proposta mantém `em_validacao` | Passa |
 | F3 | Export do WF3 igual aos ficheiros `scripts/wf3_code/` (deriva) e sem segredos | Passa |
+| H1 | WF5 código offline (`tests/test_wf5_code.py`): 3 cotações, uma a rever em destaque, condições (entrega, por camião/total), ref e reserva; sem cotações; estado inválido recusado; HTML escapado | Passa |
+| H2 | WF5 `test_workflow` (execução 256, tudo fixado): resumo montado com a_rever=1 | Passa |
+| H3 | Export do WF5 igual a `scripts/wf5_code/montar.js` | Passa |
 | D7 | 'Criar proposta no Supabase' sem retry |
 | D8 | Saída de erro do email ligada a 'Email falhou depois de gravar' |
 | B7 | WF2 e Read Outlook não guardam execuções bem-sucedidas |
