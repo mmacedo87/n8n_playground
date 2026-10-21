@@ -28,5 +28,30 @@ class Rodapes(unittest.TestCase):
             self.assertNotIn('langchain', tipos, f)
 
 
+class AprovacaoWF8(unittest.TestCase):
+    """AI Act H6: a aprovação por email exige OK + código de aprovação da proposta."""
+
+    def test_wf8_exige_codigo(self):
+        i = codigo('wf8-aprovacao-barbara.json', 'Interpretar resposta')
+        d = codigo('wf8-aprovacao-barbara.json', 'Decidir')
+        self.assertIn('codigo_enviado', i)
+        self.assertIn('codigo_aprovacao', d)
+        self.assertIn('!r.codigo_enviado', d)
+        # «OK» sozinho nunca devolve aplicar:true: a verificação do código vem antes do ramo que aplica
+        self.assertLess(d.index('!r.codigo_enviado'), d.index('aplicar: true'))
+        self.assertLess(d.index('toUpperCase() !== r.codigo_enviado'), d.index('aplicar: true'))
+
+    def test_wf5_envia_codigo(self):
+        js = codigo('wf5-resumo-validacao.json', 'Montar resumo')
+        self.assertIn('codigo_aprovacao', js)
+        self.assertNotIn('apenas com a palavra OK', js)
+
+    def test_migracao_0008(self):
+        sql = (RAIZ / 'supabase' / 'migrations' / '0008_hardening_ai_act.sql').read_text(encoding='utf-8')
+        for s in ('revoke all on all tables', 'codigo_aprovacao', 'produtos_validado_auditado'):
+            self.assertIn(s, sql)
+        self.assertTrue((RAIZ / 'supabase' / 'rollbacks' / '0008_rollback.sql').exists())
+
+
 if __name__ == '__main__':
     unittest.main()
