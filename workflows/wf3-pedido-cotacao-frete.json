@@ -351,6 +351,12 @@
               "name": "codigo",
               "type": "string",
               "value": "={{ String($json.codigo ?? $json[\"Código da proposta\"] ?? \"\").trim().toUpperCase().slice(0, 20) }}"
+            },
+            {
+              "id": "c-atualizar",
+              "name": "atualizar",
+              "type": "boolean",
+              "value": "={{ $json.atualizar === true || /atualiz/i.test(String($json.tipo_pedido ?? $json[\"Tipo de pedido\"] ?? \"\")) }}"
             }
           ]
         },
@@ -376,6 +382,22 @@
               "fieldName": "codigo",
               "placeholder": "PRP-2026-0004",
               "requiredField": true
+            },
+            {
+              "fieldLabel": "Tipo de pedido",
+              "fieldName": "tipo_pedido",
+              "fieldType": "dropdown",
+              "requiredField": false,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Novo pedido de cotação"
+                  },
+                  {
+                    "option": "Atualizar cotação já pedida"
+                  }
+                ]
+              }
             }
           ]
         },
@@ -489,7 +511,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ !!$json.id && [\"pedido\", \"a_cotar\"].includes($json.estado) }}",
+              "leftValue": "={{ !!$json.id && ([\"pedido\", \"a_cotar\"].includes($json.estado) || ($(\"Normalizar código\").item.json.atualizar === true && $json.estado === \"em_validacao\")) }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -575,7 +597,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cfg = $('Configuração').first().json;\nconst base = $('Listar candidatas').first().json;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst p = $('Ler proposta').first().json;\nconst porId = Object.fromEntries(todas.map(t => [t.id, t]));\nconst candidatas = base.candidatas.map(c => porId[c.id]).filter(Boolean);\nconst min = Number(cfg.minimo_transportadoras) || 4;\nconst alvo = base.alvo;\nconst out = $json.output || {};\nconst ids = Array.isArray(out.ids) ? [...new Set(out.ids.filter(x => typeof x === 'string'))] : [];\nconst validos = ids.filter(id => candidatas.some(c => c.id === id));\nconst modosDe = (t) => (Array.isArray(t.modos) ? t.modos : []);\nlet sel; let por;\nif (candidatas.length <= alvo) { sel = candidatas; por = 'todas'; }\nelse if (validos.slice(0, alvo).length >= Math.min(min, alvo)) { sel = validos.slice(0, alvo).map(id => porId[id]); por = 'llm'; }\nelse {\n  por = 'regra';\n  sel = [];\n  for (const m of ['maritimo', 'rodoviario', 'aereo', 'ferroviario']) {\n    if (sel.length >= alvo) break;\n    if (sel.some(t => modosDe(t).includes(m))) continue;\n    const c = candidatas.find(t => !sel.includes(t) && modosDe(t).includes(m));\n    if (c) sel.push(c);\n  }\n  for (const t of candidatas) { if (sel.length >= alvo) break; if (!sel.includes(t)) sel.push(t); }\n}\nsel = sel.slice().sort((a, b) => a.nome.localeCompare(b.nome));\nconst total = base.ja_contactadas + sel.length;\nconst motivo = por === 'llm' ? String(out.motivo || '').slice(0, 300) : '';\nreturn sel.map(t => ({ json: {\n  proposta_id: p.id, codigo: p.codigo, produto: p.produto, densidade: p.densidade, granulometria: p.granulometria,\n  quantidade: p.quantidade, unidade: p.unidade, embalagem: p.embalagem, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  transportadora_id: t.id, transportadora_nome: t.nome, transportadora_email: t.email, modos: modosDe(t).join(', '),\n  abaixo_do_minimo: total < min, escolhido_por: por, motivo_escolha: motivo, tentativa: base.tentativa || 1\n} }));",
+        "jsCode": "// WF3 · \"Escolher transportadoras\" (valida a escolha do LLM e acrescenta os dados da carga e da versão do pedido)\nconst cfg = $('Configuração').first().json;\nconst base = $('Listar candidatas').first().json;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst p = $('Ler proposta').first().json;\nconst porId = Object.fromEntries(todas.map(t => [t.id, t]));\nconst candidatas = base.candidatas.map(c => porId[c.id]).filter(Boolean);\nconst min = Number(cfg.minimo_transportadoras) || 4;\nconst alvo = base.alvo;\nconst out = $json.output || {};\nconst ids = Array.isArray(out.ids) ? [...new Set(out.ids.filter(x => typeof x === 'string'))] : [];\nconst validos = ids.filter(id => candidatas.some(c => c.id === id));\nconst modosDe = (t) => (Array.isArray(t.modos) ? t.modos : []);\nlet sel; let por;\nif (candidatas.length <= alvo) { sel = candidatas; por = 'todas'; }\nelse if (validos.slice(0, alvo).length >= Math.min(min, alvo)) { sel = validos.slice(0, alvo).map(id => porId[id]); por = 'llm'; }\nelse {\n  por = 'regra';\n  sel = [];\n  for (const m of ['maritimo', 'rodoviario', 'aereo', 'ferroviario']) {\n    if (sel.length >= alvo) break;\n    if (sel.some(t => modosDe(t).includes(m))) continue;\n    const c = candidatas.find(t => !sel.includes(t) && modosDe(t).includes(m));\n    if (c) sel.push(c);\n  }\n  for (const t of candidatas) { if (sel.length >= alvo) break; if (!sel.includes(t)) sel.push(t); }\n}\nsel = sel.slice().sort((a, b) => a.nome.localeCompare(b.nome));\nconst total = base.ja_contactadas + sel.length;\nconst motivo = por === 'llm' ? String(out.motivo || '').slice(0, 300) : '';\nconst ver = (id) => base.candidatas.find(c => c.id === id) || {};\nconst n = (v) => (v === null || v === undefined || v === '' ? null : v);\nreturn sel.map(t => ({ json: {\n  proposta_id: p.id, codigo: p.codigo, produto: p.produto, densidade: p.densidade, granulometria: p.granulometria,\n  quantidade: p.quantidade, unidade: p.unidade, embalagem: p.embalagem, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  tipo_carga: n(p.tipo_carga), n_camioes: n(p.n_camioes), n_paletes: n(p.n_paletes), peso_palete_kg: n(p.peso_palete_kg),\n  palete_c_m: n(p.palete_c_m), palete_l_m: n(p.palete_l_m), palete_a_m: n(p.palete_a_m),\n  morada_carga: n(p.morada_carga), morada_descarga: n(p.morada_descarga), cp_descarga: n(p.cp_descarga),\n  transportadora_id: t.id, transportadora_nome: t.nome, transportadora_email: t.email, modos: modosDe(t).join(', '),\n  abaixo_do_minimo: base.atualizar ? false : total < min, escolhido_por: por, motivo_escolha: motivo, tentativa: base.tentativa || 1,\n  atualizar: !!base.atualizar, versao: ver(t.id).versao || 1, substitui_id: ver(t.id).substitui_id || null\n} }));\n",
         "language": "javaScript",
         "mode": "runOnceForAllItems"
       },
@@ -654,7 +676,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const itens = $('Escolher transportadoras').all().map(i => i.json);\nconst d = itens[0];\nconst cfg = $('Configuração').first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst out = ($input.first() && $input.first().json && $input.first().json.output) || {};\nconst intro = typeof out.introducao === 'string' ? out.introducao.trim() : '';\nconst fecho = typeof out.fecho === 'string' ? out.fecho.trim() : '';\nconst limpo = (t, max) => t.length > 0 && t.length <= max && !/https?:|www[.]|[<>€$]|EUR|USD/i.test(t);\nconst llmOk = limpo(intro, 700) && intro.includes(d.codigo) && limpo(fecho, 400);\nconst introFinal = llmOk ? intro : 'Exmos. Senhores, solicitamos uma cotação de frete para o pedido com a referência ' + d.codigo + ', cujos dados constam da tabela abaixo.';\nconst fechoFinal = llmOk ? fecho : 'Agradecemos a vossa resposta com a cotação e as respetivas condições.';\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst redirecionado = !!cfg.destinatario_teste;\nconst nomes = itens.map(t => t.transportadora_nome).join(', ');\nconst emails = itens.map(t => t.transportadora_email).join(', ');\nconst destinatarioTo = redirecionado ? cfg.destinatario_teste : cfg.destinatario_principal;\nconst destinatariosBcc = redirecionado ? '' : emails;\nconst assunto = (redirecionado ? '[TESTE] ' : '') + '[' + d.codigo + '] Pedido de cotação de frete - ' + d.produto + ' - destino ' + d.destino_pais;\nconst corpo = (redirecionado ? '<p><i>Email de teste. Destinatários reais (em BCC): ' + esc(nomes) + '.</i></p>' : '')\n  + '<p>' + esc(introFinal) + '</p>'\n  + '<table>' + linha('Referência', d.codigo) + linha('Produto', d.produto) + linha('Densidade', d.densidade) + linha('Granulometria', d.granulometria)\n  + linha('Quantidade', d.quantidade + ' ' + d.unidade) + linha('Embalagem', d.embalagem) + linha('Incoterm', d.incoterm) + linha('País de destino', d.destino_pais) + '</table>'\n  + '<p><b>Pedimos que a resposta inclua:</b></p><ul><li>preço total do frete (indicar a moeda)</li><li>modo de transporte e prazo de trânsito em dias</li><li>validade da cotação</li><li>condições e eventuais custos adicionais (inland, taxas portuárias, outros)</li></ul>'\n  + '<p><b>Importante:</b> mantenha a referência ' + esc(d.codigo) + ' no assunto da resposta.</p>'\n  + '<p>' + esc(fechoFinal) + '</p><p>Cumprimentos,<br>Equipa comercial (mensagem enviada pelo sistema de propostas)</p>';\nreturn itens.map(t => ({ json: Object.assign({}, t, { assunto: assunto, corpo_html: corpo, destinatario_to: destinatarioTo, destinatarios_bcc: destinatariosBcc, redirecionado_teste: redirecionado, gerado_por: llmOk ? 'llm' : 'modelo_fixo', modelo: cfg.modelo, total_transportadoras: itens.length, nomes_transportadoras: nomes }) }));"
+        "jsCode": "// WF3 · \"Montar email\": UM email para todas as transportadoras (BCC), tabela montada por código com os dados da carga.\n// O LLM só escreve a introdução e o fecho (pedido novo); numa atualização o texto é fixo.\nconst itens = $('Escolher transportadoras').all().map(i => i.json);\nconst d = itens[0];\nconst cfg = $('Configuração').first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst out = ($input.first() && $input.first().json && $input.first().json.output) || {};\nconst intro = typeof out.introducao === 'string' ? out.introducao.trim() : '';\nconst fecho = typeof out.fecho === 'string' ? out.fecho.trim() : '';\nconst limpo = (t, max) => t.length > 0 && t.length <= max && !/https?:|www[.]|[<>€$]|EUR|USD/i.test(t);\nconst atualizar = !!d.atualizar;\nconst llmOk = !atualizar && limpo(intro, 700) && intro.includes(d.codigo) && limpo(fecho, 400);\nconst introFinal = atualizar\n  ? 'Exmos. Senhores, solicitamos que atualizem a cotação do pedido com a referência ' + d.codigo + ', cujos dados atuais constam da tabela abaixo.'\n  : (llmOk ? intro : 'Exmos. Senhores, solicitamos uma cotação de frete para o pedido com a referência ' + d.codigo + ', cujos dados constam da tabela abaixo.');\nconst fechoFinal = llmOk ? fecho : 'Agradecemos a vossa resposta com a cotação e as respetivas condições.';\nconst PAISES = { ES: 'Espanha', FR: 'França', DE: 'Alemanha', IT: 'Itália', NL: 'Países Baixos', BE: 'Bélgica', GB: 'Reino Unido', US: 'Estados Unidos', BR: 'Brasil', CN: 'China', JP: 'Japão', MA: 'Marrocos' };\nconst pais = PAISES[d.destino_pais] || d.destino_pais;\nconst tem = (v) => v !== null && v !== undefined && v !== '';\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst opc = (k, v) => (tem(v) ? linha(k, v) : '');\nconst tipo = d.tipo_carga === 'completa' ? 'Camião completo' : d.tipo_carga === 'grupagem' ? 'Grupagem' : null;\nconst dims = [d.palete_c_m, d.palete_l_m, d.palete_a_m].every(tem) ? [d.palete_c_m, d.palete_l_m, d.palete_a_m].map(Number).join(' × ') + ' m' : null;\nconst redirecionado = !!cfg.destinatario_teste;\nconst nomes = itens.map(t => t.transportadora_nome).join(', ');\nconst emails = itens.map(t => t.transportadora_email).join(', ');\nconst destinatarioTo = redirecionado ? cfg.destinatario_teste : cfg.destinatario_principal;\nconst destinatariosBcc = redirecionado ? '' : emails;\nconst base = d.cp_descarga\n  ? 'Cotação Portugal/' + d.cp_descarga + ' – ' + pais + ' [' + d.codigo + ']'\n  : '[' + d.codigo + '] Pedido de cotação de frete - ' + d.produto + ' - destino ' + d.destino_pais;\nconst assunto = (redirecionado ? '[TESTE] ' : '') + (atualizar ? 'Atualização: ' : '') + base;\n// Aviso de transparência (AI Act, Art. 50 / boa prática): fixo em código, nunca vindo do LLM.\nconst AVISO_IA = 'Esta mensagem foi redigida com apoio de um sistema de inteligência artificial e enviada pelo nosso sistema de propostas.';\nconst corpo = (redirecionado ? '<p><i>Email de teste. Destinatários reais (em BCC): ' + esc(nomes) + '.</i></p>' : '')\n  + '<p>' + esc(introFinal) + '</p>'\n  + '<table>' + linha('Referência', d.codigo) + linha('Produto', d.produto) + linha('Densidade', d.densidade) + linha('Granulometria', d.granulometria)\n  + linha('Quantidade', d.quantidade + ' ' + d.unidade) + linha('Embalagem', d.embalagem) + linha('Incoterm', d.incoterm) + linha('País de destino', pais)\n  + opc('Tipo de carga', tipo) + opc('Nº de camiões', d.n_camioes) + opc('Nº de paletes', d.n_paletes)\n  + opc('Peso por palete', tem(d.peso_palete_kg) ? d.peso_palete_kg + ' kg' : null) + opc('Dimensões da palete (C × L × A)', dims)\n  + opc('Morada de carga', d.morada_carga) + opc('Morada de descarga', d.morada_descarga) + opc('Código postal de descarga', d.cp_descarga) + '</table>'\n  + '<p><b>Pedimos que a resposta inclua:</b></p><ul><li>preço (indicar a moeda e se é por camião ou o total do transporte)</li><li>modo de transporte e prazo de trânsito em dias</li><li>se a entrega é em data fixa ou dentro de um período, com o preço de cada condição</li><li>validade da cotação</li><li>condições e eventuais custos adicionais (inland, taxas portuárias, outros)</li></ul>'\n  + '<p><b>Importante:</b> mantenha a referência ' + esc(d.codigo) + ' no assunto da resposta.</p>'\n  + '<p>' + esc(fechoFinal) + '</p><p>Cumprimentos,<br>Equipa comercial (mensagem enviada pelo sistema de propostas)</p>'\n  + '<p><i>' + AVISO_IA + '</i></p>';\nreturn itens.map(t => ({ json: Object.assign({}, t, { assunto: assunto, corpo_html: corpo, destinatario_to: destinatarioTo, destinatarios_bcc: destinatariosBcc, redirecionado_teste: redirecionado, gerado_por: llmOk ? 'llm' : 'modelo_fixo', modelo: cfg.modelo, total_transportadoras: itens.length, nomes_transportadoras: nomes }) }));\n"
       },
       "id": "415ce089-81b2-47f5-8e56-3d6b94dd203c",
       "name": "Montar email",
@@ -702,6 +724,14 @@
             {
               "fieldId": "tentativas",
               "fieldValue": "={{ $json.tentativa }}"
+            },
+            {
+              "fieldId": "versao",
+              "fieldValue": "={{ $json.versao || 1 }}"
+            },
+            {
+              "fieldId": "substitui_id",
+              "fieldValue": "={{ $json.substitui_id || null }}"
             }
           ]
         }
@@ -863,7 +893,7 @@
           "fieldValues": [
             {
               "fieldId": "estado",
-              "fieldValue": "a_cotar"
+              "fieldValue": "={{ $(\"Ler proposta\").first().json.estado === \"em_validacao\" ? \"em_validacao\" : \"a_cotar\" }}"
             }
           ]
         }
@@ -1032,7 +1062,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const p = $('Ler proposta').first().json;\nconst cfg = $('Configuração').first().json;\nconst MAX_TENTATIVAS = 5;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst pedidos = $('Ler pedidos já feitos').all().map(i => i.json).filter(r => r && r.transportadora_id);\n// 'falhou' não conta como contactada: pode ser repetida até MAX_TENTATIVAS\nconst feitasIds = pedidos.filter(r => r.estado !== 'falhou').map(r => r.transportadora_id);\nconst falhadas = pedidos.filter(r => r.estado === 'falhou');\nconst anteriores = falhadas.reduce((m, r) => Math.max(m, Number(r.tentativas) || 1), 0);\nconst max = Number(cfg.maximo_transportadoras) || 5;\nconst doPais = todas.filter(t => Array.isArray(t.rotas) && t.rotas.includes(p.destino_pais));\nif (doPais.length === 0) throw new Error('Não há transportadoras ativas para o destino ' + p.destino_pais + ' (proposta ' + p.codigo + '): nada foi enviado. Acrescente transportadoras ou rotas.');\nconst jaContactadas = doPais.filter(t => feitasIds.includes(t.id)).length;\nconst candidatas = doPais.filter(t => !feitasIds.includes(t.id)).sort((a, b) => a.nome.localeCompare(b.nome));\nconst vagas = max - jaContactadas;\nif (candidatas.length === 0 || vagas <= 0) throw new Error('Todas as transportadoras já foram contactadas para a proposta ' + p.codigo);\nif (anteriores >= MAX_TENTATIVAS) throw new Error('Proposta ' + p.codigo + ': o envio do pedido de cotação falhou ' + anteriores + ' vezes (máximo ' + MAX_TENTATIVAS + ') e NÃO foi tentado de novo. Verifique a ligação ao Outlook e envie o pedido manualmente.');\nreturn [{ json: {\n  codigo: p.codigo, produto: p.produto, quantidade: p.quantidade, unidade: p.unidade, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  alvo: Math.min(vagas, candidatas.length), vagas: vagas, ja_contactadas: jaContactadas, tentativa: anteriores + 1,\n  candidatas: candidatas.map(t => ({ id: t.id, nome: t.nome, modos: t.modos || [], paises_servidos: t.rotas }))\n} }];",
+        "jsCode": "// WF3 · \"Listar candidatas\"\n// Pedido novo: transportadoras do país ainda não contactadas (até ao máximo). Atualização: as já contactadas (último pedido enviado),\n// cada uma com versao+1 e o id do pedido que substitui.\nconst p = $('Ler proposta').first().json;\nconst cfg = $('Configuração').first().json;\nconst atualizar = $('Normalizar código').first().json.atualizar === true;\nconst MAX_TENTATIVAS = 5;\nconst todas = $('Ler transportadoras ativas').all().map(i => i.json).filter(t => t && t.id);\nconst pedidos = $('Ler pedidos já feitos').all().map(i => i.json).filter(r => r && r.transportadora_id);\n// 'falhou' não conta como contactada: pode ser repetida até MAX_TENTATIVAS\nconst feitasIds = pedidos.filter(r => r.estado !== 'falhou').map(r => r.transportadora_id);\nconst falhadas = pedidos.filter(r => r.estado === 'falhou');\nconst anteriores = falhadas.reduce((m, r) => Math.max(m, Number(r.tentativas) || 1), 0);\nconst max = Number(cfg.maximo_transportadoras) || 5;\nconst doPais = todas.filter(t => Array.isArray(t.rotas) && t.rotas.includes(p.destino_pais));\nif (doPais.length === 0) throw new Error('Não há transportadoras ativas para o destino ' + p.destino_pais + ' (proposta ' + p.codigo + '): nada foi enviado. Acrescente transportadoras ou rotas.');\nif (anteriores >= MAX_TENTATIVAS) throw new Error('Proposta ' + p.codigo + ': o envio do pedido de cotação falhou ' + anteriores + ' vezes (máximo ' + MAX_TENTATIVAS + ') e NÃO foi tentado de novo. Verifique a ligação ao Outlook e envie o pedido manualmente.');\nlet candidatas; let jaContactadas; let vagas;\nif (atualizar) {\n  // último pedido enviado de cada transportadora ativa do país\n  const ultimo = {};\n  for (const r of pedidos.filter(x => x.estado === 'enviado')) { if (!ultimo[r.transportadora_id] || (Number(r.versao) || 1) > (Number(ultimo[r.transportadora_id].versao) || 1)) ultimo[r.transportadora_id] = r; }\n  candidatas = doPais.filter(t => ultimo[t.id]).sort((a, b) => a.nome.localeCompare(b.nome))\n    .map(t => Object.assign({}, t, { _versao: (Number(ultimo[t.id].versao) || 1) + 1, _substitui_id: ultimo[t.id].id }));\n  if (candidatas.length === 0) throw new Error('Proposta ' + p.codigo + ': não há pedidos de cotação enviados para atualizar.');\n  jaContactadas = 0; vagas = candidatas.length;\n} else {\n  jaContactadas = doPais.filter(t => feitasIds.includes(t.id)).length;\n  candidatas = doPais.filter(t => !feitasIds.includes(t.id)).sort((a, b) => a.nome.localeCompare(b.nome)).map(t => Object.assign({}, t, { _versao: 1, _substitui_id: null }));\n  vagas = max - jaContactadas;\n  if (candidatas.length === 0 || vagas <= 0) throw new Error('Todas as transportadoras já foram contactadas para a proposta ' + p.codigo);\n}\nreturn [{ json: {\n  codigo: p.codigo, produto: p.produto, quantidade: p.quantidade, unidade: p.unidade, incoterm: p.incoterm, destino_pais: p.destino_pais,\n  alvo: Math.min(vagas, candidatas.length), vagas: vagas, ja_contactadas: jaContactadas, tentativa: anteriores + 1, atualizar: atualizar,\n  candidatas: candidatas.map(t => ({ id: t.id, nome: t.nome, modos: t.modos || [], paises_servidos: t.rotas, versao: t._versao, substitui_id: t._substitui_id }))\n} }];\n",
         "language": "javaScript",
         "mode": "runOnceForAllItems"
       },
@@ -1211,8 +1241,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "9278a232-2a8f-449d-8168-02a212a673d6",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "d0ca6c4d-587a-4016-80b3-b9fda8e015f5",
+    "exportedAt": "2026-10-17",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
 }

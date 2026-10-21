@@ -113,7 +113,7 @@ class T(unittest.TestCase):
 
     def test_D3_dry_run_sem_marcadores(self):
         rep = D.run(CFG, dry_run=True)
-        self.assertEqual(len(rep), 15)
+        self.assertEqual(len(rep), 16)
         self.assertTrue(all(r[1] == "simulado" for r in rep))
 
     def test_D4_config_incompleta_falha_sem_tocar_na_api(self):
@@ -135,7 +135,7 @@ class T(unittest.TestCase):
         m = Mock()
         try:
             rep = D.run(CFG, api=D.Api(m.url, "k"))
-            self.assertEqual(len(m.store), 15)
+            self.assertEqual(len(m.store), 16)
             ids = {w["name"]: i for i, w in m.store.items()}
             wf2 = m.by_name("WF2 - Pedido de proposta")
             called = {n["parameters"]["workflowId"]["value"] for n in wf2["nodes"] if n["type"] == "n8n-nodes-base.executeWorkflow"}
@@ -161,7 +161,7 @@ class T(unittest.TestCase):
             self.assertEqual(len(ativos), 12)
             self.assertNotIn("WF8 - Aprovação da Bárbara por email", ativos)
             self.assertNotIn("WF6 - Ler cotações das transportadoras", ativos)
-            self.assertEqual(sum(1 for r in rep if "criado" in r[1]), 15)
+            self.assertEqual(sum(1 for r in rep if "criado" in r[1]), 16)
         finally:
             m.close()
 
@@ -171,10 +171,10 @@ class T(unittest.TestCase):
             D.run(CFG, api=D.Api(m.url, "k"))
             n_posts = sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate"))
             rep = D.run(CFG, api=D.Api(m.url, "k"))
-            self.assertEqual(len(m.store), 15)
-            self.assertEqual(n_posts, 15)
+            self.assertEqual(len(m.store), 16)
+            self.assertEqual(n_posts, 16)
             self.assertTrue(all("atualizado" in r[1] for r in rep))
-            self.assertEqual(sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate")), 15)
+            self.assertEqual(sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate")), 16)
         finally:
             m.close()
 

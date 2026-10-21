@@ -1,0 +1,563 @@
+{
+  "name": "WF13 - Confirmação de reserva de frete",
+  "description": "Depois de a proposta ser aprovada, a Bárbara ou a Madalena escolhe a transportadora vencedora; o workflow cria só um rascunho do email de confirmação de reserva (nunca envia), atualiza o estado da reserva e o frete escolhido, e liberta as outras reservas em standby.",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Confirmar reserva de frete",
+        "formDescription": "Escolha a transportadora vencedora de uma proposta aprovada. Cria apenas um RASCUNHO do email de confirmação (nunca envia): reveja e envie no Outlook.",
+        "path": "confirmar-reserva",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Código da proposta",
+              "fieldName": "codigo",
+              "placeholder": "PRP-2026-0004",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Transportadora",
+              "fieldName": "transportadora",
+              "placeholder": "Nome como no resumo de validação",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Referência da transportadora",
+              "fieldName": "ref_transportadora",
+              "placeholder": "Só se houver mais de uma cotação (ex. Q-123456)",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Ação",
+              "fieldName": "acao",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Criar rascunho de confirmação"
+                  },
+                  {
+                    "option": "Marcar reserva como confirmada"
+                  },
+                  {
+                    "option": "Cancelar reserva"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Continuar",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Pedido recebido. Se for criado um rascunho, está na pasta Rascunhos do Outlook: reveja antes de enviar. Se algo falhar, receberá um aviso por email."
+            }
+          }
+        }
+      },
+      "id": "0",
+      "name": "Confirmar reserva de frete",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n1",
+              "name": "codigo",
+              "type": "string",
+              "value": "={{ String($json[\"Código da proposta\"] ?? $json.codigo ?? \"\").trim().toUpperCase().slice(0, 20) }}"
+            },
+            {
+              "id": "n2",
+              "name": "transportadora",
+              "type": "string",
+              "value": "={{ String($json[\"Transportadora\"] ?? $json.transportadora ?? \"\").trim().slice(0, 120) }}"
+            },
+            {
+              "id": "n3",
+              "name": "ref_transportadora",
+              "type": "string",
+              "value": "={{ String($json[\"Referência da transportadora\"] ?? $json.ref_transportadora ?? \"\").trim().slice(0, 60) }}"
+            },
+            {
+              "id": "n4",
+              "name": "acao",
+              "type": "string",
+              "value": "={{ (() => { const a = String($json[\"Ação\"] ?? $json.acao ?? \"\").toLowerCase(); return /cancel/.test(a) ? \"cancelada\" : /confirmada/.test(a) ? \"confirmada\" : /rascunho/.test(a) ? \"rascunho\" : \"\"; })() }}"
+            },
+            {
+              "id": "n5",
+              "name": "destinatario_teste",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Normalizar pedido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        80
+      ],
+      "notes": "DEV: destinatario_teste preenchido desvia o rascunho para o email de teste. Em produção esvaziar."
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "propostas",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "codigo",
+              "condition": "eq",
+              "keyValue": "={{ $json.codigo }}"
+            }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Ler proposta",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "cotacoes_frete",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "proposta_id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Ler proposta\").first().json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Ler cotações",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        80
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "transportadoras",
+        "returnAll": true
+      },
+      "id": "4",
+      "name": "Ler transportadoras",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        80
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// WF13 · «Decidir»: valida o pedido da Bárbara/Madalena e prepara o RASCUNHO de confirmação de reserva (nunca envia).\nconst cfg = $('Normalizar pedido').first().json;\nconst p = $('Ler proposta').first().json;\nif (!p || !p.id) throw new Error('Confirmação de reserva: proposta ' + cfg.codigo + ' não encontrada.');\nconst acao = cfg.acao;\nif (!['rascunho', 'confirmada', 'cancelada'].includes(acao)) throw new Error('Confirmação de reserva: ação inválida.');\nif (acao !== 'cancelada' && !['aprovada', 'enviada', 'aceite', 'em_expedicao'].includes(p.estado)) throw new Error('Confirmação de reserva: a proposta ' + cfg.codigo + ' está no estado ' + p.estado + '; só se confirma a reserva depois de aprovada.');\nconst cots = $('Ler cotações').all().map(i => i.json).filter(c => c && c.id);\nconst transps = {};\n$('Ler transportadoras').all().forEach(i => { if (i.json && i.json.id) transps[i.json.id] = i.json; });\nconst norm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();\nconst nome = norm(cfg.transportadora);\nconst ref = norm(cfg.ref_transportadora);\nlet cand = cots.filter(c => transps[c.transportadora_id] && norm(transps[c.transportadora_id].nome) === nome);\nif (cand.length === 0) throw new Error('Confirmação de reserva: a transportadora «' + cfg.transportadora + '» não tem cotação na proposta ' + cfg.codigo + '. Use o nome exatamente como no resumo.');\nif (ref) cand = cand.filter(c => norm(c.ref_transportadora) === ref);\nif (cand.length === 0) throw new Error('Confirmação de reserva: nenhuma cotação de «' + cfg.transportadora + '» tem a referência «' + cfg.ref_transportadora + '».');\nif (cand.length > 1) throw new Error('Confirmação de reserva: «' + cfg.transportadora + '» tem ' + cand.length + ' cotações na proposta ' + cfg.codigo + '; indique a referência da transportadora (' + cand.map(c => c.ref_transportadora || 'sem ref.').join(', ') + ').');\nconst c = cand[0];\nconst t = transps[c.transportadora_id];\nconst atual = c.estado_reserva || 'nenhuma';\nconst outraConfirmada = cots.find(x => x.id !== c.id && x.estado_reserva === 'confirmada');\nif (acao !== 'cancelada') {\n  if (c.revisao === 'a_rever') throw new Error('Confirmação de reserva: a cotação está marcada «a rever»; valide o preço e as condições antes de a escolher.');\n  if (c.preco === null || c.preco === undefined || c.preco === '') throw new Error('Confirmação de reserva: a cotação não tem preço registado.');\n  if (outraConfirmada) throw new Error('Confirmação de reserva: já existe outra cotação confirmada para a proposta ' + cfg.codigo + '. Cancele-a primeiro.');\n  if (atual === 'confirmada') throw new Error('Confirmação de reserva: esta cotação já está confirmada.');\n  if (acao === 'confirmada' && !['standby', 'rascunho'].includes(atual)) throw new Error('Confirmação de reserva: só se confirma uma reserva em standby ou com rascunho criado (estado atual: ' + atual + ').');\n  if (acao === 'rascunho' && !['nenhuma', 'standby', 'rascunho', 'cancelada'].includes(atual)) throw new Error('Confirmação de reserva: estado de reserva inesperado (' + atual + ').');\n} else if (!['standby', 'rascunho', 'confirmada'].includes(atual)) {\n  throw new Error('Confirmação de reserva: não há reserva a cancelar (estado atual: ' + atual + ').');\n}\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst tem = (v) => v !== null && v !== undefined && v !== '';\nconst dataPt = (d) => (/^\\d{4}-\\d{2}-\\d{2}/.test(String(d || '')) ? String(d).slice(8, 10) + '/' + String(d).slice(5, 7) + '/' + String(d).slice(0, 4) : String(d || ''));\nconst ENTREGA = { fixa: 'entrega em data fixa', janela: 'entrega dentro do período indicado', sem_data: 'sem data de entrega fixada' };\nconst PRECO_POR = { camiao: 'por camião', total: 'valor total', palete: 'por palete' };\nconst linha = (k, v) => (tem(v) ? '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>' : '');\nconst teste = !!cfg.destinatario_teste;\nconst refTxt = tem(c.ref_transportadora) ? c.ref_transportadora : null;\nconst assunto = (teste ? '[TESTE] ' : '') + 'Confirmação de reserva' + (refTxt ? ' ' + refTxt : '') + ' [' + p.codigo + ']';\nconst corpo = (teste ? '<p><i>Rascunho de teste. Destinatário real: ' + esc(t.email) + '.</i></p>' : '')\n  + '<p>Exmos. Senhores, vimos por este meio confirmar a reserva do transporte referente ao pedido ' + esc(p.codigo) + (refTxt ? ' (vossa referência ' + esc(refTxt) + ')' : '') + ', nas condições da cotação recebida:</p>'\n  + '<table>' + linha('Referência', p.codigo) + linha('Vossa referência', refTxt) + linha('Preço', c.preco + ' ' + (c.moeda || '') + (PRECO_POR[c.preco_por] ? ' (' + PRECO_POR[c.preco_por] + (tem(c.n_camioes_incluidos) ? ', ' + c.n_camioes_incluidos + ' camião(ões)' : '') + ')' : ''))\n  + linha('Condição de entrega', (ENTREGA[c.tipo_entrega] || null) && ENTREGA[c.tipo_entrega] + (tem(c.data_entrega_pedida) ? ' (' + dataPt(c.data_entrega_pedida) + ')' : '')) + linha('Modo', c.modo) + linha('Trânsito', tem(c.transito_dias) ? c.transito_dias + ' dias' : null) + '</table>'\n  + '<p>Agradecemos a confirmação de receção e a data de recolha.</p><p>Cumprimentos,<br>Equipa comercial (rascunho preparado pelo sistema de propostas)</p>';\nconst libertar = acao === 'confirmada' ? cots.filter(x => x.id !== c.id && ['standby', 'rascunho'].includes(x.estado_reserva)).map(x => x.id) : [];\nreturn [{ json: {\n  acao, proposta_id: p.id, codigo: p.codigo, cotacao_id: c.id, transportadora: t.nome,\n  novo_estado: acao === 'cancelada' ? 'cancelada' : acao,\n  frete_escolhido_id: acao === 'cancelada' ? null : c.id,\n  limpar_frete: acao === 'cancelada' && p.frete_escolhido_id === c.id,\n  atualizar_proposta: acao !== 'cancelada' || p.frete_escolhido_id === c.id,\n  criar_rascunho: acao === 'rascunho',\n  para: teste ? cfg.destinatario_teste : t.email, assunto, corpo_html: corpo, libertar_ids: libertar\n} }];\n"
+      },
+      "id": "5",
+      "name": "Decidir",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        80
+      ],
+      "notes": "Valida (proposta aprovada, cotação sem revisão pendente, uma só confirmada) e prepara o rascunho. Nunca envia. Código em scripts/wf13_code/decidir.js."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.criar_rascunho }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "6",
+      "name": "Criar rascunho?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "create",
+        "subject": "={{ $json.assunto }}",
+        "bodyContent": "={{ $json.corpo_html }}",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "toRecipients": "={{ $json.para }}"
+        }
+      },
+      "id": "7",
+      "name": "Criar rascunho no Outlook",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        80
+      ],
+      "notes": "Só RASCUNHO: a pessoa revê e envia no Outlook. Este workflow não tem nenhum nó de envio.",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "cotacoes_frete",
+        "dataToSend": "defineBelow",
+        "matchType": "allFilters",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Decidir\").first().json.cotacao_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado_reserva",
+              "fieldValue": "={{ $(\"Decidir\").first().json.novo_estado }}"
+            }
+          ]
+        }
+      },
+      "id": "8",
+      "name": "Atualizar estado da reserva",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "propostas",
+        "dataToSend": "defineBelow",
+        "matchType": "allFilters",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $(\"Decidir\").first().json.proposta_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "frete_escolhido_id",
+              "fieldValue": "={{ $(\"Decidir\").first().json.atualizar_proposta ? $(\"Decidir\").first().json.frete_escolhido_id : ($(\"Ler proposta\").first().json.frete_escolhido_id ?? null) }}"
+            }
+          ]
+        }
+      },
+      "id": "9",
+      "name": "Atualizar frete escolhido",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $('Decidir').first().json.libertar_ids.map(id => ({ json: { id } }));"
+      },
+      "id": "10",
+      "name": "Reservas a libertar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        80
+      ],
+      "notes": "Ao confirmar uma reserva, as outras em standby/rascunho passam a canceladas (sem enviar aviso). 0 itens: o ramo termina."
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "tableId": "cotacoes_frete",
+        "dataToSend": "defineBelow",
+        "matchType": "allFilters",
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado_reserva",
+              "fieldValue": "cancelada"
+            }
+          ]
+        }
+      },
+      "id": "11",
+      "name": "Libertar outras reservas",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Confirmar reserva de frete": {
+      "main": [
+        [
+          {
+            "node": "Normalizar pedido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar pedido": {
+      "main": [
+        [
+          {
+            "node": "Ler proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler proposta": {
+      "main": [
+        [
+          {
+            "node": "Ler cotações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler cotações": {
+      "main": [
+        [
+          {
+            "node": "Ler transportadoras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler transportadoras": {
+      "main": [
+        [
+          {
+            "node": "Decidir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir": {
+      "main": [
+        [
+          {
+            "node": "Criar rascunho?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar rascunho?": {
+      "main": [
+        [
+          {
+            "node": "Criar rascunho no Outlook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Atualizar estado da reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar rascunho no Outlook": {
+      "main": [
+        [
+          {
+            "node": "Atualizar estado da reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar estado da reserva": {
+      "main": [
+        [
+          {
+            "node": "Atualizar frete escolhido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar frete escolhido": {
+      "main": [
+        [
+          {
+            "node": "Reservas a libertar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reservas a libertar": {
+      "main": [
+        [
+          {
+            "node": "Libertar outras reservas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "tags": [
+    {
+      "name": "propostas"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "9C7Wfvim8cAIsgZ6",
+    "sourceVersionId": "f436b454-d2d2-4b89-ad1e-9fe640efdb68",
+    "exportedAt": "2026-10-17",
+    "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
+  }
+}

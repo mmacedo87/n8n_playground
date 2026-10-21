@@ -123,16 +123,16 @@ svg .ar{stroke:#6e5130}
 <header>
   <svg class="brand" viewBox="0 0 84 84" role="img" aria-label="Rolha de cortiça"><defs><radialGradient id="rl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#e6bf88"/><stop offset="1" stop-color="#b98a52"/></radialGradient></defs><circle cx="42" cy="42" r="38" fill="url(#rl)" stroke="#fbeccd" stroke-width="3"/><g fill="#7a4d22" opacity=".55"><circle cx="26" cy="28" r="2.4"/><circle cx="52" cy="22" r="1.8"/><circle cx="60" cy="46" r="2.6"/><circle cx="34" cy="54" r="2"/><circle cx="46" cy="64" r="1.6"/><circle cx="22" cy="46" r="1.5"/><circle cx="48" cy="40" r="1.4"/></g><g fill="#fff3d6" opacity=".6"><circle cx="38" cy="30" r="1.4"/><circle cx="56" cy="34" r="1.2"/><circle cx="30" cy="42" r="1.3"/><circle cx="44" cy="52" r="1.2"/></g></svg>
   <div class="txt">
-  <span class="tag">Versão 0.7 · Semana 1 (atualizado a 9 de outubro)</span>
+  <span class="tag">Versão 0.8 · Semana 1 (atualizado a 17 de outubro)</span>
   <h1>Automação de propostas comerciais</h1>
-  <p>Resumo do que está construído · atualizado a 9 de outubro de 2026</p>
+  <p>Resumo do que está construído · atualizado a 17 de outubro de 2026</p>
   </div>
 </header>
 
 <section>
   <h2>Em resumo</h2>
   <div class="grid">
-    <div class="kpi"><b>15</b><span>workflows construídos em n8n Cloud (12 de negócio, 3 de apoio: avisos de erro e Slack)</span></div>
+    <div class="kpi"><b>16</b><span>workflows construídos em n8n Cloud (13 de negócio, 3 de apoio: avisos de erro e Slack)</span></div>
     <div class="kpi"><b>11 etapas</b><span>automatizadas: leitura de pedidos por email, registo do pedido, pedido de cotação de frete, enriquecimento (compliance), leitura de cotações, resumo para validação, aprovação por email, envio ao cliente, confirmação pelo cliente, plano de expedição e follow-up</span></div>
     <div class="kpi"><b>1 email</b><span>único para 4 a 5 transportadoras (em cópia oculta), escolhidas por IA consoante o país de destino</span></div>
     <div class="kpi"><b>100% rastreável</b><span>cada pedido, envio e utilização de IA fica registado na base de dados</span></div>
@@ -179,16 +179,17 @@ svg .ar{stroke:#6e5130}
     <thead><tr><th>Workflow</th><th>O que faz</th><th>Estado</th></tr></thead>
     <tbody>
       <tr><td><b>WF2</b> · Pedido de proposta</td><td>Recebe o pedido (formulário ou outro workflow), valida os dados, grava a proposta com número único e envia email de confirmação. Chama o WF3, o WF4 e o aviso no Slack no fim, sem esperar por eles.</td><td><span class="pill p-ok">Ativo</span></td></tr>
-      <tr><td><b>WF3</b> · Pedido de cotação de frete</td><td>Escolhe 4 a 5 transportadoras para o país de destino, redige e envia UM único email (cópia oculta) e regista um pedido por transportadora. Se o envio falhar, repete até 5 vezes e à 6.ª avisa por email.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
+      <tr><td><b>WF3</b> · Pedido de cotação de frete</td><td>Escolhe 4 a 5 transportadoras para o país de destino, redige e envia UM único email (cópia oculta) e regista um pedido por transportadora. O email leva os dados da carga (tipo de carga, camiões, paletes, peso, dimensões e moradas, quando preenchidos) e o assunto no formato «Cotação Portugal/código postal – País [PRP]». Há também o modo «Atualizar cotação», que cria uma nova versão do pedido para as transportadoras já contactadas. Se o envio falhar, repete até 5 vezes e à 6.ª avisa por email.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
       <tr><td><b>WF4</b> · Enriquecimento</td><td>Para cada proposta, junta o código pautal, a taxa de direitos por destino (UE por regra, EUA via USITC, restantes manual) e as notas fitossanitárias. Sem IA.</td><td><span class="pill p-ok">Ativo</span></td></tr>
-      <tr><td><b>WF5</b> · Resumo para validação</td><td>Envia à Bárbara um email com os dados da proposta, as cotações de frete e o compliance, avisa no Slack e passa a proposta a «em validação». Nada vai ao cliente sem a sua validação.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
-      <tr><td><b>WF6</b> · Ler cotações</td><td>Lê as respostas das transportadoras (texto e PDFs anexos), extrai preço, modo, prazo e validade, valida em código e grava; marca «a rever» se houver dúvidas. Com cotações suficientes, envia o resumo à Bárbara (WF5).</td><td><span class="pill p-test">Em teste</span></td></tr>
+      <tr><td><b>WF5</b> · Resumo para validação</td><td>Envia à Bárbara um email com os dados da proposta, as cotações de frete (com entrega fixa ou dentro de um período, preço por camião ou total, referência da transportadora e estado da reserva; as cotações «a rever» aparecem em destaque) e o compliance, avisa no Slack e passa a proposta a «em validação». Nada vai ao cliente sem a sua validação.</td><td><span class="pill p-test">Ativo · modo de teste</span></td></tr>
+      <tr><td><b>WF6</b> · Ler cotações</td><td>Lê as respostas das transportadoras (texto e PDFs anexos), associa-as à proposta mesmo quando o assunto muda (pela conversa, pela referência da transportadora ou por um único pedido em aberto) e aceita remetentes por email ou domínio. Extrai preço, modo, prazo, validade e as condições (entrega fixa ou período, por camião ou total), valida em código e grava; marca «a rever» se houver dúvidas. Se não consegue associar com segurança, não grava nada e avisa. Com cotações suficientes, envia o resumo à Bárbara (WF5).</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>WF8</b> · Aprovação da Bárbara</td><td>Lê a resposta da Bárbara ao email de validação. Só «OK» (ou «aprovo») na primeira linha, de uma pessoa autorizada e numa proposta em validação, aprova; qualquer outro texto é só um aviso no Slack e nunca aprova.</td><td><span class="pill p-test">Em teste · por publicar</span></td></tr>
       <tr><td><b>WF9</b> · Envio ao cliente</td><td>Depois da aprovação, envia a proposta ao cliente (em português ou inglês) com a Bárbara em cópia e um link para confirmar a encomenda. Recusa enviar se ainda não houver preço final.</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>WF10</b> · Confirmação da encomenda</td><td>O cliente abre o link, vê o resumo e confirma num botão (dois passos, validade de 30 dias, não confirma duas vezes). Avisa a expedição por email e no Slack.</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>WF11</b> · Plano de expedição</td><td>Formulário para a Madalena/Bárbara: tempo de produção, stock, data de recolha, modo e transportadora. Fica numa tabela partilhada e dispara o follow-up.</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>WF12</b> · Follow-up ao cliente</td><td>Envia ao cliente a proposta final com o modo de expedição e a chegada estimada, e dá a proposta por concluída.</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>WF1</b> · Extrair pedido do email</td><td>A IA lê o email e extrai os campos do pedido; o código valida cada campo, calcula o que falta e escreve o rascunho de resposta (em português ou inglês). Nunca cria a proposta.</td><td><span class="pill p-ok">Ativo</span></td></tr>
+      <tr><td><b>WF13</b> · Confirmação de reserva de frete</td><td>Depois de a proposta ser aprovada, a Bárbara ou a Madalena escolhe a transportadora vencedora num formulário. O sistema cria só um <b>rascunho</b> do email de confirmação no Outlook (nunca envia: a pessoa revê e envia), regista o estado da reserva e liberta as outras reservas em standby.</td><td><span class="pill p-test">Em teste</span></td></tr>
       <tr><td><b>Notificar Slack</b></td><td>Publica avisos curtos nos canais de novas propostas e de pedidos de cotação. Uma falha do Slack nunca pára o resto.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>WF2 Error Flow</b></td><td>Se o WF2 falhar, avisa por email se a proposta chegou a ser gravada e que o WF3 não foi chamado.</td><td><span class="pill p-ok">Ativo</span></td></tr>
       <tr><td><b>Mail Error Flow</b></td><td>Aviso de erro geral: quando outro workflow falha, envia email com o nó que falhou, a mensagem e a ligação à execução.</td><td><span class="pill p-ok">Ativo</span></td></tr>
@@ -301,7 +302,7 @@ svg .ar{stroke:#6e5130}
     <div class="card"><h3>Email controlado</h3>
       <p style="margin:0">A IA só escreve a introdução e o fecho. Os dados do pedido vão numa tabela montada por código, o número PRP vai no assunto e o código recusa texto com ligações, preços ou HTML (nesse caso usa um texto fixo). O nome do cliente final nunca é incluído.</p></div>
     <div class="card"><h3>Sem duplicados</h3>
-      <p style="margin:0">O pedido é gravado antes do envio e a base de dados impede dois pedidos iguais para a mesma proposta e transportadora. Se o envio falhar, o sistema tenta de novo até 5 vezes; à 6.ª não envia e avisa por email. Cada pedido enviado gera um aviso curto no Slack.</p></div>
+      <p style="margin:0">O pedido é gravado antes do envio e a base de dados impede dois pedidos iguais para a mesma proposta e transportadora. Se o envio falhar, o sistema tenta de novo até 5 vezes; à 6.ª não envia e avisa por email. Cada pedido enviado gera um aviso curto no Slack. A morada exata de descarga só segue para as transportadoras se estiver preenchida no formulário; o nome do cliente final nunca vai.</p></div>
   </div>
 </section>
 
@@ -312,7 +313,7 @@ svg .ar{stroke:#6e5130}
     <div class="card"><h3>WF4 · Compliance</h3>
       <p style="margin:0">Corre em paralelo ao pedido de cotação. Calcula taxa de direitos e requisitos fitossanitários por país: UE (0 %, mercado interno), EUA (consulta ao USITC), restantes países marcados «a verificar manualmente». Os códigos pautais aguardam validação do despachante.</p></div>
     <div class="card"><h3>WF6 · Cotações recebidas</h3>
-      <p style="margin:0">Associa a resposta ao número PRP e à transportadora (só aceita remetentes conhecidos). A IA extrai preço, modo, prazo e validade; o código valida tudo e não aceita valores inventados. Lê também o texto dos PDFs anexos. Com dúvidas, fica «a rever».</p></div>
+      <p style="margin:0">Associa a resposta ao número PRP e à transportadora (só aceita remetentes conhecidos, por email ou domínio; também associa respostas em que o assunto mudou, pela conversa ou pela referência da transportadora, e nunca grava quando há ambiguidade). A IA extrai preço, modo, prazo e validade; o código valida tudo e não aceita valores inventados. Lê também o texto dos PDFs anexos. Com dúvidas, fica «a rever».</p></div>
     <div class="card"><h3>WF5 · Validação</h3>
       <p style="margin:0">Junta dados, cotações e compliance num só email para a Bárbara e avisa no Slack. É o ponto de revisão humana antes de qualquer proposta seguir para o cliente.</p></div>
     <div class="card"><h3>WF8 · Aprovação</h3>
@@ -456,7 +457,7 @@ svg .ar{stroke:#6e5130}
       <tr><td><b>Total</b></td><td><b>~20 €</b></td><td><b>~57 a 59 €</b> (~47 a 49 € sem Moloni), cerca de 1,6 € por encomenda</td></tr>
     </tbody>
   </table>
-  <div class="card"><p style="margin:0">Mudar para um modelo de IA mais barato pouparia menos de 3 € por mês e aumentaria o risco com dados pessoais, por isso mantém-se o Haiku 4.5. Acompanhar o consumo de execuções do n8n nos primeiros meses; acima de 80 % do limite, subir para o Pro.</p></div>
+  <div class="card"><p style="margin:0">Mudar para um modelo de IA mais barato pouparia menos de 3 € por mês e aumentaria o risco com dados pessoais, por isso mantém-se o Haiku 4.5. O volume esperado é de até 30 propostas por mês (e não cerca de 2), o que multiplica pedidos, respostas e leituras de caixa. Acompanhar o consumo de execuções do n8n nos primeiros meses; acima de 80 % do limite, subir para o Pro.</p></div>
 </section>
 
 <section>
@@ -469,11 +470,12 @@ svg .ar{stroke:#6e5130}
       <tr><td>Validação de códigos pautais</td><td>O despachante confirma os códigos e as regras dos países fora da UE e EUA.</td><td><span class="pill p-todo">Aguarda validação</span></td></tr>
       <tr><td>Proposta no Moloni</td><td>Gerar a proposta comercial com base nas cotações recebidas. Depende de acesso de programador ao Moloni.</td><td><span class="pill p-todo">Planeado</span></td></tr>
       <tr><td>Aprovação, envio, confirmação, expedição e follow-up</td><td>Construídos e testados de ponta a ponta com uma proposta fictícia. O envio ao cliente só funciona com preço final, que depende do Moloni; falta publicar a aprovação e preencher os emails reais na passagem a produção.</td><td><span class="pill p-test">Em teste</span></td></tr>
+          <tr><td>Cotações reais e reserva do frete</td><td>Pedido com dados da carga, leitura de respostas com várias condições e confirmação da reserva (WF13) construídos e testados com dados fixados. Falta publicar, e do cliente: o fio completo da DSV, respostas de outras transportadoras (uma com PDF), se o preço é por camião ou total e se a morada exata de descarga pode ir no pedido.</td><td><span class="pill p-test">Em teste</span></td></tr>
     </tbody>
   </table>
 </section>
 
-<footer>Versão 0.7 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 9 de outubro de 2026.</footer>
+<footer>Versão 0.8 · Implementação em n8n Cloud, Supabase e Microsoft Outlook, com IA via OpenRouter · Atualizado a 17 de outubro de 2026.</footer>
 
 </div>
 </body>

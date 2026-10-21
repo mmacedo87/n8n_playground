@@ -21,11 +21,12 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF6 Ler cotações | `HErViy6cNVrTIH7A` | inativo, manual; texto e PDFs; chama o WF5 |
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |
-| WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | por publicar; só "OK" na 1.ª linha aprova |
+| WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | despublicado (2026-10-16, após o teste real; publicar só com propostas reais); só "OK" na 1.ª linha aprova |
 | WF9 Envio ao cliente | `UrGBkXG37To7RYMR` | sub-workflow, chamado pelo WF8; precisa de `preco_final` |
 | WF10 Confirmação da encomenda | `30Z4Nnge3BRZbU8G` | webhook GET `confirmar-proposta`, link com token |
 | WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao`; chama o WF12 |
 | WF12 Follow-up ao cliente | `ETUqp17gsET6Vc5A` | sub-workflow; marca `concluida` |
+| WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva`; só cria RASCUNHO Outlook (nunca envia), atualiza `estado_reserva` e `frete_escolhido_id`; rascunho, `publish:false` |
 | WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
 | Read Outlook Messages | `39zlpRbdQvI7dHGe` | inativo, manual; chama o WF1, grava lead rascunho |
 
@@ -37,9 +38,12 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 - Slack: a app (`status_notifications`) tem de ser membro de cada canal privado.
 - Outlook "Forbidden" pontual = renovação do token; repetir.
 - Em modo de teste o BCC fica vazio: o nó de envio usa o To como alternativa.
+- **Nunca reenviar para o n8n valores vindos do export sanitizado** (`REDACTED@example.invalid`, ids, destinatários vazios): sobrescrevem a configuração viva (já aconteceu com `destinatario_confirmacao` do WF2). Ler a versão viva (`get_workflow_details`/`get_workflow_version`) e alterar só o necessário; `setNodeParameter` não acrescenta ao fim de arrays (reenviar o array completo, a partir do vivo).
+- Código dos nós Code mantido em `scripts/wf3_code`, `wf5_code`, `wf6_code`, `wf13_code` e testado offline (`tests/harness_code_node.js`); os testes de deriva comparam o `jsCode` do export com esses ficheiros. Correr os testes com `python3 -m unittest tests.test_wf3_code` (ponto, não barra).
+- Notificações Slack: o utilizador pediu a 2026-10-17 para não enviar nenhuma até voltar a pedir.
 
 ## Exportar um workflow para Git
 `python3 -I scripts/sanitize_workflow.py <detalhes.json>`; `settings.errorWorkflow` = `<ID do Mail Error Flow na instância de destino>`; `destinatario_teste` vazio; `meta` com exportedFrom, sourceWorkflowId, sourceVersionId, exportedAt, sanitized; correr `scripts/check_no_secrets.sh`. Referências a outros workflows ficam como `{{WF:Nome}}` (o sanitizer converte; novo workflow entra em `workflows/manifest.json`). Deploy para outra instância: `scripts/deploy_workflows.py` + `deploy/config.json` (ver `docs/passagem-producao.md`); testes: `python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py` e `python3 tests/e2e_app.py`. Assistente web local para quem instala: `app/` + kit com `scripts/build_kit.py`.
 
 ## Ficheiros
-Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0006, script de limpeza não corrido).
+Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0007, script de limpeza não corrido).

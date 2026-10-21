@@ -85,14 +85,14 @@ try:
         pg.click("button:has-text(\"Instalar agora\")")
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
         shot(pg, 6)
-        assert len(mock.store) == 15
+        assert len(mock.store) == 16
         cfg = json.loads(A.CONFIG.read_text())
         assert cfg["credenciais"]["slackApi"] == "Abc123451"
         assert cfg["slack_canais"]["estado"] == "C0AB12CD32"
         assert cfg["emails"]["aprovadores"] == ["b@x.pt", "c@x.pt"]
         b.close()
     assert not errors, errors
-    print("E2E OK: 7 passos percorridos, 15 workflows instalados na API simulada")
+    print("E2E OK: 7 passos percorridos, 16 workflows instalados na API simulada")
 finally:
     srv.shutdown()
     mock.close()

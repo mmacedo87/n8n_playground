@@ -51,8 +51,8 @@ a{color:var(--dark)}
 <div id="main"></div>
 </div>
 <script>
-const STEPS=["Início","Base de dados","Ligar ao n8n","Contas","Emails e Slack","Verificar","Instalar"];
-let step=0, cfg=null, connected=false, checked=false, dbDone=false;
+const STEPS=["Início","Base de dados","Ligar ao n8n","Contas","Emails e Slack","Verificar","Instalar","Repositório GitHub (opcional)"];
+let step=0, cfg=null, connected=false, checked=false, dbDone=false, ghOk=false;
 const $=(s)=>document.querySelector(s);
 const esc=(t)=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const api=async(p,b)=>{const r=await fetch(p,b===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()};
@@ -117,7 +117,41 @@ function render(){bar();const m=$("#main");
  <div class="tip" style="margin-top:20px"><b>Canais do Slack.</b> No Slack, clique com o botão direito no canal, <b>Copiar → Copiar link</b>, e cole abaixo. Depois, em cada canal escreva <i>/invite @nome-da-app</i> para a app poder escrever lá.</div>
  ${c("propostas","Canal das novas propostas")}${c("cotacoes","Canal dos pedidos de cotação")}${c("estado","Canal do estado")}</div><div id="n4"></div>`;upd4();return}
  if(step===5){m.innerHTML=`<div class="card">${head()}<p>Vamos confirmar que está tudo certo <b>antes</b> de instalar. Ainda não se muda nada no n8n.</p><p><button onclick="doCheck()">Verificar tudo</button></p><div id="ck"></div></div><div id="n5"></div>`;if(checked)$("#ck").innerHTML='<div class="msg ok">Tudo certo. Pode instalar.</div>';nav5();return}
- if(step===6){m.innerHTML=`<div class="card">${head()}<p>Último passo! Clique no botão e <b>não feche esta janela</b> até aparecer "Está feito".</p><p><button id="ib" onclick="doDeploy()">Instalar agora</button></p><ul class="prog" id="pr"></ul><div id="fin"></div></div><div class="nav"><button class="sec" onclick="go(-1)">← Voltar</button></div>`;poll();return}}
+ if(step===6){m.innerHTML=`<div class="card">${head()}<p>Último passo! Clique no botão e <b>não feche esta janela</b> até aparecer "Está feito".</p><p><button id="ib" onclick="doDeploy()">Instalar agora</button></p><ul class="prog" id="pr"></ul><div id="fin"></div></div><div class="nav"><button class="sec" onclick="go(-1)">← Voltar</button></div>`;poll();return}
+ if(step===7){const g=cfg.github=cfg.github||{};g.repo=g.repo||"propostas-cortica";if(g.private===undefined)g.private=true;
+ m.innerHTML=`<div class="card">${head()}<p>Opcional, mas recomendado. Cria o «cofre» onde fica guardada a automação, com três ramos de trabalho (<b>dev</b>, <b>stable</b> e <b>main</b>) e uma regra que impede alterações diretas na produção: tudo passa por um pedido de revisão (<i>pull request</i>). Se não quiser, pode fechar esta janela: a instalação no n8n já está concluída.</p><ol class="steps">
+ <li>Entre em <a href="https://github.com/login" target="_blank">github.com</a>. Se não tiver conta, crie uma (é grátis).</li>
+ <li>Abra <a href="https://github.com/settings/tokens/new?description=instalador-propostas&scopes=repo,workflow" target="_blank">este link</a>. Em <b>Expiration</b> escolha <b>7 days</b>, desça até ao fim e clique <b>Generate token</b>. Copie o texto que aparece (começa por <i>ghp_</i>) e cole-o abaixo.
+  <div class="tip">Esta página não guarda a chave. Depois de terminar, pode apagá-la no GitHub.</div>
+  <input type="password" id="ghtok" placeholder="ghp_…" oninput="ghOk=false;$('#ghm').innerHTML='';ghBtn()">
+  <p><button onclick="ghTest()">Testar chave</button></p><div id="ghm">${ghOk?'<div class="msg ok">Chave aceite.</div>':''}</div></li>
+ <li>Confirme os nomes.
+  <label>Conta GitHub (a sua, ou o nome da organização)</label><input type="text" id="gho" value="${esc(g.owner||"")}" oninput="cfg.github.owner=this.value.trim();save();ghBtn()">
+  <label>Nome do repositório<small>Sem espaços. Pode deixar este.</small></label><input type="text" id="ghr" value="${esc(g.repo)}" oninput="cfg.github.repo=this.value.trim();save();ghBtn()">
+  <label class="chk"><input type="radio" name="vis" ${g.private?"checked":""} onchange="cfg.github.private=true;save()"> Privado (recomendado): só vê quem convidar</label>
+  <label class="chk"><input type="radio" name="vis" ${g.private?"":"checked"} onchange="cfg.github.private=false;save()"> Público: qualquer pessoa vê o código (não tem segredos nem dados de clientes)</label>
+  <div class="tip">Num repositório <b>privado</b>, o GitHub só deixa ativar a proteção automática do <i>main</i> nos planos pagos (Pro/Team). Se o seu for gratuito, o assistente avisa e diz como a ativar à mão.</div></li>
+ <li><button id="ghb" onclick="ghCreate()" disabled>Criar o repositório</button><ul class="prog" id="ghpr"></ul><div id="ghfin"></div></li></ol></div>
+ <div class="nav"><button class="sec" onclick="go(-1)">← Voltar</button></div>`;ghBtn();ghPoll(true);return}}
+function ghBtn(){const b=$("#ghb");if(!b)return;const g=cfg.github||{};b.disabled=!(ghOk&&/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(g.owner||"")&&/^[A-Za-z0-9._-]{1,100}$/.test(g.repo||""))}
+async function ghTest(){const r=await api("/api/github/check",{token:$("#ghtok").value.trim()});ghOk=!!r.ok;
+ $("#ghm").innerHTML=r.ok?`<div class="msg ok">Chave aceite. Ligado como <b>${esc(r.login)}</b>.</div>`:`<div class="msg bad">${esc(r.error)}</div>`;
+ if(r.ok&&!cfg.github.owner){cfg.github.owner=r.login;$("#gho").value=r.login;save()}ghBtn()}
+async function ghCreate(){$("#ghb").disabled=true;await flush();const g=cfg.github;const r=await api("/api/github/create",{owner:g.owner,repo:g.repo,private:g.private});
+ if(!r.ok){$("#ghfin").innerHTML=`<div class="msg bad">${esc(r.error)}</div>`;ghBtn();return}ghPoll()}
+async function ghPoll(first){const s=await api("/api/github/status");const pr=$("#ghpr");if(!pr)return;
+ if(first&&s.state==="idle")return;
+ pr.innerHTML=s.steps.map(x=>`<li>${x.estado==="ok"?"✅":x.estado==="aviso"?"⚠️":"⏳"} ${esc(x.name)}</li>`).join("");
+ if(s.state==="running"){setTimeout(ghPoll,600)}
+ else if(s.state==="error"){$("#ghfin").innerHTML=`<div class="msg bad">${esc(s.error)}<br><small>Corrija e clique de novo em Criar: o que já foi feito não se duplica.</small></div>`;ghBtn()}
+ else if(s.state==="done"){$("#ghb").style.display="none";
+  $("#ghfin").innerHTML=`<div class="msg ok">Está feito! O repositório está em <a href="${esc(s.url)}" target="_blank">${esc(s.url)}</a></div>`
+  +(s.avisos||[]).map(a=>`<div class="msg bad">${esc(a)}</div>`).join("")
+  +`<h2 style="margin-top:22px">Como trabalhar a partir de agora</h2><ol class="steps">
+  <li>Faça as alterações no ramo <b>dev</b>. Nunca diretamente no <b>main</b>.</li>
+  <li>Quando estiver estável, abra um <i>pull request</i> de <b>dev</b> para <b>main</b>. A verificação automática corre sozinha (separador <b>Actions</b>).</li>
+  <li>Quando a verificação estiver verde, clique <b>Merge pull request</b>. Depois alinhe <b>dev</b> e <b>stable</b> com o <b>main</b>.</li></ol>`}}
+
 
 function nav5(){$("#n5").innerHTML=nav(checked)}
 function upd4(){const E=cfg.emails,S=cfg.slack_canais;
@@ -142,7 +176,7 @@ function done(s){$("#fin").innerHTML=`<div class="msg ok">Está feito! ${s.steps
  <li>Abra um workflow que use email (por exemplo <b>WF3 - Pedido de cotação de frete</b>) e confirme que a conta do Outlook aparece ligada nos cartões de email.</li>
  <li>Faça um pedido de teste com um cliente inventado e confirme que chega o email de confirmação.</li>
  <li>Só quando tiver respostas reais de transportadoras e da Bárbara, ative (interruptor no topo) o <b>WF6</b>, o <b>WF8</b> e o <b>Read Outlook Messages</b>.</li></ol>
- <p><button class="sec" onclick="window.print()">Imprimir esta lista</button></p>`}
+ <p><button class="sec" onclick="window.print()">Imprimir esta lista</button> <button onclick="go(1)">Continuar: repositório GitHub (opcional) →</button></p>`}
 
 (async()=>{cfg=await api("/api/config");cfg.credenciais=cfg.credenciais||{};cfg.emails=cfg.emails||{};cfg.slack_canais=cfg.slack_canais||{};try{step=0}catch(e){}render()})();
 </script>
