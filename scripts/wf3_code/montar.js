@@ -30,6 +30,8 @@ const base = d.cp_descarga
   ? 'Cotação Portugal/' + d.cp_descarga + ' – ' + pais + ' [' + d.codigo + ']'
   : '[' + d.codigo + '] Pedido de cotação de frete - ' + d.produto + ' - destino ' + d.destino_pais;
 const assunto = (redirecionado ? '[TESTE] ' : '') + (atualizar ? 'Atualização: ' : '') + base;
+// Aviso de transparência (AI Act, Art. 50 / boa prática): fixo em código, nunca vindo do LLM.
+const AVISO_IA = 'Esta mensagem foi redigida com apoio de um sistema de inteligência artificial e enviada pelo nosso sistema de propostas.';
 const corpo = (redirecionado ? '<p><i>Email de teste. Destinatários reais (em BCC): ' + esc(nomes) + '.</i></p>' : '')
   + '<p>' + esc(introFinal) + '</p>'
   + '<table>' + linha('Referência', d.codigo) + linha('Produto', d.produto) + linha('Densidade', d.densidade) + linha('Granulometria', d.granulometria)
@@ -39,5 +41,6 @@ const corpo = (redirecionado ? '<p><i>Email de teste. Destinatários reais (em B
   + opc('Morada de carga', d.morada_carga) + opc('Morada de descarga', d.morada_descarga) + opc('Código postal de descarga', d.cp_descarga) + '</table>'
   + '<p><b>Pedimos que a resposta inclua:</b></p><ul><li>preço (indicar a moeda e se é por camião ou o total do transporte)</li><li>modo de transporte e prazo de trânsito em dias</li><li>se a entrega é em data fixa ou dentro de um período, com o preço de cada condição</li><li>validade da cotação</li><li>condições e eventuais custos adicionais (inland, taxas portuárias, outros)</li></ul>'
   + '<p><b>Importante:</b> mantenha a referência ' + esc(d.codigo) + ' no assunto da resposta.</p>'
-  + '<p>' + esc(fechoFinal) + '</p><p>Cumprimentos,<br>Equipa comercial (mensagem enviada pelo sistema de propostas)</p>';
+  + '<p>' + esc(fechoFinal) + '</p><p>Cumprimentos,<br>Equipa comercial (mensagem enviada pelo sistema de propostas)</p>'
+  + '<p><i>' + AVISO_IA + '</i></p>';
 return itens.map(t => ({ json: Object.assign({}, t, { assunto: assunto, corpo_html: corpo, destinatario_to: destinatarioTo, destinatarios_bcc: destinatariosBcc, redirecionado_teste: redirecionado, gerado_por: llmOk ? 'llm' : 'modelo_fixo', modelo: cfg.modelo, total_transportadoras: itens.length, nomes_transportadoras: nomes }) }));

@@ -53,6 +53,27 @@ class Casos(unittest.TestCase):
                         self.assertTrue(contido(e, r), (e, {k: r.get(k) for k in e}))
 
 
+class AvisoIA(unittest.TestCase):
+    """AI Act (T1/T2): a frase de transparência é acrescentada em código, em todos os emails, venha ou não texto do LLM."""
+    AVISO = 'Esta mensagem foi redigida com apoio de um sistema de inteligência artificial'
+
+    def test_todos_os_emails_tem_aviso(self):
+        with open(RAIZ / 'tests' / 'fixtures' / 'wf3' / 'casos.json', encoding='utf-8') as f:
+            casos = [c for c in json.load(f) if c['tipo'] == 'montar' and not c.get('erro')]
+        self.assertTrue(casos)
+        for c in casos:
+            with self.subTest(c['id']):
+                out = correr('montar.js', {'nodes': c['nodes'], 'input': c.get('input', [])})
+                self.assertIn(self.AVISO, out[0]['corpo_html'])
+                self.assertEqual(out[0]['corpo_html'].count(self.AVISO), 1)
+
+    def test_aviso_nao_depende_do_llm(self):
+        with open(RAIZ / 'tests' / 'fixtures' / 'wf3' / 'casos.json', encoding='utf-8') as f:
+            c = next(c for c in json.load(f) if c['tipo'] == 'montar' and not c.get('erro'))
+        out = correr('montar.js', {'nodes': c['nodes'], 'input': [{'json': {'output': {}}}]})
+        self.assertIn(self.AVISO, out[0]['corpo_html'])
+
+
 class Exportacao(unittest.TestCase):
     def test_codigo_igual_ao_exportado(self):
         wf = json.load(open(RAIZ / 'workflows' / 'wf3-pedido-cotacao-frete.json', encoding='utf-8'))
