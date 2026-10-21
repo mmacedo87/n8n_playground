@@ -318,6 +318,10 @@ alter table propostas
   add column confirmada_em timestamptz,
   add column followup_enviado_em timestamptz;
 
+-- Código de aprovação (migração 0008): o WF5 envia-o à Bárbara e o WF8 só aprova com «OK <código>».
+alter table propostas
+  add column codigo_aprovacao text not null default upper(substr(md5(gen_random_uuid()::text), 1, 6));
+
 create unique index propostas_token_confirmacao_idx on propostas (token_confirmacao);
 
 -- Expedição (WF10 cria a linha, WF11 preenche, WF12 envia o follow-up).
@@ -360,6 +364,20 @@ alter table propostas           enable row level security;
 alter table cotacoes_frete      enable row level security;
 alter table requisitos_pais     enable row level security;
 alter table ai_log              enable row level security;
+
+-- Reforço (migração 0008): anon e authenticated sem permissões; funções só para service_role.
+revoke all on all tables    in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+revoke execute on all functions in schema public from public, anon, authenticated;
+grant  execute on all functions in schema public to service_role;
+alter default privileges in schema public revoke all on tables    from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public revoke execute on functions from public, anon, authenticated;
+
+-- A validação do despachante exige quem validou e quando.
+alter table produtos
+  add constraint produtos_validado_auditado
+  check (validado = false or (validado_por is not null and validado_em is not null)) not valid;
 
 -- ============================================================
 -- OPCIONAL: dados de teste (descomentar para usar).

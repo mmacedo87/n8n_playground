@@ -1,4 +1,4 @@
--- Bateria Supabase (A1-A35 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
+-- Bateria Supabase (A1-A39 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
 -- por isso a transação é revertida e não fica nenhum dado nem se apaga nenhum. A9 (trigger) verifica-se pelo catálogo,
 -- porque dentro de uma transação now() é constante.
 create or replace function pg_temp.falha(q text) returns boolean language plpgsql as $f$
@@ -151,6 +151,12 @@ begin
   end;
   reset role;
   r := r || format('B8 %s anon sem acesso; vista v_expedicoes=%s linha(s)' || E'\n', case when ok and exists (select 1 from pg_views where viewname='v_expedicoes') then 'OK' else 'FALHA' end, (select count(*) from v_expedicoes));
+
+  -- A36-A39 (migração 0008, AI Act)
+  r := r || format('A36 %s anon/authenticated sem permissões nas tabelas' || E'\n', case when not exists (select 1 from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated')) then 'OK' else 'FALHA' end);
+  r := r || format('A37 %s anon sem execução das funções (purgar_leads_antigos, proximo_codigo_proposta)' || E'\n', case when not exists (select 1 from pg_proc pr join pg_namespace ns on ns.oid=pr.pronamespace where ns.nspname='public' and has_function_privilege('anon', pr.oid, 'execute')) then 'OK' else 'FALHA' end);
+  r := r || format('A38 %s código de aprovação com 6 caracteres e distinto entre propostas' || E'\n', case when (select length(codigo_aprovacao) from propostas where id=p1)=6 and (select codigo_aprovacao from propostas where id=p1) <> (select codigo_aprovacao from propostas where id=p2) then 'OK' else 'FALHA' end);
+  r := r || format('A39 %s produto só fica validado com validado_por e validado_em' || E'\n', case when pg_temp.falha($q$update produtos set validado=true where produto=(select produto from produtos limit 1)$q$) then 'OK' else 'FALHA' end);
 
   raise exception E'BATERIA SUPABASE (revertida)\n%\nFALHAS: %', r, (length(r) - length(replace(r,'FALHA','')))/5;
 end $t$;
