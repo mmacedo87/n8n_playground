@@ -1,27 +1,384 @@
 [
- {"id":"R1","desc":"3 cotações, uma a rever (preço por camião ou total por esclarecer), com condições, ref e reserva",
-  "nodes":{
-   "Normalizar código":[{"codigo":"PRP-2026-0101","destinatario_teste":"teste@exemplo.invalid","destinatario_validacao":"v@exemplo.invalid"}],
-   "Ler proposta":[{"id":"p1","codigo":"PRP-2026-0101","estado":"cotado","cliente":"Cliente <X>","produto":"Granulado","densidade":"80","granulometria":"1-2","quantidade":24,"unidade":"t","embalagem":"Big bag","incoterm":"DAP","destino_pais":"ES"}],
-   "Ler compliance":[{}],
-   "Ler cotações":[
-    {"id":"c1","transportadora_id":"t1","modo":"rodoviario","preco":1702.5,"moeda":"EUR","preco_por":"nao_claro","tipo_entrega":"janela","transito_dias":3,"validade":"2026-11-01","ref_transportadora":"Q-123456","estado_reserva":"standby","revisao":"a_rever","confianca":0.4},
-    {"id":"c2","transportadora_id":"t2","modo":"rodoviario","preco":1500,"moeda":"EUR","preco_por":"camiao","n_camioes_incluidos":1,"tipo_entrega":"fixa","data_entrega_pedida":"2026-11-20","transito_dias":4,"revisao":"automatica","confianca":0.93,"estado_reserva":"nenhuma"},
-    {"id":"c3","transportadora_id":"t3","modo":"maritimo","preco":1100,"moeda":"EUR","preco_por":"total","revisao":"automatica","confianca":0.9}],
-   "Ler transportadoras":[{"id":"t1","nome":"Transp A"},{"id":"t2","nome":"Transp B"},{"id":"t3","nome":"Transp C"}]},
-  "expect":{"para":"teste@exemplo.invalid","cotacoes":3,"a_rever":1},
-  "assunto_contem":["1 cotação(ões) a rever"],
-  "corpo_contem":["Transp A","ref. Q-123456","1702.5 EUR (âmbito não claro)","dentro de um período","em standby","<b style=\"color:#b00020\">a rever</b>","background:#fff3cd","1500 EUR (por camião, 1 camião(ões))","data fixa (20/11/2026)","1100 EUR (total)","Atenção: 1 cotação(ões) marcada(s)","Cliente &lt;X&gt;"],
-  "corpo_nao_contem":["Cliente <X>"]},
- {"id":"R2","desc":"Sem cotações nem compliance: sem aviso de revisão",
-  "nodes":{
-   "Normalizar código":[{"codigo":"PRP-2026-0102","destinatario_teste":"","destinatario_validacao":"v@exemplo.invalid"}],
-   "Ler proposta":[{"id":"p2","codigo":"PRP-2026-0102","estado":"pedido","produto":"X","destino_pais":"FR"}],
-   "Ler compliance":[{}],"Ler cotações":[{}],"Ler transportadoras":[{}]},
-  "expect":{"para":"v@exemplo.invalid","cotacoes":0,"a_rever":0},
-  "assunto_contem":["PRP-2026-0102"],
-  "corpo_contem":["Ainda não há cotações de frete registadas."],
-  "corpo_nao_contem":["Atenção","a rever"]},
- {"id":"R3","desc":"Estado inválido recusado","erro":"não pode voltar a ser enviada",
-  "nodes":{"Normalizar código":[{"codigo":"PRP-2026-0103"}],"Ler proposta":[{"id":"p3","codigo":"PRP-2026-0103","estado":"concluida"}],"Ler compliance":[{}],"Ler cotações":[{}],"Ler transportadoras":[{}]}}
+  {
+    "id": "R1",
+    "desc": "3 cotações, uma a rever (preço por camião ou total por esclarecer), com condições, ref e reserva",
+    "nodes": {
+      "Normalizar código": [
+        {
+          "codigo": "PRP-2026-0101",
+          "destinatario_teste": "teste@exemplo.invalid",
+          "destinatario_validacao": "v@exemplo.invalid"
+        }
+      ],
+      "Ler proposta": [
+        {
+          "id": "p1",
+          "codigo": "PRP-2026-0101",
+          "estado": "cotado",
+          "cliente": "Cliente <X>",
+          "produto": "Granulado",
+          "densidade": "80",
+          "granulometria": "1-2",
+          "quantidade": 24,
+          "unidade": "t",
+          "embalagem": "Big bag",
+          "incoterm": "DAP",
+          "destino_pais": "ES"
+        }
+      ],
+      "Ler compliance": [
+        {}
+      ],
+      "Ler cotações": [
+        {
+          "id": "c1",
+          "transportadora_id": "t1",
+          "modo": "rodoviario",
+          "preco": 1702.5,
+          "moeda": "EUR",
+          "preco_por": "nao_claro",
+          "tipo_entrega": "janela",
+          "transito_dias": 3,
+          "validade": "2026-11-01",
+          "ref_transportadora": "Q-123456",
+          "estado_reserva": "standby",
+          "revisao": "a_rever",
+          "confianca": 0.4
+        },
+        {
+          "id": "c2",
+          "transportadora_id": "t2",
+          "modo": "rodoviario",
+          "preco": 1500,
+          "moeda": "EUR",
+          "preco_por": "camiao",
+          "n_camioes_incluidos": 1,
+          "tipo_entrega": "fixa",
+          "data_entrega_pedida": "2026-11-20",
+          "transito_dias": 4,
+          "revisao": "automatica",
+          "confianca": 0.93,
+          "estado_reserva": "nenhuma"
+        },
+        {
+          "id": "c3",
+          "transportadora_id": "t3",
+          "modo": "maritimo",
+          "preco": 1100,
+          "moeda": "EUR",
+          "preco_por": "total",
+          "revisao": "automatica",
+          "confianca": 0.9
+        }
+      ],
+      "Ler transportadoras": [
+        {
+          "id": "t1",
+          "nome": "Transp A"
+        },
+        {
+          "id": "t2",
+          "nome": "Transp B"
+        },
+        {
+          "id": "t3",
+          "nome": "Transp C"
+        }
+      ]
+    },
+    "expect": {
+      "para": "teste@exemplo.invalid",
+      "cotacoes": 3,
+      "a_rever": 1
+    },
+    "assunto_contem": [
+      "1 cotação(ões) a rever"
+    ],
+    "corpo_contem": [
+      "Transp A",
+      "ref. Q-123456",
+      "1702.5 EUR (âmbito não claro)",
+      "dentro de um período",
+      "em standby",
+      "<b style=\"color:#b00020\">a rever</b>",
+      "background:#fff3cd",
+      "1500 EUR (por camião, 1 camião(ões))",
+      "data fixa (20/11/2026)",
+      "1100 EUR (total)",
+      "Atenção: 1 cotação(ões) marcada(s)",
+      "Cliente &lt;X&gt;"
+    ],
+    "corpo_nao_contem": [
+      "Cliente <X>"
+    ]
+  },
+  {
+    "id": "R2",
+    "desc": "Sem cotações nem compliance: sem aviso de revisão",
+    "nodes": {
+      "Normalizar código": [
+        {
+          "codigo": "PRP-2026-0102",
+          "destinatario_teste": "",
+          "destinatario_validacao": "v@exemplo.invalid"
+        }
+      ],
+      "Ler proposta": [
+        {
+          "id": "p2",
+          "codigo": "PRP-2026-0102",
+          "estado": "pedido",
+          "produto": "X",
+          "destino_pais": "FR"
+        }
+      ],
+      "Ler compliance": [
+        {}
+      ],
+      "Ler cotações": [
+        {}
+      ],
+      "Ler transportadoras": [
+        {}
+      ]
+    },
+    "expect": {
+      "para": "v@exemplo.invalid",
+      "cotacoes": 0,
+      "a_rever": 0
+    },
+    "assunto_contem": [
+      "PRP-2026-0102"
+    ],
+    "corpo_contem": [
+      "Ainda não há cotações de frete registadas."
+    ],
+    "corpo_nao_contem": [
+      "Atenção",
+      "a rever"
+    ]
+  },
+  {
+    "id": "R3",
+    "desc": "Estado inválido recusado",
+    "erro": "não pode voltar a ser enviada",
+    "nodes": {
+      "Normalizar código": [
+        {
+          "codigo": "PRP-2026-0103"
+        }
+      ],
+      "Ler proposta": [
+        {
+          "id": "p3",
+          "codigo": "PRP-2026-0103",
+          "estado": "concluida"
+        }
+      ],
+      "Ler compliance": [
+        {}
+      ],
+      "Ler cotações": [
+        {}
+      ],
+      "Ler transportadoras": [
+        {}
+      ]
+    }
+  },
+  {
+    "id": "R4",
+    "desc": "AI Act H6: o email pede «OK <código>» com o código de aprovação da proposta",
+    "nodes": {
+      "Normalizar código": [
+        {
+          "codigo": "PRP-2026-0101",
+          "destinatario_teste": "teste@exemplo.invalid",
+          "destinatario_validacao": "v@exemplo.invalid"
+        }
+      ],
+      "Ler proposta": [
+        {
+          "id": "p1",
+          "codigo": "PRP-2026-0101",
+          "estado": "cotado",
+          "cliente": "Cliente <X>",
+          "produto": "Granulado",
+          "densidade": "80",
+          "granulometria": "1-2",
+          "quantidade": 24,
+          "unidade": "t",
+          "embalagem": "Big bag",
+          "incoterm": "DAP",
+          "destino_pais": "ES",
+          "codigo_aprovacao": "AB12CD"
+        }
+      ],
+      "Ler compliance": [
+        {}
+      ],
+      "Ler cotações": [
+        {
+          "id": "c1",
+          "transportadora_id": "t1",
+          "modo": "rodoviario",
+          "preco": 1702.5,
+          "moeda": "EUR",
+          "preco_por": "nao_claro",
+          "tipo_entrega": "janela",
+          "transito_dias": 3,
+          "validade": "2026-11-01",
+          "ref_transportadora": "Q-123456",
+          "estado_reserva": "standby",
+          "revisao": "a_rever",
+          "confianca": 0.4
+        },
+        {
+          "id": "c2",
+          "transportadora_id": "t2",
+          "modo": "rodoviario",
+          "preco": 1500,
+          "moeda": "EUR",
+          "preco_por": "camiao",
+          "n_camioes_incluidos": 1,
+          "tipo_entrega": "fixa",
+          "data_entrega_pedida": "2026-11-20",
+          "transito_dias": 4,
+          "revisao": "automatica",
+          "confianca": 0.93,
+          "estado_reserva": "nenhuma"
+        },
+        {
+          "id": "c3",
+          "transportadora_id": "t3",
+          "modo": "maritimo",
+          "preco": 1100,
+          "moeda": "EUR",
+          "preco_por": "total",
+          "revisao": "automatica",
+          "confianca": 0.9
+        }
+      ],
+      "Ler transportadoras": [
+        {
+          "id": "t1",
+          "nome": "Transp A"
+        },
+        {
+          "id": "t2",
+          "nome": "Transp B"
+        },
+        {
+          "id": "t3",
+          "nome": "Transp C"
+        }
+      ]
+    },
+    "expect": {},
+    "assunto_contem": [],
+    "corpo_contem": [
+      "OK AB12CD",
+      "AB12CD"
+    ],
+    "corpo_nao_contem": [
+      "apenas com a palavra OK"
+    ]
+  },
+  {
+    "id": "R5",
+    "desc": "AI Act H6: sem código de aprovação, o email avisa e não manda aprovar só com OK",
+    "nodes": {
+      "Normalizar código": [
+        {
+          "codigo": "PRP-2026-0101",
+          "destinatario_teste": "teste@exemplo.invalid",
+          "destinatario_validacao": "v@exemplo.invalid"
+        }
+      ],
+      "Ler proposta": [
+        {
+          "id": "p1",
+          "codigo": "PRP-2026-0101",
+          "estado": "cotado",
+          "cliente": "Cliente <X>",
+          "produto": "Granulado",
+          "densidade": "80",
+          "granulometria": "1-2",
+          "quantidade": 24,
+          "unidade": "t",
+          "embalagem": "Big bag",
+          "incoterm": "DAP",
+          "destino_pais": "ES"
+        }
+      ],
+      "Ler compliance": [
+        {}
+      ],
+      "Ler cotações": [
+        {
+          "id": "c1",
+          "transportadora_id": "t1",
+          "modo": "rodoviario",
+          "preco": 1702.5,
+          "moeda": "EUR",
+          "preco_por": "nao_claro",
+          "tipo_entrega": "janela",
+          "transito_dias": 3,
+          "validade": "2026-11-01",
+          "ref_transportadora": "Q-123456",
+          "estado_reserva": "standby",
+          "revisao": "a_rever",
+          "confianca": 0.4
+        },
+        {
+          "id": "c2",
+          "transportadora_id": "t2",
+          "modo": "rodoviario",
+          "preco": 1500,
+          "moeda": "EUR",
+          "preco_por": "camiao",
+          "n_camioes_incluidos": 1,
+          "tipo_entrega": "fixa",
+          "data_entrega_pedida": "2026-11-20",
+          "transito_dias": 4,
+          "revisao": "automatica",
+          "confianca": 0.93,
+          "estado_reserva": "nenhuma"
+        },
+        {
+          "id": "c3",
+          "transportadora_id": "t3",
+          "modo": "maritimo",
+          "preco": 1100,
+          "moeda": "EUR",
+          "preco_por": "total",
+          "revisao": "automatica",
+          "confianca": 0.9
+        }
+      ],
+      "Ler transportadoras": [
+        {
+          "id": "t1",
+          "nome": "Transp A"
+        },
+        {
+          "id": "t2",
+          "nome": "Transp B"
+        },
+        {
+          "id": "t3",
+          "nome": "Transp C"
+        }
+      ]
+    },
+    "expect": {},
+    "assunto_contem": [],
+    "corpo_contem": [
+      "Código de aprovação indisponível"
+    ],
+    "corpo_nao_contem": [
+      "apenas com a palavra OK",
+      "por exemplo: OK"
+    ]
+  }
 ]
