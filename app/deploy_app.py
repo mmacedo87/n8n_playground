@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import deploy_workflows as D  # noqa: E402
 import github_setup as GS  # noqa: E402
+import atualizar_config as UC  # noqa: E402
 import repo_files  # noqa: E402
 
 CONFIG = ROOT / "deploy" / "config.json"
@@ -47,7 +48,7 @@ def novo_gjob():
     return {"state": "idle", "steps": [], "error": None, "url": None, "avisos": []}
 
 
-STATE = {"key": None, "job": {"state": "idle", "steps": [], "error": None, "total": 0}, "gh": None, "gjob": novo_gjob()}
+STATE = {"key": None, "sb": None, "job": {"state": "idle", "steps": [], "error": None, "total": 0}, "gh": None, "gjob": novo_gjob()}
 LOCK = threading.Lock()
 
 
@@ -173,6 +174,36 @@ def deploy_job():
         job["error"] = "Erro inesperado: %s" % e
 
 
+def sb_connect(url, key):
+    """Liga ao Supabase com a chave service_role (só em memória) e lê as definições atuais."""
+    try:
+        c = UC.Cliente(url, key)
+        atual = c.ler()
+    except UC.AtualizadorError as e:
+        return {"ok": False, "error": str(e), "falta_migracao": e.falta_migracao}
+    STATE["sb"] = c
+    return {"ok": True, "atual": atual}
+
+
+def sb_set(chave, valor):
+    c = STATE["sb"]
+    if not c:
+        return {"ok": False, "error": "Falta ligar ao Supabase primeiro."}
+    try:
+        UC.validar(chave, valor)
+        novo = c.definir(chave, valor, "assistente de updates")
+        return {"ok": True, "valor": novo, "atual": c.ler()}
+    except UC.AtualizadorError as e:
+        return {"ok": False, "error": str(e), "falta_migracao": e.falta_migracao}
+
+
+def migracao_sql(nome):
+    if not re.fullmatch(r"[0-9]{4}_[a-z0-9_]+", nome or ""):
+        return None
+    f = ROOT / "supabase" / "migrations" / (nome + ".sql")
+    return f.read_text(encoding="utf-8") if f.is_file() else None
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -208,6 +239,11 @@ class H(BaseHTTPRequestHandler):
         elif self.path == "/api/github/status":
             with LOCK:
                 self._json(STATE["gjob"])
+        elif self.path == "/api/updates":
+            self._json({"definicoes": UC.DEFINICOES, "ligado": bool(STATE["sb"])})
+        elif self.path.startswith("/api/migracao/"):
+            sql = migracao_sql(self.path[len("/api/migracao/"):])
+            self._json({"sql": sql} if sql else {"erro": "não existe"}, 200 if sql else 404)
         elif self.path == "/api/schema":
             sql = (ROOT / "supabase" / "schema.sql").read_text(encoding="utf-8")
             self._json({"sql": sql})
@@ -241,6 +277,10 @@ class H(BaseHTTPRequestHandler):
                 STATE["job"].update(state="running", steps=[], error=None, total=c["total"])
             threading.Thread(target=deploy_job, daemon=True).start()
             self._json({"ok": True})
+        elif self.path == "/api/sb/connect":
+            self._json(sb_connect(body.get("url", ""), body.get("key", "")))
+        elif self.path == "/api/sb/set":
+            self._json(sb_set(body.get("chave", ""), body.get("valor", "")))
         elif self.path == "/api/github/check":
             self._json(gh_check((body.get("token") or "").strip()))
         elif self.path == "/api/github/create":

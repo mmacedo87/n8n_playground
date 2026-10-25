@@ -29,7 +29,7 @@ class T(unittest.TestCase):
 
     def test_K1_conteudo(self):
         for f in ["LEIA-ME-PRIMEIRO.html", "Iniciar-Windows.bat", "Iniciar-Mac.command", "app/deploy_app.py", "app/index.html",
-                  "scripts/deploy_workflows.py", "scripts/github_setup.py", "scripts/repo_files.py", "supabase/schema.sql", "deploy/config.example.json", "workflows/manifest.json"]:
+                  "scripts/deploy_workflows.py", "scripts/github_setup.py", "scripts/repo_files.py", "scripts/atualizar_config.py", "supabase/schema.sql", "supabase/migrations/0009_configuracao_modo_envio.sql", "deploy/config.example.json", "workflows/manifest.json"]:
             self.assertTrue((self.dir / f).exists(), f)
         self.assertEqual(len(list((self.dir / "workflows").glob("*.json"))), 17)
         self.assertFalse((self.dir / "deploy" / "config.json").exists())

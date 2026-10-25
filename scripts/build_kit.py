@@ -19,6 +19,8 @@ FILES = [
     ("scripts/deploy_workflows.py", "scripts/deploy_workflows.py", 0o644),
     ("scripts/github_setup.py", "scripts/github_setup.py", 0o644),
     ("scripts/repo_files.py", "scripts/repo_files.py", 0o644),
+    ("scripts/atualizar_config.py", "scripts/atualizar_config.py", 0o644),
+    ("supabase/migrations/0009_configuracao_modo_envio.sql", "supabase/migrations/0009_configuracao_modo_envio.sql", 0o644),
     ("supabase/schema.sql", "supabase/schema.sql", 0o644),
     ("deploy/config.example.json", "deploy/config.example.json", 0o644),
 ]

@@ -36,6 +36,11 @@ try:
         pg = b.new_page(viewport={"width": 430, "height": 900})
         pg.on("pageerror", lambda e: errors.append(str(e)))
         pg.goto(url)
+        # ecrã inicial com as duas opções
+        assert "O que quer fazer?" in pg.inner_text("#main")
+        assert pg.locator("button.big").count() == 2
+        shot(pg, 10)
+        pg.click("button.big:has-text(\"Deploy Inicial\")")
         assert "Bem-vindo" in pg.inner_text("#main")
         shot(pg, 0)
         pg.click("button:has-text(\"Começar\")")

@@ -41,6 +41,13 @@ button:disabled{opacity:.4;cursor:not-allowed}
 ul.prog{list-style:none;padding:0;margin:12px 0}
 ul.prog li{padding:8px 0;border-bottom:1px solid var(--line)}
 a{color:var(--dark)}
+button.big{display:block;width:100%;text-align:left;margin:12px 0;padding:18px 22px;background:var(--card);color:var(--ink);border:2px solid var(--dark)}
+button.big b{display:block;font-size:22px;color:var(--deep);font-family:Georgia,serif}
+button.big small{margin-top:4px}
+.opt{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;cursor:pointer;font-weight:400}
+.opt.sel{border-color:var(--dark);background:var(--okbg)}
+.opt input{width:24px;height:24px;margin-top:4px;flex:0 0 auto}
+.opt b{display:block}
 @media print{.nav,.bar,button{display:none}}
 </style>
 </head>
@@ -52,7 +59,7 @@ a{color:var(--dark)}
 </div>
 <script>
 const STEPS=["Início","Base de dados","Ligar ao n8n","Contas","Emails e Slack","Verificar","Instalar","Repositório GitHub (opcional)"];
-let step=0, cfg=null, connected=false, checked=false, dbDone=false, ghOk=false;
+let view="home", step=0, cfg=null, connected=false, checked=false, dbDone=false, ghOk=false;
 const $=(s)=>document.querySelector(s);
 const esc=(t)=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const api=async(p,b)=>{const r=await fetch(p,b===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()};
@@ -61,12 +68,14 @@ const credId=(v)=>{v=(v||"").trim();const m=v.match(/credentials\/([A-Za-z0-9]+)
 const slackId=(v)=>{v=(v||"").trim();const m=v.match(/archives\/(C[A-Z0-9]+)/);return m?m[1]:(/^C[A-Z0-9]{8,}$/.test(v)?v:"")};
 const isMail=(v)=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((v||"").trim());
 
-function bar(){$("#bar").innerHTML=STEPS.map((_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}
-function nav(canNext,nextLabel){return `<div class="nav"><button class="sec" onclick="go(-1)" ${step===0?"disabled":""}>← Voltar</button><button onclick="go(1)" ${canNext?"":"disabled"}>${nextLabel||"Seguinte →"}</button></div>`}
+function bar(){$("#bar").innerHTML=view==="install"?STEPS.map((_,i)=>`<i class="${i<=step?"on":""}"></i>`).join(""):""}
+function nav(canNext,nextLabel){return `<div class="nav"><button class="sec" onclick="${step===0?"home()":"go(-1)"}">${step===0?"← Menu":"← Voltar"}</button><button onclick="go(1)" ${canNext?"":"disabled"}>${nextLabel||"Seguinte →"}</button></div>`}
 function go(d){flush();step=Math.max(0,Math.min(STEPS.length-1,step+d));try{localStorage.setItem("passo",step)}catch(e){}render()}
 function head(){return `<h2>Passo ${step} de ${STEPS.length-1}: ${STEPS[step]}</h2>`}
 
 function render(){bar();const m=$("#main");
+ if(view==="home"){homeView();return}
+ if(view==="updates"){updatesView();return}
  if(step===0){m.innerHTML=`<div class="card"><h2>Bem-vindo!</h2><p>Vamos instalar a automação em poucos passos. Cada passo diz exatamente o que clicar. Pode fechar esta janela e continuar mais tarde: o que já escreveu fica guardado.</p>
  <p><b>Antes de começar, tenha à mão:</b></p><ol class="steps">
  <li>Acesso (utilizador e palavra-passe) ao <b>n8n</b> da empresa.</li>
@@ -152,6 +161,46 @@ async function ghPoll(first){const s=await api("/api/github/status");const pr=$(
   <li>Quando estiver estável, abra um <i>pull request</i> de <b>dev</b> para <b>main</b>. A verificação automática corre sozinha (separador <b>Actions</b>).</li>
   <li>Quando a verificação estiver verde, clique <b>Merge pull request</b>. Depois alinhe <b>dev</b> e <b>stable</b> com o <b>main</b>.</li></ol>`}}
 
+function home(){flush();view="home";step=0;render()}
+function startInstall(){view="install";step=0;render()}
+function startUpdates(){view="updates";render()}
+function homeView(){$("#main").innerHTML=`<div class="card"><h2>O que quer fazer?</h2>
+ <button class="big" onclick="startInstall()"><b>Deploy Inicial</b><small>Primeira instalação: base de dados, contas e workflows no n8n. Cerca de 30 minutos.</small></button>
+ <button class="big" onclick="startUpdates()"><b>Updates ao fluxo</b><small>Mudar definições de um sistema já instalado, sem abrir nem publicar nada no n8n. Por agora: enviar os pedidos de cotação automaticamente ou com revisão humana.</small></button></div>`}
+let sbOk=false, sbAtual={}, sbInfo={};
+function updatesView(){
+ $("#main").innerHTML=`<div class="card"><h2>Updates ao fluxo</h2>
+ <p>Aqui muda definições do sistema que já está instalado. A mudança vale logo para o próximo pedido: <b>não é preciso abrir nem publicar nada no n8n</b>.</p>
+ <ol class="steps"><li>Ligue ao Supabase (a base de dados).
+ <label>Project URL<small>No Supabase: <i>Project Settings → API</i>. Por exemplo https://xxxx.supabase.co</small></label>
+ <input type="text" id="sburl" value="${esc(cfg.supabase_url||"")}" oninput="cfg.supabase_url=this.value.trim();sbOk=false;save();$('#sbm').innerHTML='';$('#defs').innerHTML=''">
+ <label>Chave service_role<small>Na mesma página. <b>É secreta:</b> esta página não a guarda em lado nenhum.</small></label>
+ <input type="password" id="sbkey" oninput="sbOk=false;$('#sbm').innerHTML='';$('#defs').innerHTML=''">
+ <p><button onclick="sbConnect()">Ligar e ver definições</button></p><div id="sbm"></div></li></ol></div>
+ <div id="defs"></div><div class="nav"><button class="sec" onclick="home()">← Menu</button></div>`;
+ if(sbOk)showDefs()}
+async function sbConnect(){const r=await api("/api/sb/connect",{url:cfg.supabase_url||"",key:$("#sbkey").value.trim()});await flush();
+ if(!r.ok){let h=`<div class="msg bad">${esc(r.error)}</div>`;
+  if(r.falta_migracao)h+=`<div class="tip">Como aplicar: no Supabase abra <b>SQL Editor → New query</b>, cole o texto e clique <b>Run</b>. <p><button class="sec" onclick="copyMig()">Copiar o texto da atualização</button></p><div id="cpm"></div></div>`;
+  $("#sbm").innerHTML=h;sbOk=false;return}
+ const u=await api("/api/updates");sbInfo=u.definicoes;sbAtual=r.atual;sbOk=true;
+ $("#sbm").innerHTML='<div class="msg ok">Ligação feita com sucesso.</div>';showDefs()}
+async function copyMig(){const r=await api("/api/migracao/0009_configuracao_modo_envio");try{await navigator.clipboard.writeText(r.sql);$("#cpm").innerHTML='<div class="msg ok">Copiado! Cole no Supabase e clique Run. Depois clique outra vez em «Ligar».</div>'}catch(e){$("#cpm").innerHTML='<div class="msg bad">Não consegui copiar sozinho. Abra o ficheiro supabase/migrations/0009_configuracao_modo_envio.sql e copie o texto.</div>'}}
+function showDefs(){$("#defs").innerHTML=Object.entries(sbInfo).map(([k,d])=>{const atual=(sbAtual[k]||{}).valor||d.por_omissao;
+ const quando=`<small id="qd_${k}">${quandoTxt(k)}</small>`;
+ return `<div class="card" id="def_${k}"><h2>${esc(d.titulo)}</h2><p>${esc(d.descricao)}</p>
+ <p>Agora está: <span class="pill ok" id="cur_${k}">${esc((d.opcoes.find(o=>o.valor===atual)||{titulo:atual}).titulo)}</span>${quando}</p>
+ ${d.opcoes.map(o=>`<label class="opt ${o.valor===atual?"sel":""}"><input type="radio" name="o_${k}" value="${o.valor}" ${o.valor===atual?"checked":""} onchange="selOpt('${k}')"><span><b>${esc(o.titulo)}</b><small>${esc(o.detalhe)}</small></span></label>`).join("")}
+ <p><button id="ap_${k}" onclick="aplicar('${k}')" disabled>Aplicar</button></p><div id="rs_${k}"></div></div>`}).join("")}
+function quandoTxt(k){const a=sbAtual[k]||{};return a.atualizado_em?`Última alteração: ${esc(new Date(a.atualizado_em).toLocaleString("pt-PT"))} por ${esc(a.atualizado_por||"?")}`:""}
+function selOpt(k){const v=document.querySelector(`input[name=o_${k}]:checked`).value;const atual=(sbAtual[k]||{}).valor||sbInfo[k].por_omissao;
+ $("#ap_"+k).disabled=(v===atual);document.querySelectorAll(`#def_${k} .opt`).forEach(e=>e.classList.toggle("sel",e.querySelector("input").checked))}
+async function aplicar(k){const v=document.querySelector(`input[name=o_${k}]:checked`).value;$("#ap_"+k).disabled=true;
+ const r=await api("/api/sb/set",{chave:k,valor:v});
+ if(!r.ok){$("#rs_"+k).innerHTML=`<div class="msg bad">${esc(r.error)}</div>`;$("#ap_"+k).disabled=false;return}
+ sbAtual=r.atual;const o=sbInfo[k].opcoes.find(x=>x.valor===r.valor);
+ $("#cur_"+k).textContent=o.titulo;$("#qd_"+k).innerHTML=quandoTxt(k);
+ $("#rs_"+k).innerHTML=`<div class="msg ok">Guardado: «${esc(o.titulo)}». Vale a partir do próximo pedido de cotação.</div>`}
 
 function nav5(){$("#n5").innerHTML=nav(checked)}
 function upd4(){const E=cfg.emails,S=cfg.slack_canais;
@@ -178,7 +227,7 @@ function done(s){$("#fin").innerHTML=`<div class="msg ok">Está feito! ${s.steps
  <li>Só quando tiver respostas reais de transportadoras e da Bárbara, ative (interruptor no topo) o <b>WF6</b>, o <b>WF8</b> e o <b>Read Outlook Messages</b>.</li></ol>
  <p><button class="sec" onclick="window.print()">Imprimir esta lista</button> <button onclick="go(1)">Continuar: repositório GitHub (opcional) →</button></p>`}
 
-(async()=>{cfg=await api("/api/config");cfg.credenciais=cfg.credenciais||{};cfg.emails=cfg.emails||{};cfg.slack_canais=cfg.slack_canais||{};try{step=0}catch(e){}render()})();
+(async()=>{cfg=await api("/api/config");cfg.credenciais=cfg.credenciais||{};cfg.emails=cfg.emails||{};cfg.slack_canais=cfg.slack_canais||{};view=location.hash==="#instalar"?"install":location.hash==="#updates"?"updates":"home";step=0;render()})();
 </script>
 </body>
 </html>

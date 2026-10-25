@@ -53,7 +53,7 @@ def page(b, env, w=430, h=900, **kw):
     pg = b.new_context(viewport={"width": w, "height": h}, **kw).new_page()
     pg.errs = []
     pg.on("pageerror", lambda e: pg.errs.append(str(e)))
-    pg.goto(env.url)
+    pg.goto(env.url + "#instalar")
     return pg
 
 
@@ -308,7 +308,7 @@ def S12_copiar_sql(b):
     with Env() as e:
         ctx = b.new_context(viewport={"width": 430, "height": 900}, permissions=["clipboard-read", "clipboard-write"])
         pg = ctx.new_page()
-        pg.goto(e.url)
+        pg.goto(e.url + "#instalar")
         pg.click('button:has-text("Começar")')
         pg.click("#cp")
         pg.wait_for_selector("#cpm .msg.ok")
@@ -317,7 +317,7 @@ def S12_copiar_sql(b):
         # sem permissão: mensagem de recurso
         pg2 = page(b, e)
         pg2.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:()=>Promise.reject(new Error('x'))}})")
-        pg2.goto(e.url)
+        pg2.goto(e.url + "#instalar")
         pg2.click('button:has-text("Começar")')
         pg2.click("#cp")
         pg2.wait_for_selector("#cpm .msg.bad")
