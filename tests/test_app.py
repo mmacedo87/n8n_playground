@@ -179,6 +179,14 @@ class T(unittest.TestCase):
         self.assertNotIn("tok", A.CONFIG.read_text())
         self.assertNotIn("ghp_", A.CONFIG.read_text())
 
+    def test_A16_passo_openrouter_chave_de_producao(self):
+        """O passo do OpenRouter explica a chave de produção: ZDR, limite de gasto, chave própria e créditos."""
+        html = (ROOT / "app" / "index.html").read_text(encoding="utf-8")
+        i = html.index('["openRouterApi"')
+        passo = html[i:i + 2500]
+        for txt in ("chave própria para produção", "retenção zero", "Add budget", "limite mensal", "producao-propostas", "créditos"):
+            self.assertIn(txt, passo, txt)
+
     def test_A15_github_erro_traduzido(self):
         self.assertIn("permissão", A.gh_friendly(TG.G.GitHubError(403, "HTTP 403: x")))
         self.assertIn("erro temporário", A.gh_friendly(TG.G.GitHubError(502, "HTTP 502: x")))

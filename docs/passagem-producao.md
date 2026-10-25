@@ -37,7 +37,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Planear a renovação/expiração das credenciais OAuth e quem a monitoriza.
 
 ## 5. OpenRouter / IA
-- [ ] Criar chave de produção separada, com limite de gasto mensal e alertas.
+- [ ] Criar chave de produção separada, com limite de gasto mensal e alertas (o assistente de instalação, passo 3, explica-o passo a passo: ZDR em Settings → Privacy ou Guardrails, orçamento em Budgets & data → Add budget, chave nova e créditos). Na conta de testes, o ZDR e o limite de gasto foram ativados a 2026-10-25 e o WF6 foi testado com o ZDR ligado.
 - [ ] Ativar exclusão de fornecedores que guardam ou treinam com dados (zero retenção); proibir modelos `:free`.
 - [ ] Fixar o modelo e a versão do prompt por workflow e registar tudo em `ai_log`.
 - [ ] Garantir que nenhuma decisão de preço ou envio ao cliente é tomada pelo modelo: valores calculados em código, envio só após aprovação humana.
