@@ -82,6 +82,9 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] O WF2 arranca o WF3 no fim (nó "Pedir cotações de frete (WF3)"): confirmar o ID do WF3 nesse nó na instância de destino.
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
 - [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
+- [ ] **Modo de envio do WF3 (migração 0009):** aplicar `supabase/migrations/0009_configuracao_modo_envio.sql` (tabela `configuracao`, estado `rascunho`). O valor inicial é `automatico` (decidido a 2026-10-25). Muda-se em «Updates ao fluxo» no assistente (ou `scripts/atualizar_config.py`), sem editar nem publicar o WF3. Qualquer valor desconhecido ou erro de leitura faz o WF3 criar rascunho em vez de enviar.
+- [ ] Modo `revisao`: criar a subpasta **To Check** dentro da Inbox da caixa que o n8n usa (o nome está em `pasta_revisao` no nó «Configuração»; é procurada por nome, por isso funciona em qualquer caixa). Se não existir, o rascunho fica em Rascunhos e o aviso do Slack di-lo. Os pedidos ficam `rascunho` e a proposta passa logo a `a_cotar`; quando uma pessoa envia o rascunho, o estado do pedido mantém-se `rascunho` (o sistema não vê o envio manual).
+- [ ] O modo de envio só tem efeito na versão **publicada** do WF3: publicar o WF3 (rascunho bbc0fc46) em conjunto com WF2, WF5, WF8 e WF12 depois de testar.
 - [ ] Reenvio após falha: o WF3 repete o envio até 5 tentativas (coluna `pedidos_cotacao.tentativas`, migração 0004) e à 6.ª não envia e avisa por email (via Mail Error Flow). Confirmar que o Mail Error Flow está definido como Error Workflow do WF3.
 - [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0015, pedidos_cotacao, ai_log) antes de começar.
 

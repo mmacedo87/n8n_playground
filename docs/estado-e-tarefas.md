@@ -29,6 +29,9 @@ Supabase com RLS (11 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (
 8. Dados de teste (PRP-2026-0001 a 0015): decisão sua, manter por agora (`supabase/limpar_dados_de_teste.sql` disponível).
 
 **Novos (2026-10-17)**
+**Novos (2026-10-25)**
+- WF3: modo de envio `automatico`/`revisao` lido de `configuracao` (migração 0009, aplicada no desenvolvimento); rascunho em Inbox/To Check; testado a sério (exec. 272, 274, 276). Rascunho n8n bbc0fc46, **por publicar**. Interruptor no assistente («Updates ao fluxo») e em `scripts/atualizar_config.py`.
+- Decidido: n8n Cloud (região UE e DPA por confirmar com o suporte do n8n); o repositório de desenvolvimento pode ficar público, o de produção será privado.
 - Publicar os rascunhos do WF2, WF3, WF5 (a versão publicada difere do rascunho) e testar o WF13 com uma proposta aprovada real; o WF6 continua inativo por desenho.
 - Bateria Supabase A1-A35/B1-B8 por correr (foi cancelada); migração 0007 aplicada na instância de desenvolvimento.
 - Limitação: o envio Outlook não devolve `conversationId`, por isso a associação por conversa só funciona depois de o WF6 preencher `pedidos_cotacao.conversation_id`; PRP no assunto/corpo e referência da transportadora funcionam já.

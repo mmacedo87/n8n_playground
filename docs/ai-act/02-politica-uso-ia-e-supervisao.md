@@ -31,7 +31,9 @@ Aplica-se a todos os workflows que usam IA na automação de propostas (WF1, WF3
 | A (proposta) | Envio automático a transportadoras com texto validado em código, frase de IA obrigatória e registo em `ai_log`. Revisão amostral mensal (10 execuções). | Baixo: destinatários são transportadoras, texto sem preços nem links. |
 | B | Rascunho para aprovação da Bárbara antes de cada envio. | Mais lento, sem ganho relevante de segurança. |
 
-Decisão: `[ ] A   [ ] B` · Decidido por: `__________` · Data: `__________`
+Decisão: `[x] A   [ ] B` · Decidido por: responsável do projeto (Miguel Macedo), a confirmar pela gestão da empresa · Data: 2026-10-25
+
+**Interruptor para revisão humana:** o WF3 lê `configuracao.modo_envio` no Supabase. `automatico` envia (opção A); `revisao` cria um rascunho no Outlook (pasta «To Check») para uma pessoa rever e enviar (opção B). Se a leitura falhar ou o valor for desconhecido, assume `revisao` (nunca envia sem querer). Muda-se no assistente («Updates ao fluxo») ou com `scripts/atualizar_config.py`, sem editar nem publicar o workflow. Cada alteração fica registada (`atualizado_em`, `atualizado_por`).
 
 Para propostas ao cliente: nenhuma sai sem resposta "OK" de remetente autorizado (WF8) e `preco_final` preenchido (WF9).
 

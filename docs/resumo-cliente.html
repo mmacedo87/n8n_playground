@@ -301,6 +301,8 @@ svg .ar{stroke:#6e5130}
       <p style="margin:0">A IA escolhe, entre as transportadoras ativas que servem o país de destino, as mais adequadas (modo de transporte, rede). O código só aceita escolhas que existam na lista; se a IA falhar ou responder mal, aplica-se uma regra de reserva. Se houver menos de 4, o pedido é enviado na mesma.</p></div>
     <div class="card"><h3>Email controlado</h3>
       <p style="margin:0">A IA só escreve a introdução e o fecho. Os dados do pedido vão numa tabela montada por código, o número PRP vai no assunto e o código recusa texto com ligações, preços ou HTML (nesse caso usa um texto fixo). O nome do cliente final nunca é incluído.</p></div>
+    <div class="card"><h3>Envio automático ou com revisão</h3>
+      <p style="margin:0">Por decisão, o pedido às transportadoras <b>sai automaticamente</b>. Se um dia a empresa quiser rever cada pedido, basta mudar uma definição (no assistente, «Updates ao fluxo», sem mexer no n8n): o sistema passa a criar um <b>rascunho na pasta «To Check»</b> do Outlook, avisa no Slack, e uma pessoa revê e envia. Se a definição não puder ser lida, o sistema escolhe o rascunho, nunca o envio.</p></div>
     <div class="card"><h3>Sem duplicados</h3>
       <p style="margin:0">O pedido é gravado antes do envio e a base de dados impede dois pedidos iguais para a mesma proposta e transportadora. Se o envio falhar, o sistema tenta de novo até 5 vezes; à 6.ª não envia e avisa por email. Cada pedido enviado gera um aviso curto no Slack. A morada exata de descarga só segue para as transportadoras se estiver preenchida no formulário; o nome do cliente final nunca vai.</p></div>
   </div>
@@ -419,7 +421,7 @@ svg .ar{stroke:#6e5130}
     <ul>
       <li><b>Âmbito limitado:</b> a IA escolhe entre transportadoras já existentes, redige a introdução e o fecho de um email e extrai dados de cotações recebidas e de pedidos por email (sempre como rascunho). Não decide preços, não fala com o cliente final e não envia propostas.</li>
       <li><b>Validação por código:</b> as respostas da IA são verificadas (ids válidos, sem ligações nem valores monetários, referência obrigatória; nas cotações, tipos e valores válidos e revisão humana quando há dúvidas) e existe sempre uma alternativa fixa se falharem.</li>
-      <li><b>Supervisão humana:</b> a equipa comercial revê o pedido antes de qualquer proposta seguir para o cliente.</li>
+      <li><b>Supervisão humana:</b> a equipa comercial revê o pedido antes de qualquer proposta seguir para o cliente. Os pedidos às transportadoras saem automaticamente, mas podem passar a rascunho para revisão com uma só definição.</li>
       <li><b>Registo e transparência:</b> modelo e versão do prompt ficam registados em cada utilização.</li>
       <li><b>Custo contido:</b> modelo leve (Claude Haiku 4.5, via OpenRouter) com respostas curtas.</li>
     </ul>
