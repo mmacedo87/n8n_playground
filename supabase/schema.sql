@@ -241,7 +241,7 @@ create table pedidos_cotacao (
   assunto text not null,
   corpo_html text not null,
   redirecionado_teste boolean not null default false,
-  estado text not null default 'a_enviar' check (estado in ('a_enviar','enviado','falhou','respondido')),
+  estado text not null default 'a_enviar' check (estado in ('a_enviar','rascunho','enviado','falhou','respondido')),  -- 'rascunho': migração 0009
   gerado_por text not null default 'llm' check (gerado_por in ('llm','modelo_fixo')),
   modelo text,
   tentativas smallint not null default 1,
@@ -378,6 +378,25 @@ alter default privileges in schema public revoke execute on functions from publi
 alter table produtos
   add constraint produtos_validado_auditado
   check (validado = false or (validado_por is not null and validado_em is not null)) not valid;
+
+-- Configuração (migração 0009): definições que se mudam sem tocar nos workflows.
+create table configuracao (
+  chave          text primary key,
+  valor          text not null,
+  descricao      text,
+  atualizado_em  timestamptz not null default now(),
+  atualizado_por text,
+  constraint configuracao_modo_envio_valido
+    check (chave <> 'modo_envio' or valor in ('automatico','revisao'))
+);
+alter table configuracao enable row level security;
+revoke all on configuracao from anon, authenticated;
+create trigger configuracao_atualizado_em before update on configuracao
+  for each row execute function set_atualizado_em();
+insert into configuracao (chave, valor, descricao, atualizado_por) values
+  ('modo_envio', 'automatico',
+   'WF3: automatico = envia o pedido de cotação às transportadoras; revisao = cria rascunho no Outlook (pasta To Check) para uma pessoa enviar',
+   'schema');
 
 -- ============================================================
 -- OPCIONAL: dados de teste (descomentar para usar).

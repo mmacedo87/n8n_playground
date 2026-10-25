@@ -1,4 +1,4 @@
--- Bateria Supabase (A1-A39 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
+-- Bateria Supabase (A1-A43 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
 -- por isso a transação é revertida e não fica nenhum dado nem se apaga nenhum. A9 (trigger) verifica-se pelo catálogo,
 -- porque dentro de uma transação now() é constante.
 create or replace function pg_temp.falha(q text) returns boolean language plpgsql as $f$
@@ -15,15 +15,15 @@ declare
   n int;
   p1 uuid; p2 uuid; t1 uuid; c1 text; c2 text; v1 uuid; v2 uuid; cf uuid;
   base text := $b$insert into propostas (cliente,produto,densidade,granulometria,quantidade,embalagem,incoterm,destino_pais) values ('T','p','d','g',%s,'e','%s','ES')$b$;
-  tabelas text[] := array['contadores_proposta','leads','transportadoras','propostas','cotacoes_frete','requisitos_pais','ai_log','pedidos_cotacao','produtos','proposta_compliance','expedicoes'];
+  tabelas text[] := array['contadores_proposta','leads','transportadoras','propostas','cotacoes_frete','requisitos_pais','ai_log','pedidos_cotacao','produtos','proposta_compliance','expedicoes','configuracao'];
   tb text;
   ok boolean;
 begin
   -- A1/A2
   select count(*) into n from information_schema.tables where table_schema='public' and table_name = any(tabelas);
-  r := r || format('A1 %s tabelas=%s' || E'\n', case when n=11 then 'OK' else 'FALHA' end, n);
+  r := r || format('A1 %s tabelas=%s' || E'\n', case when n=12 then 'OK' else 'FALHA' end, n);
   select count(*) into n from pg_class c join pg_namespace s on s.oid=c.relnamespace where s.nspname='public' and c.relname = any(tabelas) and c.relrowsecurity;
-  r := r || format('A2 %s RLS ativa=%s' || E'\n', case when n=11 then 'OK' else 'FALHA' end, n);
+  r := r || format('A2 %s RLS ativa=%s' || E'\n', case when n=12 then 'OK' else 'FALHA' end, n);
 
   -- A3-A5
   insert into propostas (cliente,produto,densidade,granulometria,quantidade,embalagem,incoterm,destino_pais) values ('T1','p','d','g',10,'e','FOB','ES') returning id, codigo into p1, c1;
@@ -157,6 +157,12 @@ begin
   r := r || format('A37 %s anon sem execução das funções (purgar_leads_antigos, proximo_codigo_proposta)' || E'\n', case when not exists (select 1 from pg_proc pr join pg_namespace ns on ns.oid=pr.pronamespace where ns.nspname='public' and has_function_privilege('anon', pr.oid, 'execute')) then 'OK' else 'FALHA' end);
   r := r || format('A38 %s código de aprovação com 6 caracteres e distinto entre propostas' || E'\n', case when (select length(codigo_aprovacao) from propostas where id=p1)=6 and (select codigo_aprovacao from propostas where id=p1) <> (select codigo_aprovacao from propostas where id=p2) then 'OK' else 'FALHA' end);
   r := r || format('A39 %s produto só fica validado com validado_por e validado_em' || E'\n', case when pg_temp.falha($q$update produtos set validado=true where produto=(select produto from produtos limit 1)$q$) then 'OK' else 'FALHA' end);
+
+  -- A40-A43 (migração 0009: configuracao e estado rascunho)
+  r := r || format('A40 %s modo_envio existe com valor válido; RLS ativa; anon sem acesso' || E'\n', case when (select valor from configuracao where chave='modo_envio') in ('automatico','revisao') and (select relrowsecurity from pg_class where oid='public.configuracao'::regclass) and not has_table_privilege('anon','public.configuracao','select') and not has_table_privilege('authenticated','public.configuracao','select') then 'OK' else 'FALHA' end);
+  r := r || format('A41 %s rejeita modo_envio inválido; aceita automatico e revisao' || E'\n', case when pg_temp.falha($q$update configuracao set valor='talvez' where chave='modo_envio'$q$) and not pg_temp.falha($q$update configuracao set valor='revisao' where chave='modo_envio'$q$) and not pg_temp.falha($q$update configuracao set valor='automatico' where chave='modo_envio'$q$) then 'OK' else 'FALHA' end);
+  r := r || format('A42 %s trigger atualizado_em presente em configuracao' || E'\n', case when exists (select 1 from pg_trigger where tgrelid='public.configuracao'::regclass and tgname='configuracao_atualizado_em') then 'OK' else 'FALHA' end);
+  r := r || format('A43 %s pedidos_cotacao aceita estado rascunho e rejeita estado inválido' || E'\n', case when not pg_temp.falha(format($q$insert into pedidos_cotacao (proposta_id, transportadora_id, assunto, corpo_html, estado, versao) values (%L, %L, 'a', 'b', 'rascunho', 98)$q$, p1, t1)) and pg_temp.falha(format($q$insert into pedidos_cotacao (proposta_id, transportadora_id, assunto, corpo_html, estado, versao) values (%L, %L, 'a', 'b', 'quase', 97)$q$, p1, t1)) then 'OK' else 'FALHA' end);
 
   raise exception E'BATERIA SUPABASE (revertida)\n%\nFALHAS: %', r, (length(r) - length(replace(r,'FALHA','')))/5;
 end $t$;
