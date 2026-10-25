@@ -1,6 +1,6 @@
 {
   "name": "WF3 - Pedido de cotação de frete",
-  "nodeCount": 30,
+  "nodeCount": 37,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
@@ -150,17 +150,6 @@
           {
             "node": "Redigir texto do pedido (LLM)",
             "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Registar pedido de cotação": {
-      "main": [
-        [
-          {
-            "node": "Enviar email único às transportadoras",
-            "type": "main",
             "index": 0
           }
         ]
@@ -320,6 +309,95 @@
           }
         ]
       ]
+    },
+    "Registar pedido de cotação": {
+      "main": [
+        [
+          {
+            "node": "Ler modo de envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler modo de envio": {
+      "main": [
+        [
+          {
+            "node": "Modo automático?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modo automático?": {
+      "main": [
+        [
+          {
+            "node": "Enviar email único às transportadoras",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar rascunho para revisão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar rascunho para revisão": {
+      "main": [
+        [
+          {
+            "node": "Procurar pasta To Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procurar pasta To Check": {
+      "main": [
+        [
+          {
+            "node": "Mover rascunho para To Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mover rascunho para To Check": {
+      "main": [
+        [
+          {
+            "node": "Marcar pedidos como rascunho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar pedidos como rascunho": {
+      "main": [
+        [
+          {
+            "node": "Registar uso de IA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Avisar Slack: rascunho pronto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodes": [
@@ -386,8 +464,6 @@
             {
               "fieldLabel": "Tipo de pedido",
               "fieldName": "tipo_pedido",
-              "fieldType": "dropdown",
-              "requiredField": false,
               "fieldOptions": {
                 "values": [
                   {
@@ -397,7 +473,9 @@
                     "option": "Atualizar cotação já pedida"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": false
             }
           ]
         },
@@ -453,6 +531,12 @@
               "name": "modelo",
               "type": "string",
               "value": "anthropic/claude-haiku-4.5"
+            },
+            {
+              "id": "cfg-pasta",
+              "name": "pasta_revisao",
+              "type": "string",
+              "value": "To Check"
             }
           ]
         },
@@ -855,7 +939,7 @@
             },
             {
               "fieldId": "output_resumo",
-              "fieldValue": "=texto {{ $(\"Montar email\").first().json.gerado_por }}; enviado; teste={{ $(\"Montar email\").first().json.redirecionado_teste }}"
+              "fieldValue": "=texto {{ $(\"Montar email\").first().json.gerado_por }}; {{ $('Ler modo de envio').first().json.valor === 'automatico' ? 'enviado' : 'rascunho para revisão' }}; teste={{ $(\"Montar email\").first().json.redirecionado_teste }}"
             }
           ]
         }
@@ -952,6 +1036,12 @@
               "name": "modo_teste",
               "type": "boolean",
               "value": "={{ !!$(\"Configuração\").first().json.destinatario_teste }}"
+            },
+            {
+              "id": "r-modo",
+              "name": "modo_envio",
+              "type": "string",
+              "value": "={{ $('Ler modo de envio').first().json.valor === 'automatico' ? 'automatico' : 'revisao' }}"
             }
           ]
         },
@@ -1160,13 +1250,13 @@
         "tableId": "pedidos_cotacao"
       },
       "notes": "Apaga as linhas 'falhou' desta proposta antes de gravar a nova tentativa (a contagem fica em tentativas).",
+      "alwaysOutputData": true,
+      "executeOnce": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true,
-      "executeOnce": true
+      }
     },
     {
       "id": "bd9e2e88-0e3b-44e6-83dc-e47f9ed15764",
@@ -1236,13 +1326,275 @@
       },
       "notes": "Aviso curto no Slack (#pedidos-cotacao). Não espera: uma falha do Slack não pára o WF3.",
       "executeOnce": true
+    },
+    {
+      "id": "1d4df21b-5175-410c-83fd-63387b3ee6dc",
+      "name": "Ler modo de envio",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        0
+      ],
+      "parameters": {
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "chave",
+              "keyValue": "modo_envio"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "tableId": "configuracao"
+      },
+      "notes": "Lê configuracao.modo_envio. Se falhar ou vier vazio, o IF seguinte trata como 'revisao' (lado seguro: nunca envia sem querer).",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "15ea4546-a886-4833-b9f6-a4e91dd4f323",
+      "name": "Modo automático?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2560,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "modo-auto",
+              "leftValue": "={{ $('Ler modo de envio').first().json.valor }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "automatico"
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          }
+        },
+        "options": {}
+      },
+      "notes": "Só envia se modo_envio for exatamente 'automatico'. Qualquer outro valor, vazio ou erro de leitura segue para o rascunho."
+    },
+    {
+      "id": "0b98b370-fc28-4cc5-83a8-07e38fd007fe",
+      "name": "Criar rascunho para revisão",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        224
+      ],
+      "parameters": {
+        "additionalFields": {
+          "bccRecipients": "={{ $(\"Montar email\").first().json.destinatarios_bcc || $(\"Montar email\").first().json.destinatario_to }}",
+          "bodyContentType": "html",
+          "toRecipients": "={{ $(\"Montar email\").first().json.destinatario_to }}"
+        },
+        "bodyContent": "={{ $(\"Montar email\").first().json.corpo_html }}",
+        "operation": "create",
+        "resource": "draft",
+        "subject": "={{ $(\"Montar email\").first().json.assunto }}"
+      },
+      "notes": "Modo revisão: cria o mesmo email como rascunho (nunca envia). Uma pessoa revê e envia.",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "id": "69eaf44e-9d5a-4dfa-9e06-456d8ae19d31",
+      "name": "Procurar pasta To Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3024,
+        224
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "method": "GET",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {},
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "$filter",
+              "value": "={{ \"displayName eq '\" + $('Configuração').first().json.pasta_revisao + \"'\" }}"
+            },
+            {
+              "name": "$select",
+              "value": "id,displayName"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "url": "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/childFolders"
+      },
+      "notes": "Procura a subpasta (nome em Configuração.pasta_revisao) dentro da Inbox, pelo nome, para funcionar em qualquer caixa. Se não existir, o rascunho fica em Rascunhos.",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "id": "8e333ab5-a226-42f3-a180-739941d3f8d7",
+      "name": "Mover rascunho para To Check",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        3248,
+        224
+      ],
+      "parameters": {
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Procurar pasta To Check').first().json.value?.[0]?.id }}"
+        },
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Criar rascunho para revisão').first().json.id }}"
+        },
+        "operation": "move",
+        "resource": "message"
+      },
+      "notes": "Move o rascunho para a pasta de revisão. Se a pasta não existir ou o movimento falhar, o rascunho continua em Rascunhos e o aviso do Slack di-lo.",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "id": "e07c7c9b-5a8e-4f7a-928a-3fd3065f03a7",
+      "name": "Marcar pedidos como rascunho",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3472,
+        224
+      ],
+      "parameters": {
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "rascunho"
+            }
+          ]
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "proposta_id",
+              "keyValue": "={{ $(\"Montar email\").first().json.proposta_id }}"
+            },
+            {
+              "condition": "eq",
+              "keyName": "estado",
+              "keyValue": "a_enviar"
+            }
+          ]
+        },
+        "matchType": "allFilters",
+        "operation": "update",
+        "tableId": "pedidos_cotacao"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "75060cb3-6bf0-4d05-a00d-4f52ad9f72a8",
+      "name": "Avisar Slack: rascunho pronto",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3696,
+        448
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "cotacoes",
+            "texto": "={{ \"📝 Pedido de cotação *\" + $(\"Montar email\").first().json.codigo + \"* preparado como RASCUNHO para rever e enviar (\" + ($('Procurar pasta To Check').first().json.value?.[0]?.id ? \"pasta \" + $('Configuração').first().json.pasta_revisao : \"pasta Rascunhos, pasta de revisão não encontrada\") + \") · \" + $(\"Montar email\").first().json.produto + \" · destino \" + $(\"Montar email\").first().json.destino_pais + \" · \" + $(\"Montar email\").first().json.total_transportadoras + \" transportadoras\" + ($(\"Montar email\").first().json.redirecionado_teste ? \" · (teste)\" : \"\") }}"
+          }
+        }
+      }
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "d0ca6c4d-587a-4016-80b3-b9fda8e015f5",
-    "exportedAt": "2026-10-17",
+    "sourceVersionId": "bbc0fc46-929d-4f56-a78f-fe6b43d1b630",
+    "exportedAt": "2026-10-25",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
 }
