@@ -8,7 +8,7 @@
       "typeVersion": 2.2,
       "position": [
         0,
-        0
+        96
       ],
       "parameters": {
         "httpMethod": "GET",
@@ -25,7 +25,7 @@
       "typeVersion": 3.4,
       "position": [
         272,
-        128
+        224
       ],
       "parameters": {
         "mode": "manual",
@@ -91,7 +91,7 @@
       "typeVersion": 1,
       "position": [
         496,
-        128
+        224
       ],
       "parameters": {
         "operation": "getAll",
@@ -121,7 +121,7 @@
       "typeVersion": 2,
       "position": [
         720,
-        128
+        224
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -134,8 +134,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        944,
-        128
+        752,
+        96
       ],
       "parameters": {
         "conditions": {
@@ -163,8 +163,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1168,
-        300
+        1888,
+        0
       ],
       "parameters": {
         "respondWith": "text",
@@ -187,8 +187,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1168,
-        0
+        1024,
+        288
       ],
       "parameters": {
         "resource": "row",
@@ -237,13 +237,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1392,
-        0
+        1248,
+        288
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst r = $input.first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nif (!r || !r.id) {\n  return [{ json: { confirmou: false, http: 200, html: moldura(pt ? 'Encomenda já confirmada' : 'Order already confirmed', '<p>' + esc(pt ? 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.' : 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.') + '</p>') } }];\n}\nconst teste = !!cfg.destinatario_teste;\nconst html = moldura(pt ? 'Encomenda confirmada' : 'Order confirmed', '<p>' + esc(pt ? 'Obrigado. A proposta ' + p.codigo + ' foi confirmada. A nossa equipa vai planear a expedição e enviar-lhe o plano final.' : 'Thank you. Proposal ' + p.codigo + ' has been confirmed. Our team will plan the shipment and send you the final plan.') + '</p>');\nconst link = cfg.url_form + '?codigo=' + encodeURIComponent(p.codigo);\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Encomenda confirmada - planear expedição';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>O cliente confirmou a proposta <b>' + esc(p.codigo) + '</b>. Falta planear a expedição.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><p>Preencha o plano (tempo de produção, stock, data de recolha, modo e transportadora) neste formulário: <a href=\"' + link + '\">' + esc(link) + '</a></p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '✅ Proposta *' + p.codigo + '* confirmada pelo cliente · ' + p.produto + ' · destino ' + p.destino_pais + ' · expedição por planear' + (teste ? ' · (teste)' : '');\nreturn [{ json: { confirmou: true, http: 200, html, codigo: p.codigo, proposta_id: p.id, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : cfg.email_madalena, cc: teste ? cfg.destinatario_teste : cfg.email_barbara, slack_texto: slack } }];"
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst r = $input.first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nif (!r || !r.id) {\n  return [{ json: { confirmou: false, http: 200, html: moldura(pt ? 'Encomenda já confirmada' : 'Order already confirmed', '<p>' + esc(pt ? 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.' : 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.') + '</p>') } }];\n}\nconst teste = !!cfg.destinatario_teste;\nconst html = moldura(pt ? 'Encomenda confirmada' : 'Order confirmed', '<p>' + esc(pt ? 'Obrigado. A proposta ' + p.codigo + ' foi confirmada. A nossa equipa vai planear a expedição e enviar-lhe o plano final.' : 'Thank you. Proposal ' + p.codigo + ' has been confirmed. Our team will plan the shipment and send you the final plan.') + '</p>');\nconst link = cfg.url_form + '?codigo=' + encodeURIComponent(p.codigo);\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Encomenda confirmada pelo cliente';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>O cliente confirmou a proposta <b>' + esc(p.codigo) + '</b>. Falta planear a expedição.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><!--PLANO--><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '✅ Proposta *' + p.codigo + '* confirmada pelo cliente · ' + p.produto + ' · destino ' + p.destino_pais + ' · expedição por planear' + (teste ? ' · (teste)' : '');\nreturn [{ json: { confirmou: true, http: 200, html, codigo: p.codigo, proposta_id: p.id, link_plano: link, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : cfg.email_madalena, cc: teste ? cfg.destinatario_teste : cfg.email_barbara, slack_texto: slack } }];"
       }
     },
     {
@@ -251,8 +251,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1616,
-        0
+        1504,
+        176
       ],
       "parameters": {
         "conditions": {
@@ -280,8 +280,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1840,
-        0
+        1776,
+        336
       ],
       "parameters": {
         "resource": "row",
@@ -308,8 +308,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2064,
-        0
+        2000,
+        336
       ],
       "parameters": {
         "respondWith": "text",
@@ -332,15 +332,15 @@
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [
-        2288,
-        0
+        2336,
+        336
       ],
       "parameters": {
         "resource": "message",
         "operation": "send",
         "toRecipients": "={{ $(\"Resultado da confirmação\").first().json.para }}",
         "subject": "={{ $(\"Resultado da confirmação\").first().json.assunto }}",
-        "bodyContent": "={{ $(\"Resultado da confirmação\").first().json.corpo_html }}",
+        "bodyContent": "={{ ((r, t, c) => c.corpo_html.replace('<!--PLANO-->', r && r.id ? '<h3>Reserva de frete</h3><table>' + [['Transportadora', t && t.nome], ['Modo', r.modo], ['Referência', r.ref_transportadora], ['Trânsito', r.transito_dias != null ? r.transito_dias + ' dias' : null], ['Preço do frete', r.preco != null ? r.preco + ' ' + (r.moeda || '') : null], ['Validade da cotação', r.validade]].filter(x => x[1] !== null && x[1] !== undefined && x[1] !== '').map(x => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + x[0] + '</b></td><td>' + String(x[1]).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</td></tr>').join('') + '</table><p>A reserva do frete já está confirmada. Abra o formulário, confirme que os dados da reserva estão corretos e preencha o plano (tempo de produção, stock, data de recolha): <a href=\"' + c.link_plano + '\">' + c.link_plano + '</a></p><p>Se algum dado da reserva estiver errado, responda <b>Não</b> à pergunta do formulário: nada é gravado e a Bárbara é avisada para corrigir a reserva. Se estiver tudo certo, o cliente recebe automaticamente a proposta final.</p>' : '<p>A reserva do frete ainda não está confirmada. Quando a confirmar no formulário de confirmação de reserva (WF13), recebe por email o formulário do plano de expedição.</p>'))($(\"Ler reserva confirmada\").first().json, $(\"Ler transportadora da reserva\").first().json, $(\"Resultado da confirmação\").first().json) }}",
         "additionalFields": {
           "bodyContentType": "html",
           "ccRecipients": "={{ $(\"Resultado da confirmação\").first().json.cc }}"
@@ -357,8 +357,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2512,
-        0
+        2560,
+        336
       ],
       "parameters": {
         "source": "database",
@@ -403,6 +403,74 @@
       },
       "executeOnce": true,
       "notes": "Aviso curto no Slack (#novas-propostas). Não espera."
+    },
+    {
+      "id": "263ddb00-f6a0-4a5d-a895-cd29d53c0ae7",
+      "name": "Ler reserva confirmada",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        336
+      ],
+      "parameters": {
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "proposta_id",
+              "keyValue": "={{ $(\"Resultado da confirmação\").first().json.proposta_id }}"
+            },
+            {
+              "condition": "eq",
+              "keyName": "estado_reserva",
+              "keyValue": "confirmada"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "tableId": "cotacoes_frete"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Vê se a reserva do frete já foi confirmada no WF13. Se sim, o email à Madalena traz o link do plano (WF11); se não, o WF13 envia o link quando a reserva for confirmada.",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "c976f781-fe32-4241-9de5-5708a5a399e6",
+      "name": "Ler transportadora da reserva",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        480
+      ],
+      "parameters": {
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "id",
+              "keyValue": "={{ $(\"Ler reserva confirmada\").first().json.transportadora_id ?? \"00000000-0000-0000-0000-000000000000\" }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "tableId": "transportadoras"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Nome da transportadora da reserva confirmada, para o email à Madalena."
     }
   ],
   "connections": {
@@ -523,7 +591,7 @@
       "main": [
         [
           {
-            "node": "Avisar expedição por email",
+            "node": "Ler reserva confirmada",
             "type": "main",
             "index": 0
           }
@@ -535,6 +603,28 @@
         [
           {
             "node": "Avisar Slack: proposta confirmada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler reserva confirmada": {
+      "main": [
+        [
+          {
+            "node": "Ler transportadora da reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler transportadora da reserva": {
+      "main": [
+        [
+          {
+            "node": "Avisar expedição por email",
             "type": "main",
             "index": 0
           }
@@ -557,8 +647,9 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "30Z4Nnge3BRZbU8G",
-    "sourceVersionId": "0a40b5ee-94f5-40fc-8747-439b7272fe7c",
-    "exportedAt": "2026-10-09",
+    "sourceVersionId": "ac41b92f-b4b2-475d-892e-4bab2c33d574",
+    "exportedAt": "2026-10-27",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
-  }
+  },
+  "nodeGroups": []
 }
