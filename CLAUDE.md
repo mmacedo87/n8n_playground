@@ -24,11 +24,11 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | despublicado (2026-10-16, após o teste real; publicar só com propostas reais); só "OK" na 1.ª linha aprova |
 | WF9 Envio ao cliente | `UrGBkXG37To7RYMR` | sub-workflow, chamado pelo WF8; precisa de `preco_final` |
 | WF10 Confirmação da encomenda | `30Z4Nnge3BRZbU8G` | webhook GET `confirmar-proposta`, link com token |
-| WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao`; chama o WF12 |
+| WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao` (pergunta «Os dados da reserva estão corretos?»: Não avisa a Bárbara e não grava); chama o WF12 |
 | WF12 Follow-up ao cliente | `ETUqp17gsET6Vc5A` | sub-workflow; marca `concluida` |
-| WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva`; só cria RASCUNHO Outlook (nunca envia), atualiza `estado_reserva` e `frete_escolhido_id`; rascunho, `publish:false` |
+| WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva`; ao confirmar a reserva envia à Madalena o link do WF11 (só se a proposta já está `aceite`); ao transportador e ao cliente só cria RASCUNHO (nunca envia); atualiza `estado_reserva` e `frete_escolhido_id`; `publish:false` no manifest |
 | WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
-| Read Outlook Messages | `39zlpRbdQvI7dHGe` | inativo, manual; chama o WF1, grava lead rascunho |
+| Read Outlook Messages | `39zlpRbdQvI7dHGe` | publicado mas com gatilho manual; chama o WF1, grava lead rascunho e, se o pedido mapeia com confiança ≥ 0.8, chama o WF2 |
 
 ## Armadilhas já encontradas
 - `test_workflow` fixa gatilho, nós com credenciais e HTTP; Execute Workflow corre a sério se não for fixado. Execute Workflow Trigger não se executa por `execute_workflow`.
