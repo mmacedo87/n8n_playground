@@ -47,12 +47,18 @@ class Exportacao(unittest.TestCase):
         no = {n['name']: n for n in wf['nodes']}['Decidir']
         self.assertEqual(no['parameters']['jsCode'].strip(), JS.read_text(encoding='utf-8').strip())
 
-    def test_so_rascunho_no_outlook(self):
+    def test_so_rascunho_para_fora_da_empresa(self):
+        """Nada é enviado a transportadoras nem ao cliente: o único envio é o email interno à Madalena."""
         wf = json.load(open(RAIZ / 'workflows' / 'wf13-confirmacao-reserva.json', encoding='utf-8'))
         for n in wf['nodes']:
-            if n['type'] == 'n8n-nodes-base.microsoftOutlook':
-                self.assertEqual(n['parameters'].get('resource'), 'draft', n['name'])
-                self.assertEqual(n['parameters'].get('operation'), 'create', n['name'])
+            if n['type'] != 'n8n-nodes-base.microsoftOutlook':
+                continue
+            if n['name'] == 'Enviar plano à Madalena':
+                self.assertEqual(n['parameters'].get('operation'), 'send', n['name'])
+                self.assertEqual(n['parameters'].get('toRecipients'), '={{ $json.para }}', n['name'])
+                continue
+            self.assertEqual(n['parameters'].get('resource'), 'draft', n['name'])
+            self.assertEqual(n['parameters'].get('operation'), 'create', n['name'])
 
 
 if __name__ == '__main__':

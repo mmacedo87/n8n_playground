@@ -409,6 +409,48 @@
           "name": "Supabase account"
         }
       }
+    },
+    {
+      "id": "68b51b84-aa1b-49b6-91a3-08a2edb4c791",
+      "name": "Plano para a Madalena",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        -140
+      ],
+      "parameters": {
+        "jsCode": "const d = $('Decidir').first().json;\nconst p = $('Ler proposta').first().json;\nconst cfg = $('Normalizar pedido').first().json;\nif (d.acao !== 'confirmada') return [];\nif (p.estado !== 'aceite') return [];\nconst c = $('Ler cotações').all().map(i => i.json).find(x => x && x.id === d.cotacao_id) || {};\nconst EMAIL_MADALENA = 'REDACTED@example.invalid';\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst tem = (v) => v !== null && v !== undefined && v !== '';\nconst link = 'https://mmacedo87.app.n8n.cloud/form/plano-expedicao?codigo=' + encodeURIComponent(p.codigo);\nconst teste = !!cfg.destinatario_teste;\nconst linha = (k, v) => (tem(v) ? '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>' : '');\nconst PRECO_POR = { camiao: 'por camião', total: 'total', palete: 'por palete' };\nconst precoFrete = tem(c.preco) ? c.preco + ' ' + (c.moeda || '') + (PRECO_POR[c.preco_por] ? ' (' + PRECO_POR[c.preco_por] + ')' : '') : null;\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Reserva de frete confirmada - planear expedição';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>A reserva do frete da proposta <b>' + esc(p.codigo) + '</b> foi confirmada e o cliente já aceitou a encomenda. Falta o plano de expedição.</p><h3>Encomenda</h3><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><h3>Reserva de frete</h3><table>' + linha('Transportadora', d.transportadora) + linha('Modo', c.modo) + linha('Referência', c.ref_transportadora) + linha('Trânsito', tem(c.transito_dias) ? c.transito_dias + ' dias' : null) + linha('Preço do frete', precoFrete) + linha('Validade da cotação', c.validade) + '</table><p>Abra o formulário, confirme que os dados da reserva estão corretos e preencha o plano (tempo de produção, stock, data de recolha): <a href=\"' + link + '\">' + esc(link) + '</a></p><p>Se algum dado da reserva estiver errado, responda <b>Não</b> à pergunta do formulário: nada é gravado e a Bárbara é avisada para corrigir a reserva. Se estiver tudo certo, o cliente recebe automaticamente a proposta final.</p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nreturn [{ json: { para: teste ? cfg.destinatario_teste : EMAIL_MADALENA, assunto, corpo_html: corpo } }];",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "notes": "Só quando a reserva fica confirmada E o cliente já aceitou a proposta (estado aceite): prepara o email com o link do formulário do WF11. Se o cliente ainda não aceitou, o WF10 envia o link no momento da aceitação. Nunca envia ao cliente."
+    },
+    {
+      "id": "07456e44-52c4-48fd-8074-9f07b3ebecac",
+      "name": "Enviar plano à Madalena",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        -140
+      ],
+      "parameters": {
+        "additionalFields": {
+          "bodyContentType": "html"
+        },
+        "bodyContent": "={{ $json.corpo_html }}",
+        "operation": "send",
+        "resource": "message",
+        "subject": "={{ $json.assunto }}",
+        "toRecipients": "={{ $json.para }}"
+      },
+      "notes": "Email interno (Madalena) com o link do formulário do WF11. Em produção, pôr aqui o email real da Madalena (hoje igual ao +barbara, como no WF10).",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     }
   ],
   "connections": {
@@ -525,6 +567,11 @@
             "node": "Reservas a libertar",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Plano para a Madalena",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -534,6 +581,17 @@
         [
           {
             "node": "Libertar outras reservas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plano para a Madalena": {
+      "main": [
+        [
+          {
+            "node": "Enviar plano à Madalena",
             "type": "main",
             "index": 0
           }
@@ -556,8 +614,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "9C7Wfvim8cAIsgZ6",
-    "sourceVersionId": "f436b454-d2d2-4b89-ad1e-9fe640efdb68",
-    "exportedAt": "2026-10-17",
+    "sourceVersionId": "1f0818c5-c817-4553-b18a-3bb30268ec81",
+    "exportedAt": "2026-10-27",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
 }
