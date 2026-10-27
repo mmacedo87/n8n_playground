@@ -556,6 +556,10 @@
             {
               "fieldId": "cp_descarga",
               "fieldValue": "={{ $json.cp_descarga || null }}"
+            },
+            {
+              "fieldId": "contacto_email",
+              "fieldValue": "={{ (() => { try { const e = String($('Chamado pelo workflow principal').item.json.contacto_email || '').trim().toLowerCase(); return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e) ? e : null; } catch (x) { return null; } })() }}"
             }
           ]
         }
@@ -737,6 +741,10 @@
             },
             {
               "name": "cp_descarga",
+              "type": "string"
+            },
+            {
+              "name": "contacto_email",
               "type": "string"
             }
           ]
@@ -1013,8 +1021,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "9b8d75ae-ffa9-4f5c-97a6-920f75047dd3",
-    "exportedAt": "2026-10-17",
+    "sourceVersionId": "ecee1f63-924b-4d3a-a8f8-025b4a62e1f9",
+    "exportedAt": "2026-10-27",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
 }
