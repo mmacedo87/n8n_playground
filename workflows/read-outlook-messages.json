@@ -145,11 +145,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.4,
       "position": [
-        560,
+        1008,
         -128
       ],
-      "disabled": true,
-      "notes": "DESATIVADO: o pedido por email só é gravado como lead (rascunho a rever); a proposta só é criada por um humano. Ativar apenas quando houver decisão sobre ligar o lead ao WF2.",
+      "disabled": false,
+      "notes": "DESATIVADO: ainda não existe passo de extração (WF1) que preencha estes campos a partir do email. Valores abaixo são marcadores; ativar só quando vierem da extração.",
       "parameters": {
         "options": {
           "waitForSubWorkflow": true
@@ -237,17 +237,27 @@
               "id": "destino",
               "required": false,
               "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "contacto_email",
+              "id": "contacto_email",
+              "required": false,
+              "type": "string"
             }
           ],
           "value": {
-            "cliente": "A PREENCHER",
-            "densidade": "A PREENCHER",
-            "destino": "A PREENCHER",
-            "embalagem": "A PREENCHER",
-            "granulometria": "A PREENCHER",
-            "incoterm": "A PREENCHER",
-            "produto": "A PREENCHER",
-            "quantidade": 0
+            "cliente": "={{ $json.cliente }}",
+            "contacto_email": "={{ $json.contacto_email }}",
+            "densidade": "={{ $json.densidade }}",
+            "destino": "={{ $json.destino }}",
+            "embalagem": "={{ $json.embalagem }}",
+            "granulometria": "={{ $json.granulometria }}",
+            "incoterm": "={{ $json.incoterm }}",
+            "produto": "={{ $json.produto }}",
+            "quantidade": "={{ $json.quantidade }}"
           }
         }
       }
@@ -574,6 +584,52 @@
         }
       },
       "id": "8046eab7-187f-499f-b917-7fe602246d09"
+    },
+    {
+      "id": "2fd82d32-509f-4851-8868-c0d28e80fea5",
+      "name": "Preparar pedido para WF2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -128
+      ],
+      "parameters": {
+        "jsCode": "const w = $('Extrair pedido (WF1)').item.json;\nconst txt = (v) => String(v ?? '').toLowerCase();\nconst motivos = [];\n\nconst p = txt(w.produto);\nlet produto = '';\nif (/p[óo]\\b|powder|dust/.test(p)) produto = 'Pó de cortiça';\nelse if (/aglom|agglom|block|board/.test(p)) produto = 'Aglomerado de cortiça';\nelse if (/granul|infill|grit/.test(p)) produto = 'Granulado de cortiça';\nif (!produto) motivos.push('produto');\n\nconst dn = parseFloat(String(w.densidade ?? '').replace(',', '.').match(/\\d+(?:\\.\\d+)?/)?.[0]);\nlet densidade = '';\nif (Number.isFinite(dn)) {\n  if (dn >= 60 && dn < 80) densidade = '60-80 kg/m3';\n  else if (dn >= 80 && dn < 100) densidade = '80-100 kg/m3';\n  else if (dn >= 100 && dn < 120) densidade = '100-120 kg/m3';\n  else if (dn >= 120 && dn <= 150) densidade = '120-150 kg/m3';\n}\nif (!densidade) motivos.push('densidade');\n\nconst gm = String(w.granulometria ?? '').replace(/,/g, '.').match(/(\\d+(?:\\.\\d+)?)\\s*(?:-|–|\\/|a|to)\\s*(\\d+(?:\\.\\d+)?)/i);\nconst gran = gm ? `${parseFloat(gm[1])}-${parseFloat(gm[2])} mm` : '';\nconst granulometria = ['0-1 mm', '1-2 mm', '2-4 mm', '4-8 mm', '8-15 mm'].includes(gran) ? gran : '';\nif (!granulometria) motivos.push('granulometria');\n\nconst e = txt(w.embalagem);\nlet embalagem = '';\nif (/big\\s*-?\\s*bag/.test(e)) embalagem = 'Big bag 1 m3';\nelse if (/granel|bulk/.test(e)) embalagem = 'A granel';\nelse if (/saco|sack|bag|palet|pallet/.test(e)) embalagem = 'Sacos 25 kg em palete';\nif (!embalagem) motivos.push('embalagem');\n\nconst incoterm = String(w.incoterm ?? '').trim().toUpperCase();\nif (!['EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP'].includes(incoterm)) motivos.push('incoterm');\n\nconst destino = String(w.destino_pais ?? '').trim().toUpperCase();\nif (!['ES','FR','DE','IT','NL','BE','GB','US','BR','CN','JP','MA'].includes(destino)) motivos.push('destino');\n\nlet quantidade = Number(w.quantidade);\nconst un = txt(w.unidade);\nif (/^(t|ton|tons|tonne|tonnes|tonelada|toneladas)$/.test(un.trim())) quantidade *= 1000;\nif (!(quantidade > 0)) motivos.push('quantidade');\n\nconst cliente = String(w.empresa || w.remetente_nome || '').trim();\nif (!cliente) motivos.push('cliente');\n\nif (w.falhou_llm) motivos.push('falhou_llm');\nif (!w.e_pedido) motivos.push('nao_e_pedido');\nif (Number(w.confianca) < 0.8) motivos.push('confianca_baixa');\nif (Array.isArray(w.campos_em_falta) && w.campos_em_falta.length) motivos.push('campos_em_falta');\n\nconst contacto_email = String(w.contacto_email || w.remetente_email || '').trim().toLowerCase();\n\nreturn [{ json: { pronto: motivos.length === 0, motivos: motivos.join(','), cliente, produto, densidade, granulometria, quantidade, embalagem, incoterm, destino, contacto_email, email_id: w.email_id } }];"
+      },
+      "notes": "Converte o texto livre do WF1 nos valores exatos que o WF2 aceita. Só marca pronto=true se o WF1 tem confiança >= 0.8, não falta nenhum campo e todos os valores mapeiam; senão o pedido fica só como lead para rever."
+    },
+    {
+      "id": "cd4a9cf9-c0e6-4175-b1ae-fa379bb517db",
+      "name": "Pedido pronto para proposta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -128
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.pronto }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              }
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -636,7 +692,7 @@
       "main": [
         [
           {
-            "node": "Chamar WF2 - Pedido de proposta",
+            "node": "Preparar pedido para WF2",
             "type": "main",
             "index": 0
           }
@@ -702,6 +758,28 @@
           }
         ]
       ]
+    },
+    "Preparar pedido para WF2": {
+      "main": [
+        [
+          {
+            "node": "Pedido pronto para proposta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedido pronto para proposta?": {
+      "main": [
+        [
+          {
+            "node": "Chamar WF2 - Pedido de proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -718,8 +796,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "39zlpRbdQvI7dHGe",
-    "sourceVersionId": "358f90ac-771f-47b1-b45b-e07cbdf86a02",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "3372dd95-bab3-483f-b1f2-77b1f9921c48",
+    "exportedAt": "2026-10-27",
     "sanitized": "ids de pastas do Outlook, ids de credenciais, ids de workflows e webhookIds substituídos por marcadores ou removidos"
   },
   "nodeGroups": [
