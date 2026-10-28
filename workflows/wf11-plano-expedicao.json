@@ -339,7 +339,8 @@
           "name": "Supabase account"
         }
       },
-      "notes": "Cotação do frete escolhido no WF13: o modo, a transportadora e o trânsito vêm daqui, não do formulário."
+      "notes": "Cotação do frete escolhido no WF13: o modo, a transportadora e o trânsito vêm daqui, não do formulário.",
+      "alwaysOutputData": true
     },
     {
       "id": "5d1d6209-c629-41ee-b870-096c223cb0ee",
@@ -369,7 +370,8 @@
         "supabaseApi": {
           "name": "Supabase account"
         }
-      }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "ea1431c9-d4c8-4d76-b7f9-ecfd3aa58105",
@@ -716,7 +718,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "P4FDjLoaiGl3XP01",
-    "sourceVersionId": "82bdb0c0-1a55-46dd-8889-7d313a86ab65",
+    "sourceVersionId": "b0289040-9063-4e75-964a-2061665d1d67",
     "exportedAt": "2026-10-27",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }

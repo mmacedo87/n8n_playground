@@ -143,6 +143,12 @@ class Wf11(unittest.TestCase):
         self.assertTrue(ligado(self.w, 'Reserva correta?', 'Gravar plano de expedição', 0))
         self.assertTrue(ligado(self.w, 'Reserva correta?', 'Avisar reserva a corrigir', 1))
 
+    def test_sem_reserva_escolhida_nao_para_em_silencio(self):
+        # achado no teste real (exec. 391): sem frete_escolhido_id a leitura devolve 0 itens e o ramo parava sem erro
+        for n in ('Ler cotação escolhida', 'Ler transportadora da reserva'):
+            self.assertTrue(no(self.w, n).get('alwaysOutputData'), n)
+        self.assertIn('__erro', correr(self.w, 'Decidir plano', {'Verificar proposta': [{**PLANO}], 'Ler cotação escolhida': [{}], 'Ler transportadora da reserva': [{}]}))
+
     def test_formulario_tem_a_pergunta_e_nao_pede_modo_nem_transportadora(self):
         campos = [f.get('fieldLabel') or f.get('fieldName') for f in no(self.w, 'Madalena preenche o plano de expedição')['parameters']['formFields']['values']]
         self.assertIn('Os dados da reserva estão corretos?', campos)
