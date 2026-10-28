@@ -57,7 +57,7 @@ Dados de suporte (SQL, 2026-10-21): `ai_log` = 28 linhas (27 `modelo_fixo`, 1 `l
 | H1 | ⚠️ | Inspeção: WF9 só trata propostas aprovadas. Mas WF8 (aprovação por email) está **inativo**, por isso hoje não há caminho de aprovação por email a funcionar. Não executado. | Ativar WF8 (depois de H3–H6), e correr em teste: WF9 com proposta `em_validacao` deve recusar e avisar no Slack. |
 | H2 | ⚠️ | Inspeção: WF9 valida `preco_final`. Não executado. | Executar WF9 manualmente com proposta aprovada e `preco_final` nulo; esperado: recusa e aviso. Se enviar, adicionar IF `preco_final > 0` antes do envio. |
 | H3 | ⚠️ | Regex de aprovação `/^(ok|aprovo|aprovado|aprovada)\s*[.!]?$/i` aplicada à primeira linha: "ok mas muda o frete" e "não aprovo OK" **não** passam. Correto por inspeção, não executado. | Correr os 4 emails de teste com WF8 em modo de teste; esperado: só "OK" e "Aprovo" aprovam. |
-| H4 | ✅ | `AUTORIZADOS=['mm.n8n.wflow@gmail.com']`; outros remetentes não aprovam (inspeção). | Confirmar que este é o endereço da Bárbara; se for um endereço de serviço, substituir pelo(s) dela(s) e dos administradores. |
+| H4 | ✅ | `AUTORIZADOS=['REDACTED@example.invalid']`; outros remetentes não aprovam (inspeção). | Confirmar que este é o endereço da Bárbara; se for um endereço de serviço, substituir pelo(s) dela(s) e dos administradores. |
 | H5 | ✅ | WF8 só atualiza propostas em `em_validacao` (inspeção). | Executar com uma proposta noutro estado para confirmação. |
 | H6 | ❌ | WF8 identifica o remetente pelo campo `from` do Outlook, sem validação de SPF/DKIM/DMARC nem de token. Um From forjado pode aprovar. | Opção A (recomendada): incluir no email de pedido de aprovação um código de 6 dígitos (ou o `token_confirmacao`) e exigir "OK <código>". Opção B: ler `internetMessageHeaders` e exigir `Authentication-Results: dkim=pass` e `dmarc=pass`. Verificar também SPF/DKIM/DMARC do domínio de destino. |
 | H7 | ⚠️ | `aprovada_por` e `aprovada_em` existem na tabela e são preenchidos pelo WF8 (inspeção). Sem aprovações reais para validar. | Após o primeiro teste de H3, confirmar a linha em `propostas`. |
@@ -176,7 +176,7 @@ Executado só em leitura (nada escrito na base de dados; uma tentativa de teste 
 | Q3 | ❌ | Só existem granulado, pó e aglomerado; faltam caroço de azeitona e mistura. |
 | P7 | ❌ confirmado | 8 transportadoras `TESTE - ...` ativas com `@example.invalid`; 2 com emails pessoais de teste; todos os 28 registos de `ai_log` têm `teste=true`. |
 | G1/T6 | ⚠️ | `ai_log` regista `modelo=claude-haiku-4.5` mesmo quando o texto foi `modelo_fixo`, o que induz em erro; 27 de 28 são texto fixo. Só 1 está ligado a uma proposta (PRP-2026-0017). |
-| G3 | ⚠️ | PRP-2026-0017: 5 pedidos, 2 cotações, 1 compliance, 1 `ai_log`, aprovada por `mm.n8n.wflow@gmail.com`, enviada; mas `frete_escolhido_id` vazio. Cadeia incompleta no frete. |
+| G3 | ⚠️ | PRP-2026-0017: 5 pedidos, 2 cotações, 1 compliance, 1 `ai_log`, aprovada por `REDACTED@example.invalid`, enviada; mas `frete_escolhido_id` vazio. Cadeia incompleta no frete. |
 | H7 | ✅ | `aprovada_por` e `aprovada_em` preenchidos em PRP-0017 e PRP-0016 (esta com `aprovada_por='teste'`, dado de teste). |
 | S7 | ⚠️ | Existem `token_expira_em` e `confirmada_em`; PRP-0016 foi confirmada uma vez. Falta testar reutilização/expiração no WF10. |
 | G2 | ✅ | 0 registos com "@" em `ai_log`. |
