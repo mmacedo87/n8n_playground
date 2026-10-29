@@ -36,6 +36,11 @@ try:
         pg = b.new_page(viewport={"width": 430, "height": 900})
         pg.on("pageerror", lambda e: errors.append(str(e)))
         pg.goto(url)
+        # ecrã inicial com as duas opções
+        assert "O que quer fazer?" in pg.inner_text("#main")
+        assert pg.locator("button.big").count() == 2
+        shot(pg, 10)
+        pg.click("button.big:has-text(\"Deploy Inicial\")")
         assert "Bem-vindo" in pg.inner_text("#main")
         shot(pg, 0)
         pg.click("button:has-text(\"Começar\")")
@@ -55,10 +60,10 @@ try:
         pg.click(".nav button:last-child")
         # passo 3: cola endereços completos
         ins = pg.locator(".cred input")
-        for i, k in enumerate(["microsoftOutlookOAuth2Api", "slackApi", "supabaseApi", "openRouterApi"]):
+        for i, k in enumerate(["microsoftOutlookOAuth2Api", "slackApi", "supabaseApi", "openRouterApi", "httpBasicAuth"]):
             assert pg.is_disabled(".nav button:last-child")
             ins.nth(i).fill("https://empresa.app.n8n.cloud/home/credentials/Abc12345%d" % i)
-        assert pg.locator(".cred.done").count() == 4
+        assert pg.locator(".cred.done").count() == 5
         assert not pg.is_disabled(".nav button:last-child")
         shot(pg, 3)
         pg.click(".nav button:last-child")
@@ -85,14 +90,14 @@ try:
         pg.click("button:has-text(\"Instalar agora\")")
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
         shot(pg, 6)
-        assert len(mock.store) == 15
+        assert len(mock.store) == 16
         cfg = json.loads(A.CONFIG.read_text())
         assert cfg["credenciais"]["slackApi"] == "Abc123451"
         assert cfg["slack_canais"]["estado"] == "C0AB12CD32"
         assert cfg["emails"]["aprovadores"] == ["b@x.pt", "c@x.pt"]
         b.close()
     assert not errors, errors
-    print("E2E OK: 7 passos percorridos, 15 workflows instalados na API simulada")
+    print("E2E OK: 7 passos percorridos, 16 workflows instalados na API simulada")
 finally:
     srv.shutdown()
     mock.close()

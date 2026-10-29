@@ -3,13 +3,15 @@
 Fonte de verdade dos resultados: página "Bateria de testes" no Notion (checkbox, razão e resolução provável das falhas).
 Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes novos, e antes de dar algo por fechado corre-se a bateria completa.
 
-Última execução: 2026-10-09 (deploy automático D1-D9 passam; fases 7-10): Supabase A1-A27 + B1-B8 (migração 0006, 11 tabelas) passam numa transação revertida (A9 só falha dentro de uma transação única porque `now()` é constante; o trigger foi confirmado em dados reais). WF9 exec. 172-176, WF10 exec. 177-183, WF12 exec. 184-187, WF11 exec. 188-192, WF8 exec. 193-194 (dados fixados) e teste real ponta a ponta na PRP-2026-0016 (exec. 195-201: enviada → aceite → expedição → concluída). Anterior: 2026-10-08 (Lisboa, 23:20, bateria final da T7). Supabase A1-A27 e os testes novos de `leads` (migração 0005) passam numa transação revertida (nada deixado; contador 15, 15 propostas, 0 leads); advisors de segurança só com INFO. n8n com dados fixados nesta corrida: WF4 (exec. 168), WF2 válido (exec. 169) e inválido (exec. 170). WF3, Notificar Slack e Mail Error Flow não mudaram desde a última corrida real com sucesso (exec. 108, 142-167 para o aviso de estado). Testados nas alterações de hoje: WF5 W1-W7 (exec. 125-127), WF6 L4-L10 (exec. 128-135), WF8 M1-M4 (exec. 121-124), WF1 X1-X4 (exec. 137-140), Read Outlook X5 (exec. 141). Real com LLM: X7 (exec. 164). Pendentes: G9 (402 já visto em execução real, ver X7), F1-F6, X6 (email real na Folder 1), M5 (resposta real da Bárbara), L real com resposta de transportadora.
+Última execução: 2026-10-29, ~19:20 (Lisboa), formulários com Basic Auth (WF2, WF3, WF13), link do plano com código secreto (migração 0011, WF10/WF11/WF13) e gatilhos automáticos (WF6 1ec4243c, Read Outlook 1e3179d8): unittest 127 OK (novos: gatilhos do WF6 e do Read Outlook, `token_plano` no WF11 e nos links, formulários com `httpBasicAuth`, credencial no deploy/app), `tests/e2e_app.py` OK, `check_no_secrets.sh` OK; Supabase A1-A46 e B1-B8 OK (transação revertida, 0 falhas); real: formulários WF2/WF3/WF13 → 401 sem credenciais, `plano-expedicao` sem código válido → erro; B4.1 (token inválido → 404 «Ligação inválida»); gatilhos dispararam sozinhos às 19:15 com mensagens do «Teste - Cenários reais» (exec. 421-423): WF6 gravou 4 cotações da PRP-2026-0024 (texto 1850 total; B2.1 duas opções 1900 janela + 2100 fixa em standby; B2.2 PDF 1780, confiança 0,95, automatica) e chamou o WF5 (proposta `em_validacao`); Read Outlook: B1.1 lead Campos Verdes com 5 campos em falta e sem proposta, B1.2 newsletter sem lead nem rascunho; 5 registos em `ai_log`; nenhuma execução com erro. Nota: o 1.º poll depois de publicar só fixa a hora de referência (mensagens das 19:06 não dispararam sozinhas, foram lidas no disparo seguinte). Execução anterior: 2026-10-29, ~15:20 (Lisboa), `lead_id` na proposta e Read Outlook sem rascunho para não-pedidos (WF2 d89f09a6, Read Outlook 78d6485a, migração 0010 aplicada): unittest 120 OK (novos em `tests/test_fluxo_encomenda.py`: código do «Preparar» igual a `scripts/read_outlook_code/preparar.js`, um item por email com o lead certo, sem lead → vazio, ramo do rascunho, WF2 grava `lead_id`), `tests/e2e_app.py` OK; Supabase A1-A45 e B1-B8 OK (transação revertida; A13 corrigido para contar em relação aos leads existentes); n8n com dados fixados: exec. 399 (2 pedidos: 2 rascunhos, `lead_id` certo em cada, só o completo segue para o WF2) e exec. 400 (newsletter: sem rascunho, só marcada como lida); real X8 (exec. 403, emails criados pelo «Teste - Cenários reais», exec. 401-402): PRP-2026-0024 criada com `lead_id`, lead `convertido`, newsletter sem lead nem rascunho, 2 pedidos de cotação enviados aos aliases. Execução anterior: 2026-10-28, ~08:10 (Lisboa), teste real do WF11 (versionId b0289040) na PRP-2026-0023 (cópia de teste da 0022, criada por SQL em estado aceite com reserva confirmada): «Não» (exec. 392: email à Bárbara, nada gravado) e «Sim» (exec. 394: expedição planeada, proposta concluida, WF12 exec. 395). O 1.º teste (exec. 391) revelou que sem reserva escolhida o ramo parava em silêncio: corrigido com alwaysOutputData em «Ler cotação escolhida» e «Ler transportadora da reserva». Execução anterior: 2026-10-27, ~18:30 (Lisboa), encadeamento Read Outlook → WF2 e WF10 → WF13 → WF11 (versionIds: Read Outlook 3372dd95, WF2 ecee1f63, WF10 ac41b92f, WF13 1f0818c5, WF11 82bdb0c0, todos publicados exceto o que o manifest marca `publish:false`): unittest 113 OK (novos: `tests/test_fluxo_encomenda.py` com 20 casos, `test_wf13_code` ajustado ao email interno à Madalena), `tests/e2e_app.py` OK (16 workflows); real no n8n: PRP-2026-0022 ponta a ponta até `concluida` (Read Outlook → WF2 → WF3 → WF6 → WF5 → WF8 → WF9 → WF10 → WF13 → WF11 → WF12); WF11 com a pergunta «Os dados da reserva estão corretos?» testado só por simulação (ver `claude/testes_cenarios_reais.md`, A10); `check_no_secrets.sh` continua a assinalar emails reais em `docs/ai-act/execucao-testes-ai-act.md` (anterior a esta alteração). Execução anterior: 2026-10-21, ~11:35 (Lisboa), alterações de compliance AI Act (migração 0008 aplicada; rascunhos novos de WF3 d0fae61b, WF5, WF8 e WF12, nenhum publicado): unittest 45 OK + tests.test_ai_act 6 OK; WF3 com dados fixados exec. 259 (frase de IA no email), WF12 exec. 260 (rodapé), WF8 exec. 261-263 (OK+código aprova; OK sem código e código errado não aprovam); Supabase A36-A39 verificados só em leitura (a bateria com escrita revertida não foi repetida), advisors só INFO. Execução anterior: 2026-10-16, ~18:50 (Lisboa), alteração ao WF5 (versionId 600468f3-5628-4927-aa91-c724913b2444, rascunho: a versão ativa ainda é a anterior) e publicação do WF8: W4 real passa (WF6 exec. 222), W8 passa com dados fixados (exec. 226); restantes workflows inalterados, não repetidos. Execução anterior: 2026-10-16, ~18:25 (Lisboa), alteração ao WF6 (versionId e60094c3-4132-4c0c-a005-0b4735daa4c7): L3 real passa (exec. 214); L12-L14 passam com dados fixados (exec. 219-221); restantes workflows inalterados, não repetidos. Execução anterior: 2026-10-15, 21:50 (Lisboa), a pedido, para manter o projeto Supabase ativo sem tocar nos dados: Supabase A1-A27 e B1-B8 passam (`tests/supabase_bateria.sql`, transação revertida; depois: contador 16, 16 propostas, 0 leads, 1 expedição, 8 transportadoras, tudo igual); advisors só com INFO (11 × RLS sem políticas, esperado); unittest 40 OK, e2e_app OK, cenários Playwright 21/21, segredos limpos; WF2 com dados fixados: D1 passa (exec. 205), D3 e D4 falham como esperado com «Pedido de proposta inválido» (exec. 206-207). Nenhum workflow foi alterado desde 2026-10-09 17:22 e não houve execuções com erro desde então. Não repetidos (sem alterações): testes reais R e restantes n8n. Anterior: 2026-10-09 (deploy automático D1-D9 passam; fases 7-10): Supabase A1-A27 + B1-B8 (migração 0006, 11 tabelas) passam numa transação revertida (A9 só falha dentro de uma transação única porque `now()` é constante; o trigger foi confirmado em dados reais). WF9 exec. 172-176, WF10 exec. 177-183, WF12 exec. 184-187, WF11 exec. 188-192, WF8 exec. 193-194 (dados fixados) e teste real ponta a ponta na PRP-2026-0016 (exec. 195-201: enviada → aceite → expedição → concluída). Anterior: 2026-10-08 (Lisboa, 23:20, bateria final da T7). Supabase A1-A27 e os testes novos de `leads` (migração 0005) passam numa transação revertida (nada deixado; contador 15, 15 propostas, 0 leads); advisors de segurança só com INFO. n8n com dados fixados nesta corrida: WF4 (exec. 168), WF2 válido (exec. 169) e inválido (exec. 170). WF3, Notificar Slack e Mail Error Flow não mudaram desde a última corrida real com sucesso (exec. 108, 142-167 para o aviso de estado). Testados nas alterações de hoje: WF5 W1-W7 (exec. 125-127), WF6 L4-L10 (exec. 128-135), WF8 M1-M4 (exec. 121-124), WF1 X1-X4 (exec. 137-140), Read Outlook X5 (exec. 141). Real com LLM: X7 (exec. 164). Pendentes: G9 (402 já visto em execução real, ver X7), F1-F6, X6 (email real na Folder 1), M5 (resposta real da Bárbara), L real com resposta de transportadora.
 
 ## A. Supabase (transação revertida, sem deixar dados)
+Corre-se com `tests/supabase_bateria.sql` (uma só instrução, termina sempre com exceção que traz o relatório, por isso nada fica gravado). A15-A17 verificam-se comparando contagens antes e depois.
 | Id | Verifica |
 | --- | --- |
 | A1 | Existem as 11 tabelas |
 | A2 | RLS ativa nas 11 tabelas |
+| A44-A45 | Proposta ligada a um lead (ao criar ou ao atualizar `lead_id`) marca o lead como `convertido`; `anon` não executa a função (migração 0010) |
 | A3-A5 | Código `PRP-AAAA-NNNN`, sequência consecutiva, estado por omissão `pedido` |
 | A6-A8 | Rejeita Incoterm inválido, quantidade 0 e estado inválido |
 | A9 | Trigger atualiza `atualizado_em` |
@@ -26,6 +28,18 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | A26 | `requisitos_pais` tem 12 regras com `codigo_pautal='*'` (6 `regra_ue`, 1 `api_usitc`, 5 `tabela_manual`) e a restrição `metodo` |
 | A27 | `proposta_compliance` aceita linha com taxa nula e `metodo=tabela_manual` (transação revertida; tabela fica a 0 linhas) |
 
+## N. Encadeamento automático (offline, `tests/test_fluxo_encomenda.py`)
+| Id | Verifica |
+| --- | --- |
+| N1 | Read Outlook: «Marcar original como lido» → «Preparar pedido para WF2» → «Pedido pronto para proposta?» → WF2 (ativo, espera, passa `contacto_email`); ramo falso não faz nada |
+| N2 | «Preparar pedido para WF2»: pedido completo fica pronto com valores exatos (densidade, granulometria, embalagem, t→kg, destino); sem contacto usa o remetente |
+| N3 | Só avança com tudo certo: confiança < 0.8, campos em falta, não é pedido, destino/densidade/granulometria/incoterm/quantidade inválidos ou falha do LLM → fica só como lead |
+| N4 | WF2: `contacto_email` na entrada do sub-workflow e gravado na proposta (com try/catch) |
+| N5 | WF10: cadeia «Ler reserva confirmada» → «Ler transportadora da reserva» → email; marcador `<!--PLANO-->`, link do plano, email com e sem reserva |
+| N6 | WF11: formulário tem a pergunta e não pede modo/transportadora; «Validar plano» só dispensa os restantes campos se a resposta for «Não»; «Decidir plano» (Sim: modo e transportadora da cotação, chegada, aviso de validade; Não: avisa a Bárbara e não grava; reserva não confirmada, modo inválido ou sem transportadora: erro) |
+| N7 | WF13: email à Madalena só com reserva confirmada e proposta `aceite`; modo de teste desvia o destinatário; único envio do WF13 é interno |
+| N8 | Emails e URL da instância nos nós Code são substituídos pelo deploy (`CODE_BINDINGS` em `scripts/deploy_workflows.py`) |
+
 ## B-E. n8n (dados fixados em nós com credenciais; Set, If e Stop and Error correm a sério)
 | Id | Verifica |
 | --- | --- |
@@ -38,6 +52,20 @@ Este ficheiro descreve **o que** se testa. Regra: tudo o que se cria leva testes
 | D5 | Cliente com `<script>` e mais de 200 caracteres: fica truncado a 200 e o fluxo conclui |
 | D6 | Email de confirmação escapa HTML (verificação estrutural; o nó de email está fixado nos testes) |
 | D9 | Email de confirmação com assunto "Pedido de proposta registado – código – cliente", saudação, próximo passo e assinatura automática (estrutural + execução 29 sem erros) |
+| D10 | WF2 com carga completa (formulário com etiquetas, exec. 252, versão 9b8d75ae): normaliza tipo `completa`, números como texto, CP em maiúsculas e sem espaços, `carga_ok=true`, segue para gravar | Passa |
+| D11 | WF2 com `n_paletes=0` e palete de 9 m: `carga_ok=false` → «Pedido inválido» (exec. 253) | Passa |
+| D12 | WF2 chamado sem campos de carga (como o Read Outlook): segue e grava com valores vazios (exec. 254) | Passa |
+| D13 | Estrutural (`tests/test_wf2_wf3_estrutura.py`): os 10 campos existem no formulário (opcionais), na normalização, na gravação, na entrada do sub-workflow e em `schema.sql`; `destinatario_confirmacao` continua oculto no export | Passa |
+| F1 | WF3 código offline (`tests/test_wf3_code.py`, `tests/fixtures/wf3/casos.json`): candidatas (novo e atualização), escolha, assunto «Cotação Portugal/CP – País [PRP]», tabela com campos opcionais, escape HTML, atualização com versão+1 | Passa |
+| F2 | WF3 `test_workflow` (execução 255, tudo fixado): modo atualizar com proposta `em_validacao`, 2 transportadoras com pedido v1 → 2 pedidos v2 com `substitui_id`, assunto «[TESTE] Atualização: Cotação Portugal/28001 – Espanha [PRP-…]», proposta mantém `em_validacao` | Passa |
+| F3 | Export do WF3 igual aos ficheiros `scripts/wf3_code/` (deriva) e sem segredos | Passa |
+| H1 | WF5 código offline (`tests/test_wf5_code.py`): 3 cotações, uma a rever em destaque, condições (entrega, por camião/total), ref e reserva; sem cotações; estado inválido recusado; HTML escapado | Passa |
+| H2 | WF5 `test_workflow` (execução 256, tudo fixado): resumo montado com a_rever=1 | Passa |
+| H3 | Export do WF5 igual a `scripts/wf5_code/montar.js` | Passa |
+| J1 | WF13 código offline (`tests/test_wf13_code.py`, `tests/fixtures/wf13/casos.json`): rascunho, confirmar com libertação, cancelar, cotação a rever, transportadora sem cotação, ref obrigatória, proposta não aprovada, outra já confirmada, sem envio no código | Passa |
+| J2 | WF13 `test_workflow` (exec 257 rascunho, 258 confirmar): o rascunho só aparece no ramo «rascunho»; confirmar liberta a cotação c2 | Passa |
+| J3 | WF13 export: só nós Outlook `draft/create`, código igual ao ficheiro, no manifest (`publish:false`) | Passa |
+| J4 | Contagens de workflows nos testes de deploy/app/kit/github/e2e atualizadas para o WF13 (16 no manifest, 17 ficheiros) | Passa |
 | D7 | 'Criar proposta no Supabase' sem retry |
 | D8 | Saída de erro do email ligada a 'Email falhou depois de gravar' |
 | B7 | WF2 e Read Outlook não guardam execuções bem-sucedidas |
@@ -115,14 +143,21 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | W5 | Com os dados completos (exec. 125): o email tem a coluna «Revisão» (automática / a rever) e a instrução «responda apenas com OK» | Passa |
 | W6 | Proposta já `aprovada` → erro «não pode voltar a ser enviada para validação» (exec. 126); código inexistente continua a dar erro claro (exec. 127) | Passa |
 | W7 | Depois do email, o nó «Marcar proposta em validação» passa a proposta a `em_validacao` (nó fixado nos testes; confirmar na primeira execução real) | Estrutural |
-| W4 | Execução real (email + Slack + estado) | Pendente: precisa de uma proposta com cotações e do WF6 a chamar o WF5 |
+| W4 | Execução real (email + Slack + estado) | **Passa** (2026-10-16, WF6 exec. 222 → WF5, PRP-2026-0017): a proposta passou a `em_validacao` (o email sai antes do nó que marca o estado) e o resumo chegou à caixa de teste |
+| W8 | Coluna «Transportadora» na tabela de cotações (exec. 226, dados fixados): nome lido de `transportadoras`, HTML escapado (`<b>` → `&lt;b&gt;`), «transportadora desconhecida» se o id não existe, 3 cotações com 3 linhas | Passa |
 
 ## L. WF6 Ler cotações das transportadoras (dados fixados; Code corre a sério)
 | Id | Verifica | Resultado |
 | --- | --- | --- |
 | L1 | 3 emails: resposta de transportadora conhecida com PRP a_cotar é aceite; o nosso pedido (`[TESTE] ...`) e remetente desconhecido são ignorados; extração válida → `revisao=automatica`, moeda em maiúsculas (exec. 116) | Passa |
 | L2 | Validação do LLM: sem preço, modo ou prazo, confiança < 0,8 ou anexos → `a_rever` (verificação estrutural do código) | Passa (estrutural) |
-| L3 | Execução real (Outlook, OpenRouter, Supabase, download do anexo) | Pendente: precisa de uma resposta real de transportadora, de preferência com PDF (os emails das transportadoras de teste são `@example.invalid`) |
+| L3 | Execução real (Outlook, OpenRouter, Supabase, download do anexo) | **Passa** (2026-10-16, exec. 214, PRP-2026-0017): resposta real da «Transportes Vale do Ave» com PDF anexo; gravada 1286,40 EUR, rodoviário, 4 dias, validade 2026-10-30, confiança 0,95, `automatica`, «[dados também lidos do PDF anexo]». O WF5 não foi chamado (regra antiga, 1 de 5) |
+| L12 | Sem mínimo: 1 cotação nova para 4 pedidos (`a_cotar`) → o nó do WF5 é chamado com `cotacoes=1, pedidos_enviados=4` (exec. 219) | Passa |
+| L13 | Proposta `em_validacao` aceita resposta tardia: 2 cotações antigas + 1 nova → WF5 chamado de novo com `cotacoes=3` (exec. 220) | Passa |
+| L14 | Regressão: pedido nosso (`[TESTE]`), remetente desconhecido e proposta que não está `a_cotar`/`em_validacao` são ignorados, sem chamar o WF5 (exec. 221) | Passa |
+| L15 | Estrutural (WF5): o assunto `[PRP-...] Proposta para validação - produto - destino` não depende do número de cotações, por isso as atualizações agrupam-se na mesma conversa | Estrutural |
+| L16 | WF5: cotação `automatica` mostra «automática (confiança 95 %)»; `a_rever` mostra «a rever»; sem confiança, só «automática» (exec. 233, com pins; versão 443929eb; rascunho posterior ebf8567f só retira o 2.º destinatário de teste, por publicar) | Passa |
+| L17 | Execução real (Outlook, OpenRouter, Supabase, PDF), repetição após apagar cotações (WF6 exec. 234, PRP-2026-0017): 2 cotações regravadas (Lusovia 1247,48 EUR; Vale do Ave 1286,40 EUR; confiança 0,95; `automatica`); WF5 publicado (443929eb) chamado; email para a caixa de teste e para o 2.º destinatário de teste. Receção/aspeto do email: confirmação do utilizador | Passa (leitura e gravação); email por confirmar |
 | L4 | Passagem ao WF5: 1 cotação nova + 1 já registada, 2 pedidos enviados → a proposta segue (cotações 2, pedidos 2) (exec. 130) | Passa |
 | L6 | Estrutural: «Ler pedidos de cotação enviados» com `executeOnce` e `alwaysOutputData` (o `addNode` ignorava-os; corrigido com `setNodeSettings`). O nó é fixado nos testes, por isso só a primeira execução real confirma | Estrutural |
 | L7 | PDF com texto anexo (exec. 132): «Escolher o PDF» + «Extrair texto do PDF» (a sério, PDF real de teste) leem «frete maritimo 950 EUR, 8 dias»; texto do email + PDF vai ao LLM; confiança 0,95 → `automatica` com a nota «dados também lidos do PDF anexo» | Passa |
@@ -130,7 +165,11 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | L9 | Email sem anexos (exec. 134): o nó do PDF falha sem binário, o fluxo segue e a cotação mantém o comportamento anterior (`automatica`) | Passa |
 | L10 | Regressão do L1 com a nova cadeia (exec. 135): só o email da transportadora conhecida é aceite; o nosso pedido e o remetente desconhecido são ignorados | Passa |
 | L11 | Estrutural: cotação lida de PDF exige confiança ≥ 0,9 para ficar `automatica` (senão `a_rever`) | Estrutural |
-| L5 | Poucas cotações: 1 cotação para 2 pedidos (exec. 128) e 1 para 4 pedidos, exige 3 (exec. 129) → nada é enviado ao WF5 | Passa |
+| L20-L31 | **Associação** (`tests/test_wf6_code.py`, casos C1-C12 em `tests/fixtures/wf6/casar_casos.json`, anonimizados; corre o mesmo código do nó): código no assunto; assunto alterado + caixa partilhada (domínio aceite) + conversa conhecida; referência da transportadora; remetente com um só pedido aberto; dois pedidos abertos → `associado=false` (nada se grava); remetente desconhecido ignorado; nosso pedido e email já registado ignorados; histórico citado com outro PRP não decide (vale a conversa); único PRP só no histórico citado; HTML → tabela mantida, assinatura e aviso legal removidos; PRP de proposta fora de `a_cotar`/`em_validacao` ignorado; domínio partilhado resolvido pelo pedido da proposta | Passa (offline) |
+| L32-L41 | **Validação** (V1-V10 em `validar_casos.json`): duas condições (semana vs data fixa) + standby + preço por camião/total pouco claro → 2 linhas `a_rever`; resposta clara → 1 linha `automatica`; preço que o LLM inventou e não consta no texto → `a_rever`; sem preço → 1 linha `a_rever` sem preço; preço negativo/enorme e enumerações inválidas não passam; PDF digitalizado → `a_rever`; PDF lido com confiança 0,92 → `automatica`; confiança baixa → `a_rever`; formato antigo continua a funcionar mas fica `a_rever`; data e moeda inválidas | Passa (offline) |
+| L42 | Estrutural/deriva: o código em `workflows/wf6-ler-cotacoes.json` é igual a `scripts/wf6_code/*.js`; ligações `Casar → Associado? → (anexos \| Slack «por associar»)`; «Gravar cotação» sem `operation` (criar) e com os campos novos | Passa |
+| L43 | n8n com dados fixados (exec. 250 e 251, versão 4abef7f6): 2 emails, um associado pela conversa (2 linhas validadas, WF5 chamado com `cotacoes=2`) e um ambíguo (ramo «por associar»; Slack fixado) | Passa |
+| L5 | (substituído a 2026-10-16: já não há mínimo de cotações; ver L12) Antes: 1 cotação para 2 e para 4 pedidos não chamava o WF5 (exec. 128 e 129) | Obsoleto |
 
 ## M. WF8 Aprovação da Bárbara por email (dados fixados; Code e If correm a sério)
 | Id | Verifica | Resultado |
@@ -139,7 +178,8 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | M2 | «OK mas muda o frete» → comentário: NÃO aprova, aviso Slack com o comentário (exec. 122) | Passa |
 | M3 | Remetente desconhecido → ignorado, nada acontece (exec. 123) | Passa |
 | M4 | Proposta já `aprovada` → aprovação ignorada, aviso Slack (exec. 124) | Passa |
-| M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | Pendente: o workflow está por publicar; precisa de uma proposta real em `em_validacao` (W4) |
+| M5 | Trigger real do Outlook (resposta verdadeira) e gravação real no Supabase | **Passa** (2026-10-16 ~19:06): resposta «OK» real ao email de validação da PRP-2026-0017 → WF8 marcou `aprovada` e chamou o WF9, que falhou 0,2 s depois por falta de `preco_final` (exec. 242), sem enviar nada ao cliente. Repetição com `preco_final` de teste: ver M6 |
+| M6 | WF9 real após aprovação, com `preco_final` 1500 EUR, contacto de teste e proposta de novo `em_validacao` (modo teste: email redirecionado para a caixa de teste) | **Passa** (2026-10-16 19:10): resposta «OK» real → WF8 aprovou → WF9 enviou e marcou `enviada` (`enviada_em` 18:10:42Z). Receção e aspeto do email: confirmação do utilizador |
 
 ## X. WF1 Extração do pedido e «Read Outlook Messages» (dados fixados; Code e If correm a sério)
 | Id | Verifica | Resultado |
@@ -149,8 +189,10 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 | X3 | WF1: email que não é pedido → `e_pedido=false`, sem rascunho (exec. 139) | Passa |
 | X4 | WF1: falha do LLM → `falhou_llm=true`, confiança 0, sem inventar dados (exec. 140) | Passa |
 | X5 | Read Outlook Messages: HTML limpo (style, `&nbsp;`), remetente em minúsculas, pedido segue para o ramo «sim» e newsletter para o «não» (exec. 141) | Passa |
-| X6 | Real: email de teste na Folder 1 → lead gravado (jsonb `dados_extraidos`, `campos_em_falta`), draft em To Check, original lido, aviso Slack | Pendente: precisa de um email de teste na Folder 1 e créditos OpenRouter |
+| X6 | Real: email de teste na Folder 1 → lead gravado (jsonb `dados_extraidos`, `campos_em_falta`), draft em To Check, original lido, aviso Slack | Passa (2026-10-29, ver X8) |
 | X7 | Real (LLM a sério, OpenRouter haiku 4.5): pedido em inglês → empresa, 4-8 mm, 60 kg/m3, 2 t, big bags, FOB, ES/Valencia, confiança 0.95, rascunho em inglês; newsletter → `e_pedido=false`, sem rascunho (exec. 164, sub-exec. 165-166; antes falhou com 402 por chave sem créditos, o fallback funcionou) | Passa |
+| X8 | Real (exec. 403): pedido completo + newsletter na Folder 1 → só o pedido tem rascunho; a proposta (PRP-2026-0024) fica com `lead_id` e o lead passa a `convertido` (trigger da migração 0010); a newsletter fica lida, sem lead | Passa |
+| X9 | Vários emails na mesma execução: um item por email no «Preparar pedido para WF2» (antes só o primeiro seguia), cada um com o seu `lead_id` (exec. 399 e `tests/test_fluxo_encomenda.py`) | Passa |
 
 ## B. Fases 7-10 (migração 0006)
 | Id | Verifica | Resultado |
@@ -190,3 +232,23 @@ Regra: no máximo 1 execução real do encadeamento completo por alteração rel
 
 ### E.2 Cenários de ecrã (`tests/e2e_app_cenarios.py`, Playwright)
 S01 chave errada → certa · S02 endereço inexistente / barra final · S03 editar endereço invalida a ligação · S04 formatos de credenciais · S05 emails e canais inválidos · S06 recarregar (chave não persiste) · S07 falha 500 a meio + repetir sem duplicar · S08 duplo clique em Instalar · S09 teclado · S10 360 px sem scroll horizontal · S11 modo escuro/desktop · S12 copiar SQL (+ recurso) · S13 verificação falha com mensagem clara · S14 Voltar mantém dados · S15 sem erros de página. Resultado: 15/15.
+
+### E.3 Repositório GitHub (`tests/test_github.py`, `tests/test_app.py` A11-A15, `tests/e2e_app_cenarios.py` S16-S21)
+G1 três branches no mesmo commit, filho do commit inicial · G2 conteúdo (Action, 16 workflows, sem segredos/config) · G3 ruleset (só PR, check certo, sem bypass) · G4 organização · G5 token inválido · G6 nome com conteúdo alheio recusado · G7 repetir não duplica · G8 falha a meio e repetir · G9 plano gratuito dá aviso · G10 scopes · G11 modos executáveis.
+A11-A15 endpoints, validação de nomes, chave sem permissões, token fora do disco, mensagens em PT. K5: o `repositorio/` do kit passa os mesmos testes que a Action corre.
+S16 caminho completo · S17 chave sem permissões · S18 nomes inválidos · S19 aviso plano gratuito · S20 duplo clique + falha a meio · S21 token não persiste e 360 px.
+Pendente: T-github, teste real com conta GitHub de teste.
+
+## AI Act (2026-10-21)
+Testes estruturais em `tests/test_ai_act.py`; detalhe em `docs/ai-act/`.
+| Id | Verifica |
+| --- | --- |
+| A36 | `anon` e `authenticated` sem permissões em tabelas (Supabase, leitura de catálogo) |
+| A37 | `anon` sem execução das funções públicas |
+| A38 | `propostas.codigo_aprovacao` com 6 caracteres e distinto entre propostas |
+| A39 | `produtos.validado=true` exige `validado_por` e `validado_em` (restrição; teste de escrita em `supabase_bateria.sql`) |
+| R4-R5 (WF5) | O email de validação pede «OK <código>»; sem código avisa e não manda aprovar só com OK |
+| AI1 | WF3: todos os emails têm a frase de IA, também sem texto do LLM (`test_wf3_code.AvisoIA`) |
+| AI2 | WF12 sem «revista pela nossa equipa»; WF9, WF10 e WF12 sem nós LLM (`test_ai_act`) |
+| AI3 | WF8 só aprova com o código certo (execuções 261-263 com dados fixados) |
+

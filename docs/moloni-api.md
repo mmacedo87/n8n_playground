@@ -17,7 +17,7 @@ Não há `getPDFLink` na lista de orçamentos: o PDF terá de ser obtido por out
 ## Autenticação (OAuth 2.0)
 - Precisa de conta com acesso de programador: Developer ID (`client_id`), Redirect URI e Client Secret.
 - Access token válido 1 hora; refresh token válido **14 dias**.
-- Com cerca de 2 propostas por mês, o refresh token vai caducar entre utilizações. Opções: (a) um workflow agendado que renova o token de poucos em poucos dias e o guarda de forma segura; (b) fluxo de password (guardar utilizador e palavra-passe do Moloni, o que o Moloni desaconselha); (c) voltar a autorizar manualmente quando caducar.
+- Com até 30 propostas por mês pode ainda assim haver semanas sem propostas, e o refresh token caduca entre utilizações. Opções: (a) um workflow agendado que renova o token a cada ~7 dias e o guarda de forma segura; (b) fluxo de password (guardar utilizador e palavra-passe do Moloni, o que o Moloni desaconselha); (c) voltar a autorizar manualmente quando caducar.
 
 ## O que preciso de si
 1. Developer ID, Client Secret e Redirect URI (criados na área de programador do Moloni), ou acesso para os criar.

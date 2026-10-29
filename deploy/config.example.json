@@ -19,6 +19,7 @@
     "microsoftOutlookOAuth2Api": "ID da credencial Outlook criada no destino",
     "slackApi": "ID da credencial Slack",
     "supabaseApi": "ID da credencial Supabase",
-    "openRouterApi": "ID da credencial OpenRouter"
+    "openRouterApi": "ID da credencial OpenRouter",
+    "httpBasicAuth": "ID da credencial Basic Auth dos formulários internos (WF2, WF3, WF13)"
   }
 }

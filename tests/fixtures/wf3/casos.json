@@ -1,0 +1,1513 @@
+[
+ {
+  "tipo": "montar",
+  "id": "E1",
+  "desc": "Pedido novo com carga completa: assunto no formato do cliente, tabela com os dados da carga, BCC com as transportadoras",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t2",
+     "transportadora_nome": "Beta Express",
+     "transportadora_email": "betaexpress@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t3",
+     "transportadora_nome": "Gama Frete",
+     "transportadora_email": "gamafrete@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Exmos. Senhores, pedimos uma cotação de frete para a referência PRP-2026-0101.",
+     "fecho": "Agradecemos a vossa resposta."
+    }
+   }
+  ],
+  "expect": [
+   {
+    "assunto": "Cotação Portugal/28100 – Espanha [PRP-2026-0101]",
+    "gerado_por": "llm",
+    "destinatario_to": "pedidos@empresa.example",
+    "redirecionado_teste": false
+   }
+  ],
+  "corpo_contem": [
+   "Camião completo",
+   "Nº de paletes",
+   "1.2 × 0.8 × 1.5 m",
+   "Calle Ejemplo 2, Madrid",
+   "28100",
+   "por camião ou o total",
+   "PRP-2026-0101"
+  ],
+  "corpo_nao_contem": [
+   "Cliente Final"
+  ]
+ },
+ {
+  "tipo": "montar",
+  "id": "E2",
+  "desc": "Sem dados de carga: assunto e tabela como antes",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": null,
+     "n_camioes": null,
+     "n_paletes": null,
+     "peso_palete_kg": null,
+     "palete_c_m": null,
+     "palete_l_m": null,
+     "palete_a_m": null,
+     "morada_carga": null,
+     "morada_descarga": null,
+     "cp_descarga": null,
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": null,
+     "n_camioes": null,
+     "n_paletes": null,
+     "peso_palete_kg": null,
+     "palete_c_m": null,
+     "palete_l_m": null,
+     "palete_a_m": null,
+     "morada_carga": null,
+     "morada_descarga": null,
+     "cp_descarga": null,
+     "transportadora_id": "t2",
+     "transportadora_nome": "Beta Express",
+     "transportadora_email": "betaexpress@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Exmos. Senhores, pedimos uma cotação de frete para a referência PRP-2026-0101.",
+     "fecho": "Agradecemos a vossa resposta."
+    }
+   }
+  ],
+  "expect": [
+   {
+    "assunto": "[PRP-2026-0101] Pedido de cotação de frete - Granulado de cortiça - destino ES"
+   }
+  ],
+  "corpo_contem": [
+   "Referência"
+  ],
+  "corpo_nao_contem": [
+   "Tipo de carga",
+   "Morada de descarga",
+   "Dimensões"
+  ]
+ },
+ {
+  "tipo": "montar",
+  "id": "E3",
+  "desc": "Texto do LLM com link/valor → modelo fixo",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t2",
+     "transportadora_nome": "Beta Express",
+     "transportadora_email": "betaexpress@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t3",
+     "transportadora_nome": "Gama Frete",
+     "transportadora_email": "gamafrete@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Veja https://x.example PRP-2026-0101",
+     "fecho": "ok"
+    }
+   }
+  ],
+  "expect": [
+   {
+    "gerado_por": "modelo_fixo"
+   }
+  ],
+  "corpo_contem": [
+   "solicitamos uma cotação"
+  ],
+  "corpo_nao_contem": []
+ },
+ {
+  "tipo": "montar",
+  "id": "E4",
+  "desc": "Modo de teste: [TESTE], destinatário de teste e BCC vazio",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t2",
+     "transportadora_nome": "Beta Express",
+     "transportadora_email": "betaexpress@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t3",
+     "transportadora_nome": "Gama Frete",
+     "transportadora_email": "gamafrete@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "teste@empresa.example",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Exmos. Senhores, pedimos uma cotação de frete para a referência PRP-2026-0101.",
+     "fecho": "Agradecemos a vossa resposta."
+    }
+   }
+  ],
+  "expect": [
+   {
+    "destinatario_to": "teste@empresa.example",
+    "destinatarios_bcc": "",
+    "redirecionado_teste": true
+   }
+  ],
+  "corpo_contem": [
+   "Email de teste"
+  ],
+  "corpo_nao_contem": []
+ },
+ {
+  "tipo": "montar",
+  "id": "E5",
+  "desc": "Atualização: assunto «Atualização:», texto fixo (sem LLM) a pedir a atualização",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": true,
+     "versao": 2,
+     "substitui_id": "ped-t1"
+    },
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "transportadora_id": "t2",
+     "transportadora_nome": "Beta Express",
+     "transportadora_email": "betaexpress@transp.example",
+     "atualizar": true,
+     "versao": 2,
+     "substitui_id": "ped-t2"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Exmos. Senhores, pedimos uma cotação de frete para a referência PRP-2026-0101.",
+     "fecho": "Agradecemos a vossa resposta."
+    }
+   }
+  ],
+  "expect": [
+   {
+    "assunto": "Atualização: Cotação Portugal/28100 – Espanha [PRP-2026-0101]",
+    "gerado_por": "modelo_fixo"
+   }
+  ],
+  "corpo_contem": [
+   "atualizem a cotação"
+  ],
+  "corpo_nao_contem": []
+ },
+ {
+  "tipo": "montar",
+  "id": "E6",
+  "desc": "Morada com HTML é escapada",
+  "nodes": {
+   "Escolher transportadoras": [
+    {
+     "proposta_id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "<script>alert(1)</script> Rua",
+     "cp_descarga": "28100",
+     "transportadora_id": "t1",
+     "transportadora_nome": "Alfa Cargas",
+     "transportadora_email": "alfacargas@transp.example",
+     "atualizar": false,
+     "versao": 1,
+     "substitui_id": null
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "introducao": "Exmos. Senhores, pedimos uma cotação de frete para a referência PRP-2026-0101.",
+     "fecho": "Agradecemos a vossa resposta."
+    }
+   }
+  ],
+  "expect": [
+   {}
+  ],
+  "corpo_contem": [
+   "&lt;script&gt;"
+  ],
+  "corpo_nao_contem": [
+   "<script>"
+  ]
+ },
+ {
+  "tipo": "listar",
+  "id": "L1",
+  "desc": "Pedido novo: exclui transportadoras já contactadas e conta as vagas",
+  "nodes": {
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Normalizar código": [
+    {
+     "codigo": "PRP-2026-0101",
+     "atualizar": false
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler pedidos já feitos": [
+    {
+     "transportadora_id": "t1",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "a"
+    }
+   ]
+  },
+  "expect": {
+   "alvo": 3,
+   "ja_contactadas": 1,
+   "atualizar": false
+  },
+  "erro": null
+ },
+ {
+  "tipo": "listar",
+  "id": "L2",
+  "desc": "Atualização: só as contactadas, com versao+1 e id do pedido que substitui",
+  "nodes": {
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Normalizar código": [
+    {
+     "codigo": "PRP-2026-0101",
+     "atualizar": true
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler pedidos já feitos": [
+    {
+     "transportadora_id": "t1",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "a"
+    },
+    {
+     "transportadora_id": "t2",
+     "estado": "enviado",
+     "versao": 2,
+     "id": "b"
+    },
+    {
+     "transportadora_id": "t3",
+     "estado": "falhou",
+     "versao": 1,
+     "id": "c",
+     "tentativas": 1
+    }
+   ]
+  },
+  "expect": {
+   "alvo": 2,
+   "atualizar": true,
+   "cands": [
+    [
+     "t1",
+     2,
+     "a"
+    ],
+    [
+     "t2",
+     3,
+     "b"
+    ]
+   ]
+  },
+  "erro": null
+ },
+ {
+  "tipo": "listar",
+  "id": "L3",
+  "desc": "Atualização sem pedidos enviados → erro claro",
+  "nodes": {
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Normalizar código": [
+    {
+     "codigo": "PRP-2026-0101",
+     "atualizar": true
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler pedidos já feitos": []
+  },
+  "expect": null,
+  "erro": "não há pedidos de cotação enviados"
+ },
+ {
+  "tipo": "listar",
+  "id": "L4",
+  "desc": "Pedido novo com todas as transportadoras já contactadas → erro",
+  "nodes": {
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Normalizar código": [
+    {
+     "codigo": "PRP-2026-0101",
+     "atualizar": false
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler pedidos já feitos": [
+    {
+     "transportadora_id": "t1",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "xt1"
+    },
+    {
+     "transportadora_id": "t2",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "xt2"
+    },
+    {
+     "transportadora_id": "t3",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "xt3"
+    },
+    {
+     "transportadora_id": "t4",
+     "estado": "enviado",
+     "versao": 1,
+     "id": "xt4"
+    }
+   ]
+  },
+  "expect": null,
+  "erro": "Todas as transportadoras já foram contactadas"
+ },
+ {
+  "tipo": "listar",
+  "id": "L5",
+  "desc": "Cinco falhas de envio → não repete",
+  "nodes": {
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ],
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Normalizar código": [
+    {
+     "codigo": "PRP-2026-0101",
+     "atualizar": false
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler pedidos já feitos": [
+    {
+     "transportadora_id": "t1",
+     "estado": "falhou",
+     "tentativas": 5,
+     "id": "f"
+    }
+   ]
+  },
+  "expect": null,
+  "erro": "falhou 5 vezes"
+ },
+ {
+  "tipo": "escolher",
+  "id": "S1",
+  "desc": "Atualização: leva dados da carga, versao e substitui_id; sem aviso de «abaixo do mínimo»",
+  "nodes": {
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Listar candidatas": [
+    {
+     "codigo": "PRP-2026-0101",
+     "alvo": 2,
+     "ja_contactadas": 0,
+     "tentativa": 1,
+     "atualizar": true,
+     "candidatas": [
+      {
+       "id": "t1",
+       "nome": "Alfa Cargas",
+       "versao": 2,
+       "substitui_id": "a"
+      },
+      {
+       "id": "t2",
+       "nome": "Beta Express",
+       "versao": 3,
+       "substitui_id": "b"
+      }
+     ]
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": "completa",
+     "n_camioes": 1,
+     "n_paletes": 24,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": "28100",
+     "cliente": "Cliente Final SA"
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "ids": [
+      "inventado"
+     ]
+    }
+   }
+  ],
+  "expect": [
+   {
+    "versao": 2,
+    "substitui_id": "a",
+    "abaixo_do_minimo": false,
+    "cp_descarga": "28100",
+    "tipo_carga": "completa",
+    "atualizar": true
+   },
+   {
+    "versao": 3,
+    "substitui_id": "b"
+   }
+  ]
+ },
+ {
+  "tipo": "escolher",
+  "id": "S2",
+  "desc": "Pedido novo, proposta sem carga: campos novos a null (não rebenta) e ids inventados pelo LLM ignorados",
+  "nodes": {
+   "Configuração": [
+    {
+     "destinatario_teste": "",
+     "destinatario_principal": "pedidos@empresa.example",
+     "modelo": "modelo-x",
+     "maximo_transportadoras": 5,
+     "minimo_transportadoras": 4
+    }
+   ],
+   "Listar candidatas": [
+    {
+     "codigo": "PRP-2026-0101",
+     "alvo": 4,
+     "ja_contactadas": 0,
+     "tentativa": 1,
+     "atualizar": false,
+     "candidatas": [
+      {
+       "id": "t1",
+       "nome": "Alfa Cargas",
+       "versao": 1,
+       "substitui_id": null
+      },
+      {
+       "id": "t2",
+       "nome": "Beta Express",
+       "versao": 1,
+       "substitui_id": null
+      },
+      {
+       "id": "t3",
+       "nome": "Gama Frete",
+       "versao": 1,
+       "substitui_id": null
+      },
+      {
+       "id": "t4",
+       "nome": "Delta Log",
+       "versao": 1,
+       "substitui_id": null
+      }
+     ]
+    }
+   ],
+   "Ler transportadoras ativas": [
+    {
+     "id": "t1",
+     "nome": "Alfa Cargas",
+     "email": "alfacargas@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t2",
+     "nome": "Beta Express",
+     "email": "betaexpress@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t3",
+     "nome": "Gama Frete",
+     "email": "gamafrete@transp.example",
+     "modos": [
+      "maritimo",
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    },
+    {
+     "id": "t4",
+     "nome": "Delta Log",
+     "email": "deltalog@transp.example",
+     "modos": [
+      "rodoviario"
+     ],
+     "rotas": [
+      "ES"
+     ],
+     "ativa": true
+    }
+   ],
+   "Ler proposta": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "produto": "Granulado de cortiça",
+     "densidade": "80-100 kg/m3",
+     "granulometria": "1-2 mm",
+     "quantidade": 24000,
+     "unidade": "kg",
+     "embalagem": "Big bag 1 m3",
+     "incoterm": "DAP",
+     "destino_pais": "ES",
+     "estado": "a_cotar",
+     "tipo_carga": null,
+     "n_camioes": 1,
+     "n_paletes": null,
+     "peso_palete_kg": 1000,
+     "palete_c_m": 1.2,
+     "palete_l_m": 0.8,
+     "palete_a_m": 1.5,
+     "morada_carga": "Rua Exemplo 1, 3700 Local",
+     "morada_descarga": "Calle Ejemplo 2, Madrid",
+     "cp_descarga": null,
+     "cliente": "Cliente Final SA"
+    }
+   ]
+  },
+  "input": [
+   {
+    "output": {
+     "ids": [
+      "x",
+      "y"
+     ]
+    }
+   }
+  ],
+  "expect": [
+   {
+    "versao": 1,
+    "tipo_carga": null,
+    "cp_descarga": null,
+    "escolhido_por": "todas"
+   },
+   {
+    "versao": 1,
+    "tipo_carga": null,
+    "cp_descarga": null,
+    "escolhido_por": "todas"
+   },
+   {
+    "versao": 1,
+    "tipo_carga": null,
+    "cp_descarga": null,
+    "escolhido_por": "todas"
+   },
+   {
+    "versao": 1,
+    "tipo_carga": null,
+    "cp_descarga": null,
+    "escolhido_por": "todas"
+   }
+  ]
+ }
+]

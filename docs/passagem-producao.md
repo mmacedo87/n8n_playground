@@ -3,7 +3,7 @@
 Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar cada ponto quando concluído.
 
 ## 1. Decisões que bloqueiam
-- [ ] Decidir n8n Cloud vs VPS na UE. Se Cloud: confirmar a região UE da instância (suporte/DPA) e os limites de execuções do plano.
+- [x] Decidido a 2026-10-25: n8n Cloud. Falta: confirmar a região UE da instância (suporte/DPA) e os limites de execuções do plano.
 - [ ] Decidir se produção é uma instância/projeto separado do desenvolvimento (recomendado) e como se promove: exportar do Git (`main`) ou Source Control nativo do n8n.
 - [ ] Definir responsáveis: quem aprova propostas, quem recebe erros, quem administra n8n, Supabase e Microsoft 365.
 
@@ -12,7 +12,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Importar os workflows a partir de `main` e ligar credenciais de produção pelo nome.
 - [ ] Preencher marcadores: destinatários, IDs das pastas Outlook, Mail Error Flow como Error Workflow de **todos** os workflows, ID do WF2 no nó de chamada.
 - [ ] Fixar o caminho (`path`) do formulário e decidir o URL final (domínio próprio, se possível).
-- [ ] Proteger o formulário: autenticação (Basic Auth) ou ligação só a partir de um sítio controlado; avaliar captcha e limite de pedidos.
+- [x] Formulários internos protegidos com Basic Auth (2026-10-29): WF2 (pedido de proposta), WF3 (pedido manual de cotações) e WF13 (reserva de frete) respondem 401 sem utilizador e palavra-passe. Em produção: criar uma credencial **Basic Auth** no n8n (utilizador e palavra-passe só da equipa) e indicá-la no assistente (passo 3) ou em `credenciais.httpBasicAuth` do `deploy/config.json`. Avaliar ainda captcha e limite de pedidos no WF2.
 - [ ] Definir retenção de execuções: guardar execuções falhadas, não guardar dados de execuções bem-sucedidas com dados pessoais, ou prune curto.
 - [ ] Ativar notificações de erro para mais do que um destinatário (equipa) e testar com uma falha real em produção.
 - [ ] Publicar os workflows e confirmar que os triggers estão ativos.
@@ -37,7 +37,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Planear a renovação/expiração das credenciais OAuth e quem a monitoriza.
 
 ## 5. OpenRouter / IA
-- [ ] Criar chave de produção separada, com limite de gasto mensal e alertas.
+- [ ] Criar chave de produção separada, com limite de gasto mensal e alertas (o assistente de instalação, passo 3, explica-o passo a passo: ZDR em Settings → Privacy ou Guardrails, orçamento em Budgets & data → Add budget, chave nova e créditos). Na conta de testes, o ZDR e o limite de gasto foram ativados a 2026-10-25 e o WF6 foi testado com o ZDR ligado.
 - [ ] Ativar exclusão de fornecedores que guardam ou treinam com dados (zero retenção); proibir modelos `:free`.
 - [ ] Fixar o modelo e a versão do prompt por workflow e registar tudo em `ai_log`.
 - [ ] Garantir que nenhuma decisão de preço ou envio ao cliente é tomada pelo modelo: valores calculados em código, envio só após aprovação humana.
@@ -65,8 +65,8 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Escrever o runbook: como correr, o que fazer quando há erro, quem contactar.
 
 ## 10. GitHub
-- [ ] Passar o repositório a privado e ativar secret scanning e push protection.
-- [ ] Proteger `main` (Pull Request obrigatório, sem force-push) e etiquetar a versão de arranque (`v1.0.0`).
+- [ ] No repositório de produção (o de desenvolvimento pode ficar público): privado, ativar secret scanning e push protection.
+- [ ] Proteger `main` (Pull Request obrigatório, sem force-push) e etiquetar a versão de arranque (`v1.0.0`). O assistente de instalação já faz isto ao criar o repositório (ver «Repositório GitHub de produção»); confirmar em Settings → Rules que a regra `proteger-main` está **Active**.
 - [ ] Confirmar que nada sensível está no histórico (`scripts/check_no_secrets.sh`).
 
 ## 11. Entregabilidade do email (evitar spam)
@@ -81,7 +81,10 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Comprar créditos na OpenRouter e ativar zero data retention; sem créditos o WF3 usa a regra de reserva e o texto fixo (funciona, mas sem o LLM).
 - [ ] O WF2 arranca o WF3 no fim (nó "Pedir cotações de frete (WF3)"): confirmar o ID do WF3 nesse nó na instância de destino.
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
-- [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
+- [x] O formulário «Pedir cotações de frete» do WF3 tem Basic Auth (mesma credencial do WF2 e WF13).
+- [ ] **Modo de envio do WF3 (migração 0009):** aplicar `supabase/migrations/0009_configuracao_modo_envio.sql` (tabela `configuracao`, estado `rascunho`). O valor inicial é `automatico` (decidido a 2026-10-25). Muda-se em «Updates ao fluxo» no assistente (ou `scripts/atualizar_config.py`), sem editar nem publicar o WF3. Qualquer valor desconhecido ou erro de leitura faz o WF3 criar rascunho em vez de enviar.
+- [ ] Modo `revisao`: criar a subpasta **To Check** dentro da Inbox da caixa que o n8n usa (o nome está em `pasta_revisao` no nó «Configuração»; é procurada por nome, por isso funciona em qualquer caixa). Se não existir, o rascunho fica em Rascunhos e o aviso do Slack di-lo. Os pedidos ficam `rascunho` e a proposta passa logo a `a_cotar`; quando uma pessoa envia o rascunho, o estado do pedido mantém-se `rascunho` (o sistema não vê o envio manual).
+- [ ] O modo de envio só tem efeito na versão **publicada** do WF3: publicar o WF3 (rascunho bbc0fc46) em conjunto com WF2, WF5, WF8 e WF12 depois de testar.
 - [ ] Reenvio após falha: o WF3 repete o envio até 5 tentativas (coluna `pedidos_cotacao.tentativas`, migração 0004) e à 6.ª não envia e avisa por email (via Mail Error Flow). Confirmar que o Mail Error Flow está definido como Error Workflow do WF3.
 - [ ] Apagar os dados de teste com um só comando: `supabase/limpar_dados_de_teste.sql` (propostas PRP-2026-0001 a 0015, pedidos_cotacao, ai_log) antes de começar.
 
@@ -94,6 +97,13 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Garantir que a Bárbara vê `proposta_compliance` (linhas `a_verificar_manualmente`) antes de validar a proposta (passo 6).
 - [ ] Apagar os dados de teste de `proposta_compliance` antes de começar. (O índice duplicado `requisitos_pais_pais_nc_uq` já foi removido pela migração 0004; aplicar a 0004 também em produção.)
 
+## 13b. Cotações reais e WF13 (2026-10-17)
+- [ ] Aplicar a migração `0007_cotacoes_reais.sql` (carga e moradas em `propostas`, versões e referências em `pedidos_cotacao`, condições e `estado_reserva` em `cotacoes_frete`, `dominios_aceites` em `transportadoras`); reversão em `supabase/rollbacks/0007_rollback.sql`.
+- [ ] Preencher `transportadoras.dominios_aceites` (ex. `pt.dsv.com`) para aceitar caixas partilhadas.
+- [ ] WF13 (confirmação de reserva): `publish:false` no manifest. No nó «Normalizar pedido» esvaziar `destinatario_teste` em produção; só cria rascunhos no Outlook, nunca envia. Proteger o formulário (Basic Auth) ou desativar o trigger quando não for usado.
+- [ ] Rever com o cliente se a morada exata de descarga pode ir no pedido às transportadoras.
+- [ ] Volume: até 30 propostas/mês. Contar as execuções do n8n (pedidos, respostas, polls) face ao limite do plano.
+
 ## 14. Slack (avisos de propostas e cotações)
 - [ ] Criar (ou reutilizar) os canais de produção e **convidar a app do Slack** (`/invite @status_notifications`) para cada um; sem isso o aviso falha com `channel_not_found`.
 - [ ] Substituir os IDs dos canais no código do nó "Escolher canal e texto" do workflow "Notificar Slack" (`propostas`, `cotacoes`, `estado`).
@@ -104,16 +114,18 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 
 ## 15. WF5, WF6, WF8 (validação e leitura de cotações)
 - [ ] Definir o email da Bárbara no WF5 (destinatário do resumo) e a lista `AUTORIZADOS` no código do WF8 (hoje só o email de teste). O WF8 só aprova com "OK"/"aprovo" na primeira linha, de um remetente autorizado, numa proposta em `em_validacao`.
-- [ ] Confirmar a regra de arranque do WF5 no WF6 (`MAX_EXIGIDAS=3`: com 3 cotações, ou todas as pedidas se forem menos).
-- [ ] Publicar o WF8 (poll de 2 minutos ao Outlook) só quando houver uma proposta real em `em_validacao`; ativar o WF6 com o trigger de produção.
+- [x] Regra de arranque do WF5 no WF6 definida a 2026-10-16: sempre que há cotações novas a Bárbara recebe o resumo atualizado (sem mínimo). O assunto é fixo por proposta e o WF6 aceita propostas `a_cotar` e `em_validacao`.
+- [x] WF8 publicado a 2026-10-16 (poll de 2 minutos ao Outlook; só aprova respostas de `AUTORIZADOS`). Falta ativar o WF6 com o trigger de produção e, em produção, pôr em `AUTORIZADOS` só o email da Bárbara.
 - [ ] Testes reais por fazer: M5 (resposta real da Bárbara), uma resposta real de transportadora para o WF6 (texto e PDF).
 - [ ] Confirmar os IDs do WF5 (no WF6) e do Mail Error Flow como Error Workflow do WF5, WF6 e WF8 na instância de destino.
 
 ## 16. WF1 e Read Outlook Messages (pedidos por email)
+- [ ] Gatilhos automáticos (2026-10-29): o Read Outlook tem um Outlook Trigger na **Folder 1** e o WF6 na **Inbox**, a cada 5 min, só emails não lidos (polls sem emails novos não contam execuções). Na instância de produção escolher de novo as pastas nos dois gatilhos (os IDs no Git são marcadores) e só publicar depois da decisão sobre o Read Outlook criar propostas sem revisão humana. O primeiro poll depois de publicar só fixa a hora de referência: emails que já estavam por ler não disparam o gatilho sozinhos (são lidos no primeiro disparo seguinte, ou correndo à mão).
+- [ ] WF11: o link do plano de expedição leva um código secreto por proposta (`token_plano`, migração 0011); a migração tem de estar aplicada antes de publicar o WF10, WF11 e WF13.
 - [ ] Aplicar a migração `0005_leads_rascunho_pedido.sql` (colunas `assunto`, `dados_extraidos`, `confianca`, `campos_em_falta` em `leads`).
 - [ ] Credencial OpenRouter com créditos na conta da chave usada (o erro 402 fez o WF1 falhar em segurança: `falhou_llm=true`, sem dados inventados).
 - [ ] Teste real X6: um email na Folder 1 gera lead rascunho, draft em To Check, original lido e aviso Slack.
-- [ ] Os leads são rascunhos para um humano rever; ninguém cria a proposta sozinho. O nó de chamada ao WF2 fica desativado até haver decisão.
+- [ ] Desde 2026-10-29 o Read Outlook chama o WF2 quando o pedido mapeia com confiança ≥ 0,8 (a proposta fica ligada ao lead). Decisão pendente: manter assim ou exigir revisão humana antes (a política e as fichas de IA em `docs/ai-act/` ainda dizem que o email nunca cria a proposta).
 - [ ] RGPD: o `ai_log` só leva o domínio do remetente; o texto do email vai ao LLM (confirmar zero retenção no OpenRouter) e `leads` entra na purga (`purgar_leads_antigos`).
 
 ## Fases 7 a 10 (WF9-WF12)
@@ -149,5 +161,23 @@ Fica fora do script: aplicar as migrações do Supabase e as tags dos workflows.
 - [ ] Correr o dry-run e, se passar, o deploy; abrir um workflow e confirmar que as credenciais ficaram ligadas.
 
 ### Assistente de instalação (para quem não é técnico)
-Para quem vai instalar sem experiência: gerar o kit com `python3 scripts/build_kit.py` (cria `dist/Kit-de-instalacao.zip`) e entregá-lo. Dentro vem a folha `LEIA-ME-PRIMEIRO.html` (instruções passo a passo, estilo IKEA) e um ficheiro de duplo clique (`Iniciar-Windows` ou `Iniciar-Mac`) que abre uma página com 6 passos: base de dados, ligar ao n8n, contas, emails e Slack, verificar, instalar. Só é preciso ter o Python instalado. A página escreve o `deploy/config.json`, não guarda a chave de API e dá mensagens de erro em português.
+Para quem vai instalar sem experiência: gerar o kit com `python3 scripts/build_kit.py` (cria `dist/Kit-de-instalacao.zip`) e entregá-lo. Dentro vem a folha `LEIA-ME-PRIMEIRO.html` (instruções passo a passo, estilo IKEA) e um ficheiro de duplo clique (`Iniciar-Windows` ou `Iniciar-Mac`) que abre uma página com 7 passos (+1 opcional): base de dados, ligar ao n8n, contas, emails e Slack, verificar, instalar e, opcionalmente, o repositório GitHub. Só é preciso ter o Python instalado. A página escreve o `deploy/config.json`, não guarda a chave de API e dá mensagens de erro em português.
 - [ ] Teste real do assistente numa instância n8n de teste antes de o entregar (T-assistente).
+
+### Repositório GitHub de produção (passo opcional do assistente)
+No fim da instalação, o assistente pode criar o repositório da empresa, sem o técnico precisar de saber `git`. O que faz, por esta ordem:
+1. Cria o repositório (privado por defeito) na conta ou organização indicada.
+2. Envia os ficheiros (workflows, scripts, SQL, testes, documentação e a GitHub Action) num único commit `chore(inicio): ...`.
+3. Cria os branches `dev`, `stable` e `main` **no mesmo commit**.
+4. Garante que o GitHub Actions está ativo.
+5. Cria a regra (ruleset) `proteger-main`: `main` só por pull request, sem force-push nem apagar, sem exceções para administradores, e com o check obrigatório «PR para main (origem dev + testes)».
+
+**O que a pessoa tem de fazer:** criar uma chave pessoal do GitHub (link já preparado na página, com as permissões `repo` e `workflow`, validade de 7 dias) e colá-la. A chave só vive na memória do assistente e pode ser apagada no GitHub no fim.
+
+**GitHub Action** (`.github/workflows/main-so-por-pr.yml`): em pull request para `main` só aceita origem `dev` ou `stable`, corre os testes unitários e a verificação de segredos; em push para `main` falha se o commit não vier de um PR (o commit inicial do assistente é a única exceção). O bloqueio efetivo é o ruleset.
+
+**Limites a conhecer:**
+- Em repositórios **privados**, o GitHub só permite rulesets nos planos pagos (Pro/Team). No plano gratuito o assistente cria tudo, avisa e indica como ativar a regra à mão; alternativa: repositório público (não tem segredos nem dados de clientes).
+- Se o nome do repositório já existir **com conteúdo**, o assistente recusa e pede outro nome; se ficou a meio, basta carregar outra vez em Criar (não duplica).
+- Fluxo de trabalho depois: alterar em `dev` → PR `dev` → `main` → merge → alinhar `dev` e `stable` com o `main` (ver `docs/versionamento.md`).
+- [ ] Teste real do passo GitHub com uma conta de teste (T-github) antes de entregar o kit.

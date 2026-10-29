@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Requisitos dos testes reais</title>
+<style>
+/* Folha de requisitos: tabela por fase + listas de verificação; mesmo tema cortiça dos outros documentos */
+:root{
+  --bg:#ead9bd; --card:#fbf5e9; --ink:#3a2817; --muted:#6e5a44; --line:#d6bf98;
+  --dark:#7a4d22; --deep:#4a2e14; --olive:#4d6a2a; --olive-soft:#e8efd6; --amber:#8a5d0a; --amber-soft:#f8e7bf;
+  --serif:Georgia,"Times New Roman",serif; --sans:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#241a10; --card:#31241a; --ink:#f1e3cc; --muted:#c3ad8d; --line:#5a4430;
+  --dark:#e0b97e; --deep:#f1e3cc; --olive:#a9cc7a; --olive-soft:#2f3a1f; --amber:#e0b04f; --amber-soft:#4a3813; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#241a10; --card:#31241a; --ink:#f1e3cc; --muted:#c3ad8d; --line:#5a4430;
+  --dark:#e0b97e; --deep:#f1e3cc; --olive:#a9cc7a; --olive-soft:#2f3a1f; --amber:#e0b04f; --amber-soft:#4a3813; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans);margin:0;
+  padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:920px;margin-inline:auto;display:flex;flex-direction:column;gap:24px}
+h1{font:700 30px/1.15 var(--serif);color:var(--deep);margin:0 0 6px;text-wrap:balance}
+h2{font:700 21px/1.25 var(--serif);color:var(--deep);margin:0 0 10px;text-wrap:balance}
+p{margin:0 0 8px;max-width:68ch} .sub{color:var(--muted);margin:0}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px} li{max-width:70ch}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--amber-soft)}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;font:600 12px/1 var(--sans);padding:3px 8px;border-radius:20px;white-space:nowrap}
+.ok{background:var(--olive-soft);color:var(--olive)} .no{background:var(--amber-soft);color:var(--amber)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.cols>div{min-width:0}
+h3{font:600 12px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--dark);margin:0 0 8px}
+footer{color:var(--muted);font-size:14px}
+:focus-visible{outline:3px solid var(--dark);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>O que falta para os testes reais</h1>
+<p class="sub">Além das contas de teste. Automação de propostas comerciais · 15 de outubro de 2026</p>
+</header>
+
+<section>
+<h2>Por fase</h2>
+<p>Estado: <span class="tag ok">testável já</span> só depende das contas e da configuração; <span class="tag no">bloqueado</span> precisa de algo da empresa.</p>
+<div class="tbl"><table>
+<thead><tr><th>Fase</th><th>Além das contas, é preciso</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td>1. Pedidos por email (WF1, Read Outlook)</td><td>Pasta do Outlook a ler e a aceitação de que o sistema só cria rascunhos. Um email de teste nessa pasta.</td><td><span class="tag ok">testável já</span></td></tr>
+<tr><td>2. Pedido de proposta (WF2)</td><td>Nada de novo. As listas do formulário são provisórias, mas servem para o teste.</td><td><span class="tag ok">testável já</span></td></tr>
+<tr><td>3. Cotações de frete (WF3, WF6)</td><td>Transportadoras de teste registadas com países e modos. Modo de teste desligado. Confirmar que só se leem respostas de endereços registados e quantas cotações bastam (hoje 3).</td><td><span class="tag ok">testável já</span></td></tr>
+<tr><td>4. Compliance (WF4)</td><td>Códigos NC validados pelo despachante. Sem eles o teste corre, mas as linhas ficam «a verificar». Produtos de caroço de azeitona só entram com os dados do cliente.</td><td><span class="tag ok">parcial</span></td></tr>
+<tr><td>5. Orçamento no Moloni</td><td>Developer ID, Client Secret, Redirect URI, plano com API, orçamento de exemplo, tabela de preços e regra do frete.</td><td><span class="tag no">bloqueado</span></td></tr>
+<tr><td>6. Validação da Bárbara (WF5, WF8)</td><td>Emails autorizados a aprovar e a confirmação de que «OK» na primeira linha serve. O WF8 tem de ser publicado para o teste.</td><td><span class="tag ok">testável já</span></td></tr>
+<tr><td>7-8. Envio e confirmação (WF9, WF10)</td><td>Um preço final gravado na proposta de teste (sem Moloni), o texto do email em português e inglês e o endereço público do n8n para o link de confirmação.</td><td><span class="tag ok">com preço de teste</span></td></tr>
+<tr><td>9-10. Expedição e follow-up (WF11, WF12)</td><td>Campos do formulário, quem é avisado e o texto do email final.</td><td><span class="tag ok">testável já</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>Do lado técnico</h2>
+<div class="cols">
+<div><h3>Antes</h3><ul>
+<li>Registar as transportadoras de teste e atualizar os emails na configuração.</li>
+<li>Confirmar que as credenciais estão ligadas (Outlook, Slack, Supabase, OpenRouter) e que a app do Slack está nos canais.</li>
+<li>Ver os créditos do fornecedor de IA e as execuções do mês (limite de 2.500).</li>
+<li>Guardar uma cópia da base de dados e do estado dos workflows.</li>
+<li>Correr a bateria completa para ter o ponto de partida.</li>
+</ul></div>
+<div><h3>Durante</h3><ul>
+<li>Desligar o modo de teste só para os endereços de teste.</li>
+<li>Ativar à mão o WF6, o WF8 e o Read Outlook, e só durante o teste.</li>
+<li>Seguir uma proposta nova (a partir da PRP-2026-0017) do pedido ao follow-up.</li>
+<li>Registar cada passo e cada erro. Se uma tarefa bloquear, guardar o que está feito e avisar.</li>
+</ul></div>
+<div><h3>Depois</h3><ul>
+<li>Repor o modo de teste e desativar o WF6, o WF8 e o Read Outlook.</li>
+<li>Não apagar dados de teste sem pedido expresso; as propostas PRP-2026-0001 a 0016 ficam.</li>
+<li>Atualizar a bateria e o estado das tarefas.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2>Condições do teste</h2>
+<ul>
+<li><b>Janela combinada:</b> cerca de duas horas, com quem faz de transportadora, Bárbara, Madalena e cliente disponível para responder.</li>
+<li><b>Só dados fictícios:</b> nenhum cliente ou transportadora real recebe emails.</li>
+<li><b>Retenção zero:</b> ativada no fornecedor de IA antes de qualquer dado real.</li>
+<li><b>Formulário de cotação:</b> protegido com utilizador e palavra-passe, ou desativado, se o endereço for público.</li>
+<li><b>Critério de sucesso:</b> a proposta chega a «concluída» sem intervenção, com um email correto em cada passo e nenhum erro nos avisos.</li>
+</ul>
+</section>
+
+<section>
+<h2>Fica fora destes testes</h2>
+<ul>
+<li>Geração do orçamento no Moloni (fase 5).</li>
+<li>Preços e prazos reais de transportadoras.</li>
+<li>Regras de compliance do Reino Unido, Brasil, China, Japão e Marrocos, até o despachante as validar.</li>
+</ul>
+</section>
+<footer>Detalhe dos pedidos à empresa: documento «Pedidos ao cliente». Custos e fases: «Resumo do cliente».</footer>
+</div>
+</body>
+</html>

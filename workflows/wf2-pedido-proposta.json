@@ -1,6 +1,6 @@
 {
   "name": "WF2 - Pedido de proposta",
-  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas. Depois de gravar, confirmar e devolver, arranca o WF3 (pedido de cotações de frete) sem esperar por ele; se o WF2 falhar antes, o WF3 não é chamado e o WF2 Error Flow avisa.",
+  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, ",
   "nodes": [
     {
       "id": "3b60d028-511f-47b4-a364-82b1948c7c30",
@@ -12,24 +12,22 @@
         0
       ],
       "parameters": {
-        "authentication": "none",
+        "authentication": "basicAuth",
         "formTitle": "Pedido de proposta",
-        "formDescription": "Preencha os dados do pedido. Todos os campos são obrigatórios.",
+        "formDescription": "Preencha os dados do pedido. Os dados da carga e as moradas são opcionais, mas são precisos para pedir cotações de frete às transportadoras.",
         "responseMode": "onReceived",
         "formFields": {
           "values": [
             {
-              "fieldName": "cliente",
               "fieldLabel": "Cliente",
+              "fieldName": "cliente",
               "fieldType": "text",
               "placeholder": "Nome da empresa",
               "requiredField": true
             },
             {
-              "fieldName": "produto",
               "fieldLabel": "Produto",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "produto",
               "fieldOptions": {
                 "values": [
                   {
@@ -42,13 +40,13 @@
                     "option": "Aglomerado de cortiça"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "densidade",
               "fieldLabel": "Densidade",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "densidade",
               "fieldOptions": {
                 "values": [
                   {
@@ -64,13 +62,13 @@
                     "option": "120-150 kg/m3"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "granulometria",
               "fieldLabel": "Granulometria",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "granulometria",
               "fieldOptions": {
                 "values": [
                   {
@@ -89,20 +87,20 @@
                     "option": "8-15 mm"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "quantidade",
               "fieldLabel": "Quantidade (kg)",
+              "fieldName": "quantidade",
               "fieldType": "number",
               "placeholder": "ex. 1000",
               "requiredField": true
             },
             {
-              "fieldName": "embalagem",
               "fieldLabel": "Embalagem",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "embalagem",
               "fieldOptions": {
                 "values": [
                   {
@@ -115,13 +113,13 @@
                     "option": "A granel"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "incoterm",
               "fieldLabel": "Incoterm",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "incoterm",
               "fieldOptions": {
                 "values": [
                   {
@@ -158,13 +156,13 @@
                     "option": "DDP"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "destino",
               "fieldLabel": "Destino (país)",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "destino",
               "fieldOptions": {
                 "values": [
                   {
@@ -204,7 +202,88 @@
                     "option": "MA - Marrocos"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Tipo de carga",
+              "fieldName": "tipo_carga",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Camião completo"
+                  },
+                  {
+                    "option": "Grupagem"
+                  }
+                ]
+              },
+              "fieldType": "dropdown",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Nº de camiões",
+              "fieldName": "n_camioes",
+              "fieldType": "number",
+              "placeholder": "ex. 1",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Nº de paletes",
+              "fieldName": "n_paletes",
+              "fieldType": "number",
+              "placeholder": "ex. 24",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Peso por palete (kg)",
+              "fieldName": "peso_palete_kg",
+              "fieldType": "number",
+              "placeholder": "ex. 600",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Palete: comprimento (m)",
+              "fieldName": "palete_c_m",
+              "fieldType": "number",
+              "placeholder": "ex. 1.2",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Palete: largura (m)",
+              "fieldName": "palete_l_m",
+              "fieldType": "number",
+              "placeholder": "ex. 0.8",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Palete: altura (m)",
+              "fieldName": "palete_a_m",
+              "fieldType": "number",
+              "placeholder": "ex. 1.5",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Morada de carga",
+              "fieldName": "morada_carga",
+              "fieldType": "text",
+              "placeholder": "Local e código postal",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Morada de descarga",
+              "fieldName": "morada_descarga",
+              "fieldType": "text",
+              "placeholder": "Local e código postal",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "Código postal de descarga",
+              "fieldName": "cp_descarga",
+              "fieldType": "text",
+              "placeholder": "ex. 28100",
+              "requiredField": false
             }
           ]
         },
@@ -217,6 +296,11 @@
               "formSubmittedText": "Pedido registado. Vai receber um email de confirmação com o número da proposta."
             }
           }
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "name": "Unnamed credential"
         }
       }
     },
@@ -287,6 +371,72 @@
               "name": "destinatario_confirmacao",
               "type": "string",
               "value": "REDACTED@example.invalid"
+            },
+            {
+              "id": "n-tipo-carga",
+              "name": "tipo_carga",
+              "type": "string",
+              "value": "={{ ((t) => /compl|cami/.test(t) ? \"completa\" : /grup/.test(t) ? \"grupagem\" : \"\")(String($json.tipo_carga ?? $json[\"Tipo de carga\"] ?? \"\").toLowerCase()) }}"
+            },
+            {
+              "id": "n-n-camioes",
+              "name": "n_camioes",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.n_camioes ?? $json[\"Nº de camiões\"]) }}"
+            },
+            {
+              "id": "n-n-paletes",
+              "name": "n_paletes",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.n_paletes ?? $json[\"Nº de paletes\"]) }}"
+            },
+            {
+              "id": "n-peso-palete",
+              "name": "peso_palete_kg",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.peso_palete_kg ?? $json[\"Peso por palete (kg)\"]) }}"
+            },
+            {
+              "id": "n-palete-c",
+              "name": "palete_c_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_c_m ?? $json[\"Palete: comprimento (m)\"]) }}"
+            },
+            {
+              "id": "n-palete-l",
+              "name": "palete_l_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_l_m ?? $json[\"Palete: largura (m)\"]) }}"
+            },
+            {
+              "id": "n-palete-a",
+              "name": "palete_a_m",
+              "type": "string",
+              "value": "={{ ((v) => v === undefined || v === null || v === \"\" ? \"\" : String(Number(v)))($json.palete_a_m ?? $json[\"Palete: altura (m)\"]) }}"
+            },
+            {
+              "id": "n-morada-carga",
+              "name": "morada_carga",
+              "type": "string",
+              "value": "={{ String($json.morada_carga ?? $json[\"Morada de carga\"] ?? \"\").trim().slice(0, 300) }}"
+            },
+            {
+              "id": "n-morada-descarga",
+              "name": "morada_descarga",
+              "type": "string",
+              "value": "={{ String($json.morada_descarga ?? $json[\"Morada de descarga\"] ?? \"\").trim().slice(0, 300) }}"
+            },
+            {
+              "id": "n-cp-descarga",
+              "name": "cp_descarga",
+              "type": "string",
+              "value": "={{ String($json.cp_descarga ?? $json[\"Código postal de descarga\"] ?? \"\").trim().toUpperCase().slice(0, 12) }}"
+            },
+            {
+              "id": "n-carga-ok",
+              "name": "carga_ok",
+              "type": "boolean",
+              "value": "={{ (() => { const g = (k, l) => $json[k] ?? $json[l]; const num = (k, l, max, int) => { const v = g(k, l); if (v === undefined || v === null || v === \"\") return true; const n = Number(v); return Number.isFinite(n) && n > 0 && n <= max && (!int || Number.isInteger(n)); }; const t = String(g(\"tipo_carga\", \"Tipo de carga\") ?? \"\").toLowerCase(); return (t === \"\" || /compl|cami|grup/.test(t)) && num(\"n_camioes\", \"Nº de camiões\", 50, true) && num(\"n_paletes\", \"Nº de paletes\", 2000, true) && num(\"peso_palete_kg\", \"Peso por palete (kg)\", 2000) && num(\"palete_c_m\", \"Palete: comprimento (m)\", 3) && num(\"palete_l_m\", \"Palete: largura (m)\", 3) && num(\"palete_a_m\", \"Palete: altura (m)\", 4); })() }}"
             }
           ]
         }
@@ -312,7 +462,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) }}",
+              "leftValue": "={{ !!$json.cliente && !!$json.produto && !!$json.densidade && !!$json.granulometria && !!$json.embalagem && !!$json.destino && $json.quantidade > 0 && [\"EXW\",\"FCA\",\"FAS\",\"FOB\",\"CFR\",\"CIF\",\"CPT\",\"CIP\",\"DAP\",\"DPU\",\"DDP\"].includes($json.incoterm) && $json.carga_ok === true }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -334,9 +484,6 @@
         0
       ],
       "parameters": {
-        "resource": "row",
-        "operation": "create",
-        "tableId": "propostas",
         "dataToSend": "defineBelow",
         "fieldsUi": {
           "fieldValues": [
@@ -371,9 +518,60 @@
             {
               "fieldId": "destino_pais",
               "fieldValue": "={{ $json.destino }}"
+            },
+            {
+              "fieldId": "tipo_carga",
+              "fieldValue": "={{ $json.tipo_carga || null }}"
+            },
+            {
+              "fieldId": "n_camioes",
+              "fieldValue": "={{ $json.n_camioes === \"\" ? null : Number($json.n_camioes) }}"
+            },
+            {
+              "fieldId": "n_paletes",
+              "fieldValue": "={{ $json.n_paletes === \"\" ? null : Number($json.n_paletes) }}"
+            },
+            {
+              "fieldId": "peso_palete_kg",
+              "fieldValue": "={{ $json.peso_palete_kg === \"\" ? null : Number($json.peso_palete_kg) }}"
+            },
+            {
+              "fieldId": "palete_c_m",
+              "fieldValue": "={{ $json.palete_c_m === \"\" ? null : Number($json.palete_c_m) }}"
+            },
+            {
+              "fieldId": "palete_l_m",
+              "fieldValue": "={{ $json.palete_l_m === \"\" ? null : Number($json.palete_l_m) }}"
+            },
+            {
+              "fieldId": "palete_a_m",
+              "fieldValue": "={{ $json.palete_a_m === \"\" ? null : Number($json.palete_a_m) }}"
+            },
+            {
+              "fieldId": "morada_carga",
+              "fieldValue": "={{ $json.morada_carga || null }}"
+            },
+            {
+              "fieldId": "morada_descarga",
+              "fieldValue": "={{ $json.morada_descarga || null }}"
+            },
+            {
+              "fieldId": "cp_descarga",
+              "fieldValue": "={{ $json.cp_descarga || null }}"
+            },
+            {
+              "fieldId": "contacto_email",
+              "fieldValue": "={{ (() => { try { const e = String($('Chamado pelo workflow principal').item.json.contacto_email || '').trim().toLowerCase(); return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e) ? e : null; } catch (x) { return null; } })() }}"
+            },
+            {
+              "fieldId": "lead_id",
+              "fieldValue": "={{ (() => { try { const v = String($('Chamado pelo workflow principal').item.json.lead_id || '').trim().toLowerCase(); return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v) ? v : null; } catch (x) { return null; } })() }}"
             }
           ]
-        }
+        },
+        "operation": "create",
+        "resource": "row",
+        "tableId": "propostas"
       },
       "retryOnFail": false,
       "maxTries": 3,
@@ -513,6 +711,54 @@
             {
               "name": "destino",
               "type": "string"
+            },
+            {
+              "name": "tipo_carga",
+              "type": "string"
+            },
+            {
+              "name": "n_camioes",
+              "type": "number"
+            },
+            {
+              "name": "n_paletes",
+              "type": "number"
+            },
+            {
+              "name": "peso_palete_kg",
+              "type": "number"
+            },
+            {
+              "name": "palete_c_m",
+              "type": "number"
+            },
+            {
+              "name": "palete_l_m",
+              "type": "number"
+            },
+            {
+              "name": "palete_a_m",
+              "type": "number"
+            },
+            {
+              "name": "morada_carga",
+              "type": "string"
+            },
+            {
+              "name": "morada_descarga",
+              "type": "string"
+            },
+            {
+              "name": "cp_descarga",
+              "type": "string"
+            },
+            {
+              "name": "contacto_email",
+              "type": "string"
+            },
+            {
+              "name": "lead_id",
+              "type": "string"
             }
           ]
         }
@@ -576,7 +822,7 @@
       "notes": "Só corre quando tudo o resto do WF2 correu bem. Não espera pelo WF3: o resultado do WF2 não depende dele e os erros do WF3 têm o seu próprio aviso."
     },
     {
-      "id": "c8a4f7e2-6d1b-4a35-9f0e-3b7d2a1c5e90",
+      "id": "cefe2a0b-7884-4ab7-8f00-12b2f0a3635f",
       "name": "Enriquecer proposta (WF4)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -776,20 +1022,26 @@
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
-    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "errorWorkflow": "{{WF:WF2 Error Flow - Pedido de proposta}}",
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none",
-    "saveDataErrorExecution": "all"
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
   },
   "tags": [
-    "subworkflow",
-    "propostas"
+    {
+      "id": "AZ9PZCNJ9SptxXlK",
+      "name": "subworkflow"
+    },
+    {
+      "id": "SXu3g2OjNALjODL1",
+      "name": "propostas"
+    }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "424506e2-1f0e-4a56-a4ce-38acc8b60614",
-    "exportedAt": "2026-10-08",
+    "sourceVersionId": "b9ecbe09-2db2-4a49-8207-a47f39eb7938",
+    "exportedAt": "2026-10-29",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
 }
