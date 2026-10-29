@@ -82,6 +82,19 @@ class ReadOutlook(unittest.TestCase):
         self.assertEqual(c['parameters']['workflowInputs']['value']['contacto_email'], '={{ $json.contacto_email }}')
         self.assertEqual(c['parameters']['workflowInputs']['value']['lead_id'], '={{ $json.lead_id }}')
 
+    def test_gatilho_automatico_folder1(self):
+        g = no(self.w, 'Email novo na Folder 1')
+        self.assertEqual(g['type'], 'n8n-nodes-base.microsoftOutlookTrigger')
+        p = g['parameters']
+        self.assertEqual(p['filters']['readStatus'], 'unread')
+        self.assertEqual(p['filters']['foldersToInclude'], ['<ID da pasta Inbox/Folder 1 no Outlook de destino>'])
+        self.assertEqual(p['pollTimes']['item'][0], {'mode': 'everyX', 'unit': 'minutes', 'value': 5})
+        self.assertTrue(ligado(self.w, 'Email novo na Folder 1', 'Ler emails da Folder 1'))
+        self.assertTrue(ligado(self.w, 'When clicking ‘Execute workflow’', 'Ler emails da Folder 1'), 'o gatilho manual continua')
+        # O gatilho entrega um item por email novo; a leitura corre uma vez e lê todos os não lidos.
+        self.assertTrue(no(self.w, 'Ler emails da Folder 1').get('executeOnce'))
+        self.assertNotIn('AQMk', json.dumps(self.w))
+
     def test_pedido_completo_fica_pronto(self):
         r = self.prep()[0]
         self.assertTrue(r['pronto'], r['motivos'])

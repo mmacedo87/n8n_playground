@@ -1,6 +1,6 @@
 {
   "name": "Read Outlook Messages",
-  "description": "Lê os emails não lidos da Folder 1, extrai o pedido (WF1), grava o lead e, só para pedidos, cria um rascunho de resposta em To Check (nunca envia). Se o pedido mapeia com confiança ≥ 0,8, chama o WF2 e liga a proposta ao lead. Gatilho manual.",
+  "description": "Corre sozinho (5 em 5 min) com emails novos na Folder 1. Extrai o pedido (WF1), grava o lead, faz rascunho de resposta só para pedidos (nunca envia) e, com confiança ≥ 0,8, chama o WF2 ligando a proposta ao lead.",
   "nodes": [
     {
       "parameters": {},
@@ -49,6 +49,7 @@
         -304,
         -128
       ],
+      "executeOnce": true,
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "name": "Microsoft Outlook account"
@@ -672,6 +673,45 @@
         "options": {}
       },
       "notes": "Só cria rascunho de resposta para pedidos (ou quando o LLM falhou e não se sabe). Emails que não são pedidos (newsletters, avisos) só ficam marcados como lidos."
+    },
+    {
+      "id": "57f6267a-6556-4743-bf76-3a6d188a15fc",
+      "name": "Email novo na Folder 1",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        -160
+      ],
+      "parameters": {
+        "event": "messageReceived",
+        "fields": [
+          "subject"
+        ],
+        "filters": {
+          "foldersToInclude": [
+            "<ID da pasta Inbox/Folder 1 no Outlook de destino>"
+          ],
+          "readStatus": "unread"
+        },
+        "options": {},
+        "output": "fields",
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "notes": "Corre sozinho: a cada 5 minutos vê se chegaram emails novos não lidos à Folder 1 (pedidos de clientes). Só cria execução quando há emails novos. O gatilho manual continua para correr à mão.",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     }
   ],
   "connections": {
@@ -840,6 +880,17 @@
           }
         ]
       ]
+    },
+    "Email novo na Folder 1": {
+      "main": [
+        [
+          {
+            "node": "Ler emails da Folder 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -856,7 +907,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "39zlpRbdQvI7dHGe",
-    "sourceVersionId": "78d6485a-d306-4c6a-9b17-3fe526797c8e",
+    "sourceVersionId": "1e3179d8-2580-422a-9447-0e59bb9d25f8",
     "exportedAt": "2026-10-29",
     "sanitized": "ids de pastas do Outlook, ids de credenciais, ids de workflows e webhookIds substituídos por marcadores ou removidos"
   }
