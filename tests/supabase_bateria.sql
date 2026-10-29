@@ -1,4 +1,4 @@
--- Bateria Supabase (A1-A45 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
+-- Bateria Supabase (A1-A46 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
 -- por isso a transação é revertida e não fica nenhum dado nem se apaga nenhum. A9 (trigger) verifica-se pelo catálogo,
 -- porque dentro de uma transação now() é constante.
 create or replace function pg_temp.falha(q text) returns boolean language plpgsql as $f$
@@ -174,6 +174,9 @@ begin
   insert into leads (empresa, origem_email_id) values ('Lead teste A45', 'bateria-a45') returning id into cf;
   update propostas set lead_id=cf where id=p1;
   r := r || format('A45 %s ligar uma proposta existente a um lead também o converte; anon sem execução da função' || E'\n', case when (select estado from leads where id=cf)='convertido' and not has_function_privilege('anon','public.marcar_lead_convertido()','execute') then 'OK' else 'FALHA' end);
+
+  -- A46 (migração 0011: código secreto do link do plano)
+  r := r || format('A46 %s token_plano com 64 hex, distinto entre propostas e do token do cliente; formato inválido rejeitado' || E'\n', case when (select token_plano from propostas where id=p1) ~ '^[0-9a-f]{64}$' and (select token_plano from propostas where id=p1) <> (select token_plano from propostas where id=p2) and (select token_plano <> token_confirmacao from propostas where id=p1) and pg_temp.falha(format($q$update propostas set token_plano='abc' where id=%L$q$, p1)) and pg_temp.falha(format($q$update propostas set token_plano=(select token_plano from propostas where id=%L) where id=%L$q$, p1, p2)) then 'OK' else 'FALHA' end);
 
   raise exception E'BATERIA SUPABASE (revertida)\n%\nFALHAS: %', r, (length(r) - length(replace(r,'FALHA','')))/5;
 end $t$;

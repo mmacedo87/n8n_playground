@@ -418,6 +418,13 @@ create trigger propostas_lead_convertido
   after insert or update of lead_id on propostas
   for each row execute function marcar_lead_convertido();
 
+-- Código secreto do link do plano de expedição (migração 0011): vai no link do WF10/WF13 (&t=) e o WF11 compara-o.
+alter table propostas
+  add column token_plano text not null
+  default (replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''));
+alter table propostas add constraint propostas_token_plano_key unique (token_plano);
+alter table propostas add constraint propostas_token_plano_formato check (token_plano ~ '^[0-9a-f]{64}$');
+
 -- ============================================================
 -- OPCIONAL: dados de teste (descomentar para usar).
 -- Nomes e emails são fictícios; trocar pelas transportadoras reais.
