@@ -3,6 +3,7 @@
   "description": "Para uma proposta aprovada (código PRP), envia ao cliente o email da proposta com a ligação de confirmação e a Bárbara em CC; marca enviada e avisa no Slack. Entrada: codigo. Recusa propostas sem preço final.",
   "nodes": [
     {
+      "id": "83da1bbd-45a0-42f7-94c5-1fa4a49efce2",
       "name": "Chamado por outro workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.2,
@@ -21,6 +22,7 @@
       }
     },
     {
+      "id": "51b9ea43-0aec-431e-ace3-f1444f8b4154",
       "name": "Normalizar código",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -63,6 +65,7 @@
       "notes": "DEV: destinatario_teste preenchido desvia o email do cliente. Em produção esvaziar destinatario_teste e pôr em cc_barbara o email da Bárbara."
     },
     {
+      "id": "8ffab84d-6cba-400a-a913-4317b6d95832",
       "name": "Ler proposta",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
@@ -85,14 +88,15 @@
           ]
         }
       },
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
+      "id": "acad3d77-e782-445c-b95d-c3b0777590de",
       "name": "Montar email da proposta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -107,11 +111,12 @@
       }
     },
     {
+      "id": "8dba964d-7629-4d2e-8649-a745698bb86f",
       "name": "Enviar proposta ao cliente",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [
-        944,
+        800,
         128
       ],
       "parameters": {
@@ -132,11 +137,12 @@
       }
     },
     {
+      "id": "0c532942-3fa0-4e6e-be54-51a4def00038",
       "name": "Marcar proposta como enviada",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1168,
+        1024,
         128
       ],
       "parameters": {
@@ -168,19 +174,20 @@
           ]
         }
       },
+      "notes": "Depois do email enviado, a proposta passa a enviada. O WF10 só aceita confirmações de propostas neste estado.",
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "notes": "Depois do email enviado, a proposta passa a enviada. O WF10 só aceita confirmações de propostas neste estado."
+      }
     },
     {
+      "id": "b71b0c30-243d-4149-b55e-0d6e11558acb",
       "name": "Avisar Slack: proposta enviada",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1392,
+        1248,
         128
       ],
       "parameters": {
@@ -224,8 +231,8 @@
           "waitForSubWorkflow": false
         }
       },
-      "executeOnce": true,
-      "notes": "Aviso curto no Slack (#novas-propostas). Não espera."
+      "notes": "Aviso curto no Slack (#novas-propostas). Não espera: uma falha do Slack não pára o fluxo.",
+      "executeOnce": true
     }
   ],
   "connections": {
@@ -306,17 +313,19 @@
   },
   "tags": [
     {
+      "id": "AZ9PZCNJ9SptxXlK",
       "name": "subworkflow"
     },
     {
+      "id": "SXu3g2OjNALjODL1",
       "name": "propostas"
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "UrGBkXG37To7RYMR",
-    "sourceVersionId": "b0101945-b000-4cf1-93c9-985f2c1a4921",
-    "exportedAt": "2026-10-09",
+    "sourceVersionId": "b22118ca-edd8-48a2-b5c7-b5b9bbe3069a",
+    "exportedAt": "2026-10-29",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }
 }
