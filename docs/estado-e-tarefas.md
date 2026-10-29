@@ -1,45 +1,44 @@
-# Estado e tarefas (2026-10-17)
+# Estado e tarefas (2026-10-29)
 
-Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, até 30 propostas/mês, humano sempre no loop).
+Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 encomendas/mês, humano sempre no loop). Instância de desenvolvimento: n8n Cloud `mmacedo87.app.n8n.cloud`, Supabase `ahisuvnooplmiczjytfp`. Cópia deste ficheiro no Project: `claude/estado_do_projeto.md` (a fonte é o repositório).
+
+**Marco (2026-10-27):** a PRP-2026-0022 percorreu as 10 fases com emails reais (aliases Gmail a fazer de cliente, Bárbara, Madalena e duas transportadoras): pedido por email → proposta → 2 cotações → validação e «OK código» → envio ao cliente → confirmação → reserva (WF13) → plano (WF11) → follow-up (WF12), estado final `concluida`. Guião: Project `claude/testes_cenarios_reais.md` (parte A passou; parte B por fazer).
 
 | Fase | Estado | O que existe |
 | --- | --- | --- |
-| 1. Prospeção | Parcial | WF1 (`t7cjKbq4VKfx44Fv`): o LLM extrai o pedido do email e o código valida cada campo. O "Read Outlook Messages" grava o pedido como lead **rascunho** (`leads`, com campos em falta e confiança), avisa no Slack e cria o draft de resposta (nunca envia, nunca cria a proposta). Teste real do LLM passa (X7); falta o teste com um email real na Folder 1 (X6) e a decisão de ligar o lead ao WF2 |
-| 2. Definição comercial | Feito | WF2: formulário e sub-workflow, grava em `propostas` (PRP-AAAA-NNNN) e confirma por email. Avisa no Slack (#novas-propostas) |
-| 3. Cotação de transporte | Parcial | WF3: 1 email único a até 5 transportadoras (BCC), reenvio até 5 tentativas, aviso Slack (#pedidos-cotacao). WF6 lê as respostas (texto e PDFs anexos) e grava em `cotacoes_frete`; sempre que há cotações novas chama o WF5, que envia à Bárbara o resumo atualizado com assunto fixo por proposta (aceita propostas `a_cotar` e `em_validacao`). Testado com dados fixados e com uma resposta real com PDF (L3, PRP-2026-0017). **2026-10-17** (rascunhos por publicar): WF2 com dados de carga e moradas (opcionais); WF3 com tabela de carga, assunto «Cotação Portugal/CP – País [PRP]» e modo «Atualizar cotação» (versao+1); WF6 associa por conversa/referência/domínio e extrai condições (fixa/período, por camião/total, `a_rever`); WF5 mostra condições, referência e reserva; WF13 (`9C7Wfvim8cAIsgZ6`, rascunho, `publish:false`) cria só o rascunho de confirmação de reserva. Migração 0007 aplicada |
-| 4. Enriquecimento | Feito (dados por validar, lista em `docs/validacao-despachante.md`) | WF4: código pautal, taxa (UE regra, EUA via USITC, resto manual) e notas fitossanitárias em `proposta_compliance`. Códigos pautais por validar pelo despachante |
-| 5. Geração de proposta (Moloni) | Bloqueado | API confirmada (`estimates/insert`), ver `docs/moloni-api.md`. Faltam Developer ID/Client Secret e decisão sobre o refresh token (14 dias) |
-| 6. Validação (Bárbara) | Parcial | WF5: email e aviso Slack com o resumo; marca a proposta `em_validacao`. WF8 (`4dU064sO0xcxkPTc`, testado a sério a 2026-10-16 e despublicado a seguir): a resposta da Bárbara com "OK" na primeira linha aprova; qualquer outro texto é só aviso no Slack. Falta o teste real (precisa de uma proposta em `em_validacao`) e confirmar o email da Bárbara |
-| 7. Envio ao cliente | Feito (depende do Moloni para o preço) | WF9 (`UrGBkXG37To7RYMR`): email com a Bárbara em CC, chamado pelo WF8 após aprovação; recusa se não houver `preco_final` |
-| 8. Confirmação | Feito | WF10 (`30Z4Nnge3BRZbU8G`): link no email, página de resumo e botão (2 passos); token de 30 dias; avisa expedição e Slack |
-| 9. Expedição | Feito | Tabela `expedicoes` + vista `v_expedicoes`; WF11 (`P4FDjLoaiGl3XP01`): formulário do plano |
-| 10. Follow-up | Feito | WF12 (`ETUqp17gsET6Vc5A`): proposta final com modo e chegada estimada; marca `concluida` |
+| 1. Prospeção | Funciona, gatilho manual | WF1 (LLM extrai, código valida). Read Outlook grava o lead e, com confiança ≥ 0,8 e todos os campos mapeados, chama o WF2 (desde 27/10). Gatilho manual: alguém tem de o correr |
+| 2. Definição comercial | Feito | WF2: formulário ou chamada do Read Outlook, grava `propostas` (com `contacto_email`), confirma por email, chama WF3 + WF4 + Slack |
+| 3. Cotação de transporte | Funciona, WF6 manual | WF3: um email (BCC) a até 5 transportadoras, `modo_envio` automático/revisão lido de `configuracao`, aviso de IA fixo. WF6 (gatilho manual): associa por código/conversa/referência/remetente, lê PDFs, grava várias condições, regista em `ai_log` e chama o WF5 |
+| 4. Enriquecimento | Feito, dados por validar | WF4: código pautal, taxa, notas fitossanitárias. 0 produtos validados pelo despachante |
+| 5. Proposta no Moloni | **Bloqueado** | API estudada (`docs/moloni-api.md`); faltam credenciais. O `preco_final` é posto à mão (SQL) nos testes |
+| 6. Validação (Bárbara) | Feito | WF5 (resumo com cotações, condições e código de aprovação) e WF8 publicado (só «OK <código>» de remetente autorizado aprova) |
+| 7. Envio ao cliente | Feito (preço depende do Moloni) | WF9: email PT/EN com link de confirmação, Bárbara em CC |
+| 8. Confirmação | Feito | WF10: link com token (30 dias), 2 passos, cria `expedicoes`, avisa a Madalena |
+| 9. Expedição | Feito | WF13 (escolha e confirmação da reserva; só rascunhos para fora) e WF11 (plano; dados da reserva lidos da BD, «reserva correta?») |
+| 10. Follow-up | Feito | WF12: proposta final com recolha e chegada estimada; `concluida` |
 
-## Transversal (feito)
-Supabase com RLS (11 tabelas), Mail Error Flow e WF2 Error Flow, modo de teste (emails desviados), `ai_log` para uso de IA, Slack (Notificar Slack), repositório com export sanitizado e verificação de segredos, bateria de testes (`tests/BATERIA.md`).
+## Transversal
+- 16 workflows no Git (`workflows/`), todos publicados no n8n de desenvolvimento e iguais à versão viva (sincronizados a 2026-10-29). No deploy de produção, WF6, WF8, WF13 e Read Outlook ficam inativos até ao arranque (`publish:false` no manifest). Mais 2 só no n8n: «Claude → Slack | Estado das tarefas» e «Teste - Cenários reais (só dev)» (inativo).
+- Supabase: 9 migrações (0004 aplicada sem registo no histórico), RLS ativo, `anon`/`authenticated` sem permissões, `configuracao.modo_envio = automatico`.
+- Modo produção desde 27/10: `destinatario_teste` vazio; emails internos = aliases de teste; só 2 transportadoras ativas (`TESTE - Transp1/2 (Gmail)`).
+- AI Act: avaliação, 72 testes e 7 documentos em rascunho (`docs/ai-act/`).
+- Deploy automático, assistente de instalação e kit; GitHub Action que só aceita `main` por PR.
+- Bateria offline: 115 testes (`python3 -m unittest tests.test_…`), `scripts/check_no_secrets.sh`.
 
 ## Pendentes
-**Dependem de si**
-1. ~~Regra WF6 → WF5~~ Decidido a 2026-10-16: a Bárbara recebe sempre o resumo atualizado quando há cotações novas (sem mínimo), com assunto fixo por proposta; o WF6 aceita também propostas `em_validacao`.
-2. Proteger o formulário manual do WF3: precisa de uma credencial Basic Auth criada por si (ou desativar o trigger em produção).
-3. Teste real do WF1/Read Outlook: pôr um email de teste na Folder 1 (X6).
-4. Teste real do WF8: publicar quando houver uma proposta real em `em_validacao`; definir o email da Bárbara no WF5 e no WF8.
-6. Validar códigos pautais (despachante) e regras do Reino Unido, Brasil, China, Japão e Marrocos.
-7. Moloni (fase 5, bloqueado): Developer ID/Client Secret e decisão sobre o refresh token.
-8. Dados de teste (PRP-2026-0001 a 0015): decisão sua, manter por agora (`supabase/limpar_dados_de_teste.sql` disponível).
+**Técnicos (próximos)**
+1. Autenticação nos formulários do WF2, WF11 e WF13 (S6 do AI Act): hoje quem tiver o URL cria propostas (e dispara pedidos às transportadoras) ou confirma reservas e planos.
+2. Preencher `propostas.lead_id` quando a proposta vem do Read Outlook (hoje 0 propostas ligadas ao lead).
+3. Read Outlook: não criar rascunho de resposta quando o email não é um pedido (cenário B1.2).
+4. Gatilhos automáticos (Outlook Trigger) no WF6 e no Read Outlook.
+5. Simplificação da arquitetura (revisão de 2026-10-28): sub-workflow «Enviar email» + «Montar email», que absorve `docs/plano-destinatarios-bd.md`; fundir WF9/WF12 e o aviso à Madalena do WF10/WF13.
+6. Parte B dos testes de cenários reais.
+7. Propostas de teste presas em `em_validacao` (PRP-2026-0018 a 0021): decidir se ficam.
 
-**Novos (2026-10-17)**
-**Novos (2026-10-25)**
-- WF3: modo de envio `automatico`/`revisao` lido de `configuracao` (migração 0009, aplicada no desenvolvimento); rascunho em Inbox/To Check; testado a sério (exec. 272, 274, 276). Rascunho n8n bbc0fc46, **por publicar**. Interruptor no assistente («Updates ao fluxo») e em `scripts/atualizar_config.py`.
-- Decidido: n8n Cloud (região UE e DPA por confirmar com o suporte do n8n); o repositório de desenvolvimento pode ficar público, o de produção será privado.
-- Publicar os rascunhos do WF2, WF3, WF5 (a versão publicada difere do rascunho) e testar o WF13 com uma proposta aprovada real; o WF6 continua inativo por desenho.
-- Bateria Supabase A1-A35/B1-B8 por correr (foi cancelada); migração 0007 aplicada na instância de desenvolvimento.
-- Limitação: o envio Outlook não devolve `conversationId`, por isso a associação por conversa só funciona depois de o WF6 preencher `pedidos_cotacao.conversation_id`; PRP no assunto/corpo e referência da transportadora funcionam já.
-- Dependem do cliente: fio completo da DSV, respostas de outras transportadoras (uma com PDF), preço por camião ou total, domínios das transportadoras, se a morada exata de descarga pode ir no pedido, quem escolhe e confirma a reserva.
-- WhatsApp/SMS: decisão do cliente e conta Meta.
-
-**Por construir**
-9. Fases 7 a 10 construídas e testadas. Falta: preço final (Moloni) para o WF9 funcionar, publicar o WF8, e na passagem a produção esvaziar `destinatario_teste` e preencher `cc_barbara`, `email_madalena`, `email_barbara`, `url_base`, `url_form`.
-10. O briefing refere granulado de caroço de azeitona e misturas, que ainda não existem em `produtos`.
-11. Passagem a produção: ver `docs/passagem-producao.md`.
-12. Testes reais por fazer: F5 (agora X6), F6 (campos em falta no formulário), G9 (402 do OpenRouter já visto em execução real: o WF1 falhou em segurança).
+**Decisões suas**
+8. Read Outlook → WF2 sem humano: com confiança ≥ 0,8 a proposta é criada e o WF3 envia o pedido às transportadoras sem revisão. A política e as fichas de IA (`docs/ai-act/02`, `03`) ainda dizem que o pedido por email nunca cria a proposta; pela gestão de mudança (`05`) é preciso reavaliar e registar a decisão.
+9. Retenção automática (`purgar_leads_antigos` sem `pg_cron`).
+10. Moloni: credenciais e refresh token.
+11. Despachante: validar códigos pautais; produtos em falta (caroço de azeitona, misturas).
+12. AI Act: aprovação da política, pareceres do jurista, DPAs, formação, região do n8n Cloud.
+13. Passagem a produção: emails reais (Bárbara, Madalena, erros), transportadoras reais, repositório privado (`docs/passagem-producao.md`).
