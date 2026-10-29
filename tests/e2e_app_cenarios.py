@@ -72,7 +72,7 @@ def connect(pg, url, key="k"):
 
 def fill_creds(pg):
     ins = pg.locator(".cred input")
-    for i in range(4):
+    for i in range(5):
         ins.nth(i).fill("https://e.app.n8n.cloud/home/credentials/Abc1234%d" % i)
 
 
@@ -151,6 +151,8 @@ def S04_credenciais_formatos(b):
         ins.nth(3).fill("curto")
         assert pg.locator(".cred.done").count() == 3 and pg.is_disabled(NEXT)
         ins.nth(3).fill("https://e.app.n8n.cloud/home/credentials/Q1w2E3r4")
+        assert pg.locator(".cred.done").count() == 4 and pg.is_disabled(NEXT)  # falta a Basic Auth dos formulários
+        ins.nth(4).fill("Bb55Bb55")
         assert not pg.is_disabled(NEXT)
         cfg = json.loads(A.CONFIG.read_text()) if A.CONFIG.exists() else {}
         pg.click(NEXT)
@@ -209,7 +211,7 @@ def S06_persistencia_apos_recarregar(b):
         assert "SEGREDO-XYZ" not in A.CONFIG.read_text()
         connect(pg, e.mock.url)
         pg.click(NEXT)
-        assert pg.locator(".cred.done").count() == 4 and not pg.is_disabled(NEXT)
+        assert pg.locator(".cred.done").count() == 5 and not pg.is_disabled(NEXT)
         pg.click(NEXT)
         assert pg.input_value("#main input[type=text] >> nth=1") == C["emails"]["validacao_barbara"]
 
@@ -354,7 +356,7 @@ def S14_voltar_mantem_dados(b):
         pg.click(NEXT)
         fill_emails(pg)
         pg.click(".nav >> nth=-1 >> button >> nth=0")  # Voltar (passo 4 -> 3)
-        assert pg.locator(".cred.done").count() == 4
+        assert pg.locator(".cred.done").count() == 5
         pg.click(NEXT)
         assert pg.input_value("#main input[type=text] >> nth=4") == C["emails"]["madalena"]
         assert pg.locator("#n4 .nav button").last.is_enabled()

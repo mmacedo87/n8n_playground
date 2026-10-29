@@ -42,6 +42,7 @@ LABELS = {
     "credenciais.slackApi": "a conta do Slack",
     "credenciais.supabaseApi": "a conta do Supabase (base de dados)",
     "credenciais.openRouterApi": "a conta do OpenRouter (IA)",
+    "credenciais.httpBasicAuth": "a palavra-passe dos formulários internos (Basic Auth)",
 }
 
 def novo_gjob():
@@ -123,7 +124,7 @@ def load_cfg():
         return json.loads(CONFIG.read_text(encoding="utf-8"))
     return {"n8n_url": "", "emails": {k: ([] if k == "aprovadores" else "") for k in json.loads(EXAMPLE.read_text(encoding="utf-8"))["emails"]},
             "slack_canais": {"propostas": "", "cotacoes": "", "estado": ""},
-            "credenciais": {"microsoftOutlookOAuth2Api": "", "slackApi": "", "supabaseApi": "", "openRouterApi": ""}}
+            "credenciais": {"microsoftOutlookOAuth2Api": "", "slackApi": "", "supabaseApi": "", "openRouterApi": "", "httpBasicAuth": ""}}
 
 
 def save_cfg(cfg):

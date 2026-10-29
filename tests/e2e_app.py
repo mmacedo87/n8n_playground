@@ -60,10 +60,10 @@ try:
         pg.click(".nav button:last-child")
         # passo 3: cola endereços completos
         ins = pg.locator(".cred input")
-        for i, k in enumerate(["microsoftOutlookOAuth2Api", "slackApi", "supabaseApi", "openRouterApi"]):
+        for i, k in enumerate(["microsoftOutlookOAuth2Api", "slackApi", "supabaseApi", "openRouterApi", "httpBasicAuth"]):
             assert pg.is_disabled(".nav button:last-child")
             ins.nth(i).fill("https://empresa.app.n8n.cloud/home/credentials/Abc12345%d" % i)
-        assert pg.locator(".cred.done").count() == 4
+        assert pg.locator(".cred.done").count() == 5
         assert not pg.is_disabled(".nav button:last-child")
         shot(pg, 3)
         pg.click(".nav button:last-child")

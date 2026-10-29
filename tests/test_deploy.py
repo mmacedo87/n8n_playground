@@ -18,7 +18,7 @@ CFG = {
                "barbara": "b@x.pt", "aprovadores": ["B@X.pt", "c@x.pt"]},
     "slack_canais": {"propostas": "CPROP", "cotacoes": "CCOT", "estado": "CEST"},
     "credenciais": {"microsoftOutlookOAuth2Api": "cred-o", "slackApi": "cred-s",
-                    "supabaseApi": "cred-d", "openRouterApi": "cred-r"},
+                    "supabaseApi": "cred-d", "openRouterApi": "cred-r", "httpBasicAuth": "cred-b"},
 }
 
 
@@ -158,7 +158,7 @@ class T(unittest.TestCase):
             slack = m.by_name("Notificar Slack")
             self.assertIn("CPROP", json.dumps(slack))
             creds = {c["id"] for w in m.store.values() for n in w["nodes"] for c in (n.get("credentials") or {}).values()}
-            self.assertEqual(creds, {"cred-o", "cred-s", "cred-d", "cred-r"})
+            self.assertEqual(creds, {"cred-o", "cred-s", "cred-d", "cred-r", "cred-b"})
             ativos = {w["name"] for w in m.store.values() if w.get("active")}
             self.assertEqual(len(ativos), 12)
             self.assertNotIn("WF8 - Aprovação da Bárbara por email", ativos)
