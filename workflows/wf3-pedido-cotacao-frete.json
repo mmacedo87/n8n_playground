@@ -87,7 +87,8 @@
               "formSubmittedText": "Pedido recebido. As transportadoras serão contactadas; se algo falhar, receberá um aviso por email."
             }
           }
-        }
+        },
+        "authentication": "basicAuth"
       },
       "id": "78230dee-6a24-405f-bbbc-3acffe746dc3",
       "name": "Pedir cotações manualmente",
@@ -96,7 +97,12 @@
       "position": [
         0,
         208
-      ]
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "name": "Unnamed credential"
+        }
+      }
     },
     {
       "parameters": {
@@ -1575,7 +1581,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "x9RhWxZfJ0apbhlc",
-    "sourceVersionId": "e94a33e5-eb0f-422f-a233-720ea1ded7bd",
+    "sourceVersionId": "fe137365-d29c-4c01-add6-24d2b1ff5c0d",
     "exportedAt": "2026-10-29",
     "sanitized": "destinatario_teste, ids de credenciais, errorWorkflow e webhookIds removidos"
   }
