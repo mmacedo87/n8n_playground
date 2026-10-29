@@ -6,7 +6,7 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 en
 
 | Fase | Estado | O que existe |
 | --- | --- | --- |
-| 1. Prospeção | Funciona, gatilho manual | WF1 (LLM extrai, código valida). Read Outlook grava o lead e, com confiança ≥ 0,8 e todos os campos mapeados, chama o WF2 (desde 27/10). Gatilho manual: alguém tem de o correr |
+| 1. Prospeção | Funciona, gatilho manual | WF1 (LLM extrai, código valida). Read Outlook grava o lead, cria rascunho de resposta só para pedidos e, com confiança ≥ 0,8 e todos os campos mapeados, chama o WF2 com o `lead_id` (lead passa a `convertido`). Gatilho manual: alguém tem de o correr |
 | 2. Definição comercial | Feito | WF2: formulário ou chamada do Read Outlook, grava `propostas` (com `contacto_email`), confirma por email, chama WF3 + WF4 + Slack |
 | 3. Cotação de transporte | Funciona, WF6 manual | WF3: um email (BCC) a até 5 transportadoras, `modo_envio` automático/revisão lido de `configuracao`, aviso de IA fixo. WF6 (gatilho manual): associa por código/conversa/referência/remetente, lê PDFs, grava várias condições, regista em `ai_log` e chama o WF5 |
 | 4. Enriquecimento | Feito, dados por validar | WF4: código pautal, taxa, notas fitossanitárias. 0 produtos validados pelo despachante |
@@ -19,7 +19,7 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 en
 
 ## Transversal
 - 16 workflows no Git (`workflows/`), todos publicados no n8n de desenvolvimento e iguais à versão viva (sincronizados a 2026-10-29). No deploy de produção, WF6, WF8, WF13 e Read Outlook ficam inativos até ao arranque (`publish:false` no manifest). Mais 2 só no n8n: «Claude → Slack | Estado das tarefas» e «Teste - Cenários reais (só dev)» (inativo).
-- Supabase: 9 migrações (0004 aplicada sem registo no histórico), RLS ativo, `anon`/`authenticated` sem permissões, `configuracao.modo_envio = automatico`.
+- Supabase: 10 migrações (0004 aplicada sem registo no histórico), RLS ativo, `anon`/`authenticated` sem permissões, `configuracao.modo_envio = automatico`.
 - Modo produção desde 27/10: `destinatario_teste` vazio; emails internos = aliases de teste; só 2 transportadoras ativas (`TESTE - Transp1/2 (Gmail)`).
 - AI Act: avaliação, 72 testes e 7 documentos em rascunho (`docs/ai-act/`).
 - Deploy automático, assistente de instalação e kit; GitHub Action que só aceita `main` por PR.
@@ -28,8 +28,8 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 en
 ## Pendentes
 **Técnicos (próximos)**
 1. Autenticação nos formulários do WF2, WF11 e WF13 (S6 do AI Act): hoje quem tiver o URL cria propostas (e dispara pedidos às transportadoras) ou confirma reservas e planos.
-2. Preencher `propostas.lead_id` quando a proposta vem do Read Outlook (hoje 0 propostas ligadas ao lead).
-3. Read Outlook: não criar rascunho de resposta quando o email não é um pedido (cenário B1.2).
+2. ~~`lead_id` na proposta vinda de email~~ e ~~rascunho só para pedidos~~: feitos a 2026-10-29 (migração 0010, WF2 d89f09a6, Read Outlook 78d6485a; teste real PRP-2026-0024).
+3. Read Outlook: notas antigas em dois nós («Chamar WF2»: «DESATIVADO…»; «Gravar lead»: «Nunca cria a proposta») a corrigir no editor do n8n (o MCP não altera notas).
 4. Gatilhos automáticos (Outlook Trigger) no WF6 e no Read Outlook.
 5. Simplificação da arquitetura (revisão de 2026-10-28): sub-workflow «Enviar email» + «Montar email», que absorve `docs/plano-destinatarios-bd.md`; fundir WF9/WF12 e o aviso à Madalena do WF10/WF13.
 6. Parte B dos testes de cenários reais.

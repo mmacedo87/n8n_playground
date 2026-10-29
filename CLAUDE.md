@@ -28,7 +28,7 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF12 Follow-up ao cliente | `ETUqp17gsET6Vc5A` | sub-workflow; marca `concluida` |
 | WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva`; ao confirmar a reserva envia à Madalena o link do WF11 (só se a proposta já está `aceite`); ao transportador e ao cliente só cria RASCUNHO (nunca envia); atualiza `estado_reserva` e `frete_escolhido_id` |
 | WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
-| Read Outlook Messages | `39zlpRbdQvI7dHGe` | publicado mas com gatilho manual; chama o WF1, grava lead rascunho e, se o pedido mapeia com confiança ≥ 0.8, chama o WF2 |
+| Read Outlook Messages | `39zlpRbdQvI7dHGe` | publicado mas com gatilho manual; chama o WF1, grava o lead; rascunho de resposta só para pedidos (ou falha do LLM), o resto só fica lido; se o pedido mapeia com confiança ≥ 0.8, chama o WF2 com `lead_id` (a proposta fica ligada ao lead e o lead passa a `convertido` por trigger, migração 0010) |
 | Teste - Cenários reais (só dev) | `iD9ACaK1TSwHZgP8` | inativo de propósito; cria mensagens de teste na caixa; não está no Git nem no manifest |
 
 No n8n de desenvolvimento estão todos publicados (modo produção com aliases de teste desde 2026-10-27). O `publish` do `workflows/manifest.json` é a regra do deploy de produção, não o espelho do desenvolvimento: WF6, WF8, WF13 e Read Outlook ficam `false` e ativam-se à mão no arranque (`docs/passagem-producao.md`). Estado real e pendentes: `docs/estado-e-tarefas.md`.
@@ -42,7 +42,7 @@ No n8n de desenvolvimento estão todos publicados (modo produção com aliases d
 - Outlook "Forbidden" pontual = renovação do token; repetir.
 - Em modo de teste o BCC fica vazio: o nó de envio usa o To como alternativa.
 - **Nunca reenviar para o n8n valores vindos do export sanitizado** (`REDACTED@example.invalid`, ids, destinatários vazios): sobrescrevem a configuração viva (já aconteceu com `destinatario_confirmacao` do WF2). Ler a versão viva (`get_workflow_details`/`get_workflow_version`) e alterar só o necessário; `setNodeParameter` não acrescenta ao fim de arrays (reenviar o array completo, a partir do vivo).
-- Código dos nós Code mantido em `scripts/wf3_code`, `wf5_code`, `wf6_code`, `wf13_code` e testado offline (`tests/harness_code_node.js`); os testes de deriva comparam o `jsCode` do export com esses ficheiros. Correr os testes com `python3 -m unittest tests.test_wf3_code` (ponto, não barra).
+- Código dos nós Code mantido em `scripts/wf3_code`, `wf5_code`, `wf6_code`, `wf13_code`, `read_outlook_code` e testado offline (`tests/harness_code_node.js`); os testes de deriva comparam o `jsCode` do export com esses ficheiros. Correr os testes com `python3 -m unittest tests.test_wf3_code` (ponto, não barra).
 - Notificações Slack: o utilizador pediu a 2026-10-17 para não enviar nenhuma até voltar a pedir.
 - **Deriva Git ↔ n8n** (aconteceu com WF3, WF5, WF6, WF8, WF9 e WF12, corrigida a 2026-10-29): qualquer alteração no n8n, mesmo de configuração, exige export e commit no mesmo dia. Verificação: `versionId` vivo (`get_workflow_details`, `detailLevel: execution`) = `meta.sourceVersionId` do ficheiro.
 - O n8n vivo omite valores por omissão (ex. `operation` de um rascunho Outlook, `method: GET`, `pollTimes` de 2 min): os testes estruturais não devem exigir esses campos explícitos.
@@ -52,4 +52,4 @@ No n8n de desenvolvimento estão todos publicados (modo produção com aliases d
 `python3 -I scripts/sanitize_workflow.py <detalhes.json>`; `settings.errorWorkflow` = `<ID do Mail Error Flow na instância de destino>`; `destinatario_teste` vazio; `meta` com exportedFrom, sourceWorkflowId, sourceVersionId, exportedAt, sanitized; correr `scripts/check_no_secrets.sh`. Referências a outros workflows ficam como `{{WF:Nome}}` (o sanitizer converte; novo workflow entra em `workflows/manifest.json`). Deploy para outra instância: `scripts/deploy_workflows.py` + `deploy/config.json` (ver `docs/passagem-producao.md`); testes: `python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py` e `python3 tests/e2e_app.py`. Assistente web local para quem instala: `app/` + kit com `scripts/build_kit.py`.
 
 ## Ficheiros
-Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0009 e rollbacks 0007-0009, script de limpeza não corrido).
+Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0010 e rollbacks 0007-0010, script de limpeza não corrido).
