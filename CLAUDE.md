@@ -14,21 +14,21 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 ## Mapa dos workflows (n8n)
 | Workflow | Id | Notas |
 | --- | --- | --- |
-| WF2 Pedido de proposta | `8pRJJuN094Mp9iuu` | formulário; chama WF3, WF4 e Slack sem esperar |
+| WF2 Pedido de proposta | `8pRJJuN094Mp9iuu` | formulário com Basic Auth (credencial `httpBasicAuth`); chama WF3, WF4 e Slack sem esperar; error flow próprio (WF2 Error Flow) |
 | WF3 Pedido de cotação de frete | `x9RhWxZfJ0apbhlc` | UM email (BCC), reenvio até 5 tentativas, 6.ª avisa |
 | WF4 Enriquecimento | `ya6mCmn3qi4YE3CG` | compliance, sem IA |
 | WF5 Resumo para validação | `8xj41URokjCimmon` | email à Bárbara + Slack; marca `em_validacao`; chamado pelo WF6 |
-| WF6 Ler cotações | `HErViy6cNVrTIH7A` | publicado mas com gatilho manual; texto e PDFs; regista cada extração em `ai_log`; chama o WF5 |
+| WF6 Ler cotações | `HErViy6cNVrTIH7A` | Outlook Trigger na Inbox (5 min, não lidos) + gatilho manual; texto e PDFs; regista cada extração em `ai_log`; chama o WF5 |
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |
 | WF8 Aprovação da Bárbara | `4dU064sO0xcxkPTc` | publicado (desde 2026-10-26); Outlook Trigger a cada 2 min; só aprova «OK <código de aprovação>» na 1.ª linha, de remetente em `AUTORIZADOS`, com a proposta em `em_validacao` |
 | WF9 Envio ao cliente | `UrGBkXG37To7RYMR` | sub-workflow, chamado pelo WF8; precisa de `preco_final` |
 | WF10 Confirmação da encomenda | `30Z4Nnge3BRZbU8G` | webhook GET `confirmar-proposta`, link com token |
-| WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao` (pergunta «Os dados da reserva estão corretos?»: Não avisa a Bárbara e não grava); chama o WF12 |
+| WF11 Plano de expedição | `P4FDjLoaiGl3XP01` | formulário `plano-expedicao`, só com o código secreto do link (`t` = `propostas.token_plano`, migração 0011) (pergunta «Os dados da reserva estão corretos?»: Não avisa a Bárbara e não grava); chama o WF12 |
 | WF12 Follow-up ao cliente | `ETUqp17gsET6Vc5A` | sub-workflow; marca `concluida` |
-| WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva`; ao confirmar a reserva envia à Madalena o link do WF11 (só se a proposta já está `aceite`); ao transportador e ao cliente só cria RASCUNHO (nunca envia); atualiza `estado_reserva` e `frete_escolhido_id` |
+| WF13 Confirmação de reserva de frete | `9C7Wfvim8cAIsgZ6` | formulário `confirmar-reserva` (path em `options.path`, Basic Auth); ao confirmar a reserva envia à Madalena o link do WF11 (só se a proposta já está `aceite`); ao transportador e ao cliente só cria RASCUNHO (nunca envia); atualiza `estado_reserva` e `frete_escolhido_id` |
 | WF1 Extrair pedido do email | `t7cjKbq4VKfx44Fv` | sub-workflow, LLM + validação em código; nunca cria propostas |
-| Read Outlook Messages | `39zlpRbdQvI7dHGe` | publicado mas com gatilho manual; chama o WF1, grava o lead; rascunho de resposta só para pedidos (ou falha do LLM), o resto só fica lido; se o pedido mapeia com confiança ≥ 0.8, chama o WF2 com `lead_id` (a proposta fica ligada ao lead e o lead passa a `convertido` por trigger, migração 0010) |
+| Read Outlook Messages | `39zlpRbdQvI7dHGe` | Outlook Trigger na Folder 1 (5 min, não lidos) + gatilho manual; chama o WF1, grava o lead; rascunho de resposta só para pedidos (ou falha do LLM), o resto só fica lido; se o pedido mapeia com confiança ≥ 0.8, chama o WF2 com `lead_id` (a proposta fica ligada ao lead e o lead passa a `convertido` por trigger, migração 0010) |
 | Teste - Cenários reais (só dev) | `iD9ACaK1TSwHZgP8` | inativo de propósito; cria mensagens de teste na caixa; não está no Git nem no manifest |
 
 No n8n de desenvolvimento estão todos publicados (modo produção com aliases de teste desde 2026-10-27). O `publish` do `workflows/manifest.json` é a regra do deploy de produção, não o espelho do desenvolvimento: WF6, WF8, WF13 e Read Outlook ficam `false` e ativam-se à mão no arranque (`docs/passagem-producao.md`). Estado real e pendentes: `docs/estado-e-tarefas.md`.
@@ -46,10 +46,11 @@ No n8n de desenvolvimento estão todos publicados (modo produção com aliases d
 - Notificações Slack: o utilizador pediu a 2026-10-17 para não enviar nenhuma até voltar a pedir.
 - **Deriva Git ↔ n8n** (aconteceu com WF3, WF5, WF6, WF8, WF9 e WF12, corrigida a 2026-10-29): qualquer alteração no n8n, mesmo de configuração, exige export e commit no mesmo dia. Verificação: `versionId` vivo (`get_workflow_details`, `detailLevel: execution`) = `meta.sourceVersionId` do ficheiro.
 - O n8n vivo omite valores por omissão (ex. `operation` de um rascunho Outlook, `method: GET`, `pollTimes` de 2 min): os testes estruturais não devem exigir esses campos explícitos.
+- Outlook Trigger: o primeiro poll depois de publicar só fixa a hora de referência; emails já por ler antes disso não o disparam. Execuções de sucesso não ficam guardadas: confirmar no Supabase.
 - A migração 0004 foi aplicada sem ficar em `supabase_migrations.schema_migrations` (a coluna `tentativas` existe).
 
 ## Exportar um workflow para Git
-`python3 -I scripts/sanitize_workflow.py <detalhes.json>`; `settings.errorWorkflow` = `<ID do Mail Error Flow na instância de destino>`; `destinatario_teste` vazio; `meta` com exportedFrom, sourceWorkflowId, sourceVersionId, exportedAt, sanitized; correr `scripts/check_no_secrets.sh`. Referências a outros workflows ficam como `{{WF:Nome}}` (o sanitizer converte; novo workflow entra em `workflows/manifest.json`). Deploy para outra instância: `scripts/deploy_workflows.py` + `deploy/config.json` (ver `docs/passagem-producao.md`); testes: `python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py` e `python3 tests/e2e_app.py`. Assistente web local para quem instala: `app/` + kit com `scripts/build_kit.py`.
+`python3 -I scripts/sanitize_workflow.py <detalhes.json>`; `settings.errorWorkflow` = `<ID do Mail Error Flow na instância de destino>`; `destinatario_teste` vazio; `meta` com exportedFrom, sourceWorkflowId, sourceVersionId, exportedAt, sanitized; IDs de pastas do Outlook (`folderId`, `foldersToInclude`) à mão como `<ID da pasta ... no Outlook de destino>` (o sanitizer não os troca); correr `scripts/check_no_secrets.sh`. Referências a outros workflows ficam como `{{WF:Nome}}` (o sanitizer converte; novo workflow entra em `workflows/manifest.json`). Deploy para outra instância: `scripts/deploy_workflows.py` + `deploy/config.json` (ver `docs/passagem-producao.md`); testes: `python3 -m unittest tests/test_deploy.py tests/test_app.py tests/test_kit.py` e `python3 tests/e2e_app.py`. Assistente web local para quem instala: `app/` + kit com `scripts/build_kit.py`.
 
 ## Ficheiros
-Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0010 e rollbacks 0007-0010, script de limpeza não corrido).
+Ver `docs/estado-e-tarefas.md` (estado por fase e pendentes), `docs/passagem-producao.md`, `docs/versionamento.md`, `tests/BATERIA.md`, `supabase/` (schema, migrações 0001-0011 e rollbacks 0007-0011, script de limpeza não corrido).

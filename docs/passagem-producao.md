@@ -12,7 +12,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Importar os workflows a partir de `main` e ligar credenciais de produção pelo nome.
 - [ ] Preencher marcadores: destinatários, IDs das pastas Outlook, Mail Error Flow como Error Workflow de **todos** os workflows, ID do WF2 no nó de chamada.
 - [ ] Fixar o caminho (`path`) do formulário e decidir o URL final (domínio próprio, se possível).
-- [ ] Proteger o formulário: autenticação (Basic Auth) ou ligação só a partir de um sítio controlado; avaliar captcha e limite de pedidos.
+- [x] Formulários internos protegidos com Basic Auth (2026-10-29): WF2 (pedido de proposta), WF3 (pedido manual de cotações) e WF13 (reserva de frete) respondem 401 sem utilizador e palavra-passe. Em produção: criar uma credencial **Basic Auth** no n8n (utilizador e palavra-passe só da equipa) e indicá-la no assistente (passo 3) ou em `credenciais.httpBasicAuth` do `deploy/config.json`. Avaliar ainda captcha e limite de pedidos no WF2.
 - [ ] Definir retenção de execuções: guardar execuções falhadas, não guardar dados de execuções bem-sucedidas com dados pessoais, ou prune curto.
 - [ ] Ativar notificações de erro para mais do que um destinatário (equipa) e testar com uma falha real em produção.
 - [ ] Publicar os workflows e confirmar que os triggers estão ativos.
@@ -81,7 +81,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Comprar créditos na OpenRouter e ativar zero data retention; sem créditos o WF3 usa a regra de reserva e o texto fixo (funciona, mas sem o LLM).
 - [ ] O WF2 arranca o WF3 no fim (nó "Pedir cotações de frete (WF3)"): confirmar o ID do WF3 nesse nó na instância de destino.
 - [ ] Definir o Error Workflow do WF2 como o "WF2 Error Flow" e o do WF3 como o "Mail Error Flow"; preencher o destinatário em "Preparar aviso do WF2".
-- [ ] O formulário "Pedir cotações de frete" do WF3 não tem autenticação: proteger ou desativar o trigger manual em produção.
+- [x] O formulário «Pedir cotações de frete» do WF3 tem Basic Auth (mesma credencial do WF2 e WF13).
 - [ ] **Modo de envio do WF3 (migração 0009):** aplicar `supabase/migrations/0009_configuracao_modo_envio.sql` (tabela `configuracao`, estado `rascunho`). O valor inicial é `automatico` (decidido a 2026-10-25). Muda-se em «Updates ao fluxo» no assistente (ou `scripts/atualizar_config.py`), sem editar nem publicar o WF3. Qualquer valor desconhecido ou erro de leitura faz o WF3 criar rascunho em vez de enviar.
 - [ ] Modo `revisao`: criar a subpasta **To Check** dentro da Inbox da caixa que o n8n usa (o nome está em `pasta_revisao` no nó «Configuração»; é procurada por nome, por isso funciona em qualquer caixa). Se não existir, o rascunho fica em Rascunhos e o aviso do Slack di-lo. Os pedidos ficam `rascunho` e a proposta passa logo a `a_cotar`; quando uma pessoa envia o rascunho, o estado do pedido mantém-se `rascunho` (o sistema não vê o envio manual).
 - [ ] O modo de envio só tem efeito na versão **publicada** do WF3: publicar o WF3 (rascunho bbc0fc46) em conjunto com WF2, WF5, WF8 e WF12 depois de testar.
@@ -120,10 +120,12 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Confirmar os IDs do WF5 (no WF6) e do Mail Error Flow como Error Workflow do WF5, WF6 e WF8 na instância de destino.
 
 ## 16. WF1 e Read Outlook Messages (pedidos por email)
+- [ ] Gatilhos automáticos (2026-10-29): o Read Outlook tem um Outlook Trigger na **Folder 1** e o WF6 na **Inbox**, a cada 5 min, só emails não lidos (polls sem emails novos não contam execuções). Na instância de produção escolher de novo as pastas nos dois gatilhos (os IDs no Git são marcadores) e só publicar depois da decisão sobre o Read Outlook criar propostas sem revisão humana. O primeiro poll depois de publicar só fixa a hora de referência: emails que já estavam por ler não disparam o gatilho sozinhos (são lidos no primeiro disparo seguinte, ou correndo à mão).
+- [ ] WF11: o link do plano de expedição leva um código secreto por proposta (`token_plano`, migração 0011); a migração tem de estar aplicada antes de publicar o WF10, WF11 e WF13.
 - [ ] Aplicar a migração `0005_leads_rascunho_pedido.sql` (colunas `assunto`, `dados_extraidos`, `confianca`, `campos_em_falta` em `leads`).
 - [ ] Credencial OpenRouter com créditos na conta da chave usada (o erro 402 fez o WF1 falhar em segurança: `falhou_llm=true`, sem dados inventados).
 - [ ] Teste real X6: um email na Folder 1 gera lead rascunho, draft em To Check, original lido e aviso Slack.
-- [ ] Os leads são rascunhos para um humano rever; ninguém cria a proposta sozinho. O nó de chamada ao WF2 fica desativado até haver decisão.
+- [ ] Desde 2026-10-29 o Read Outlook chama o WF2 quando o pedido mapeia com confiança ≥ 0,8 (a proposta fica ligada ao lead). Decisão pendente: manter assim ou exigir revisão humana antes (a política e as fichas de IA em `docs/ai-act/` ainda dizem que o email nunca cria a proposta).
 - [ ] RGPD: o `ai_log` só leva o domínio do remetente; o texto do email vai ao LLM (confirmar zero retenção no OpenRouter) e `leads` entra na purga (`purgar_leads_antigos`).
 
 ## Fases 7 a 10 (WF9-WF12)
