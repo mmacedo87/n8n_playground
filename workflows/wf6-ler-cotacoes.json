@@ -737,6 +737,45 @@
           "name": "Supabase account"
         }
       }
+    },
+    {
+      "id": "e926c931-4f28-42b9-a837-5c87e982123d",
+      "name": "Email novo na Inbox",
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        320
+      ],
+      "parameters": {
+        "event": "messageReceived",
+        "fields": [
+          "subject"
+        ],
+        "filters": {
+          "foldersToInclude": [
+            "<ID da pasta Inbox no Outlook de destino>"
+          ],
+          "readStatus": "unread"
+        },
+        "options": {},
+        "output": "fields",
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "notes": "Corre sozinho: a cada 5 minutos vê se chegaram emails novos não lidos à Inbox (respostas das transportadoras). Só cria execução quando há emails novos. O gatilho manual continua para correr à mão.",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
     }
   ],
   "connections": {
@@ -982,6 +1021,17 @@
           }
         ]
       ]
+    },
+    "Email novo na Inbox": {
+      "main": [
+        [
+          {
+            "node": "Ler emails não lidos da caixa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1004,7 +1054,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "HErViy6cNVrTIH7A",
-    "sourceVersionId": "e9654914-4e92-4a96-ab7e-01459c5a3bca",
+    "sourceVersionId": "1ec4243c-4d57-4181-8a90-ad775c3e78c7",
     "exportedAt": "2026-10-29",
     "sanitized": "ids de credenciais e errorWorkflow removidos"
   }

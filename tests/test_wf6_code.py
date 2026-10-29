@@ -89,3 +89,18 @@ class Exportacao(unittest.TestCase):
         self.assertNotIn('operation', gravar)  # criar é o valor por omissão; getAll só lia
         campos = {f['fieldId'] for f in gravar['fieldsUi']['fieldValues']}
         self.assertTrue({'tipo_entrega', 'preco_por', 'estado_reserva', 'ref_transportadora', 'pedido_cotacao_id'} <= campos)
+
+    def test_gatilho_automatico_inbox(self):
+        """Corre sozinho com emails novos não lidos na Inbox; a leitura corre uma vez e lê todos os não lidos."""
+        wf = json.load(open(RAIZ / 'workflows' / 'wf6-ler-cotacoes.json', encoding='utf-8'))
+        nos = {n['name']: n for n in wf['nodes']}
+        g = nos['Email novo na Inbox']
+        self.assertEqual(g['type'], 'n8n-nodes-base.microsoftOutlookTrigger')
+        p = g['parameters']
+        self.assertEqual(p['filters']['readStatus'], 'unread')
+        self.assertEqual(p['filters']['foldersToInclude'], ['<ID da pasta Inbox no Outlook de destino>'])
+        self.assertEqual(p['pollTimes']['item'][0], {'mode': 'everyX', 'unit': 'minutes', 'value': 5})
+        for gatilho in ('Email novo na Inbox', 'Ler respostas das transportadoras'):
+            self.assertEqual(wf['connections'][gatilho]['main'][0][0]['node'], 'Ler emails não lidos da caixa', gatilho)
+        self.assertTrue(nos['Ler emails não lidos da caixa'].get('executeOnce'))
+        self.assertNotIn('AQMk', json.dumps(wf))
