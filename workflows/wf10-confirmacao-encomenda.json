@@ -3,6 +3,7 @@
   "description": "Webhook GET com a ligação do email da proposta: 1.º passo mostra o resumo e um botão, 2.º passo (ok=1) marca a proposta aceite, cria a linha de expedição e avisa a Madalena, a Bárbara e o Slack. Token aleatório de 64 hex com validade; ignora bots.",
   "nodes": [
     {
+      "id": "86667f95-67bc-486f-9e56-4332c9da8984",
       "name": "Cliente abre a ligação de confirmação",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.2,
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "8e359721-c7f5-44e1-9a48-c9049e253f6f",
       "name": "Configuração",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -86,6 +88,7 @@
       "notes": "DEV: destinatario_teste preenchido desvia o email interno. Em produção esvaziar destinatario_teste e preencher email_madalena e email_barbara."
     },
     {
+      "id": "8be53099-b2b8-40de-ba1f-1eb945aaa14f",
       "name": "Ler proposta pela ligação",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
@@ -108,14 +111,15 @@
           ]
         }
       },
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
+      "id": "13b69df1-80e3-450e-bbdf-a0b1b39ed2ef",
       "name": "Decidir resposta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -130,6 +134,7 @@
       }
     },
     {
+      "id": "155fa878-f5e1-4506-a288-daba17bddab5",
       "name": "Confirmar agora?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -159,30 +164,7 @@
       }
     },
     {
-      "name": "Responder página",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        1888,
-        0
-      ],
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.html }}",
-        "options": {
-          "responseCode": "={{ $json.http ?? 200 }}",
-          "responseHeaders": {
-            "entries": [
-              {
-                "name": "Content-Type",
-                "value": "text/html; charset=utf-8"
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
+      "id": "fecb2fe4-405c-416c-b1ac-04b6836f1c03",
       "name": "Marcar proposta como aceite",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
@@ -224,15 +206,16 @@
           ]
         }
       },
+      "notes": "Só atualiza se a proposta ainda estiver enviada: duas aberturas da ligação ao mesmo tempo não confirmam duas vezes.",
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true,
-      "notes": "Só atualiza se a proposta ainda estiver enviada: duas aberturas da ligação ao mesmo tempo não confirmam duas vezes."
+      }
     },
     {
+      "id": "9624165f-0016-4695-86b5-f1e4e6e69aad",
       "name": "Resultado da confirmação",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -243,10 +226,11 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst r = $input.first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nif (!r || !r.id) {\n  return [{ json: { confirmou: false, http: 200, html: moldura(pt ? 'Encomenda já confirmada' : 'Order already confirmed', '<p>' + esc(pt ? 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.' : 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.') + '</p>') } }];\n}\nconst teste = !!cfg.destinatario_teste;\nconst html = moldura(pt ? 'Encomenda confirmada' : 'Order confirmed', '<p>' + esc(pt ? 'Obrigado. A proposta ' + p.codigo + ' foi confirmada. A nossa equipa vai planear a expedição e enviar-lhe o plano final.' : 'Thank you. Proposal ' + p.codigo + ' has been confirmed. Our team will plan the shipment and send you the final plan.') + '</p>');\nconst link = cfg.url_form + '?codigo=' + encodeURIComponent(p.codigo);\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Encomenda confirmada pelo cliente';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>O cliente confirmou a proposta <b>' + esc(p.codigo) + '</b>. Falta planear a expedição.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><!--PLANO--><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '✅ Proposta *' + p.codigo + '* confirmada pelo cliente · ' + p.produto + ' · destino ' + p.destino_pais + ' · expedição por planear' + (teste ? ' · (teste)' : '');\nreturn [{ json: { confirmou: true, http: 200, html, codigo: p.codigo, proposta_id: p.id, link_plano: link, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : cfg.email_madalena, cc: teste ? cfg.destinatario_teste : cfg.email_barbara, slack_texto: slack } }];"
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst p = $('Ler proposta pela ligação').first().json;\nconst r = $input.first().json;\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst moldura = (titulo, corpo) => '<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>' + esc(titulo) + '</title></head><body style=\"font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222\"><h2>' + esc(titulo) + '</h2>' + corpo + '</body></html>';\nconst pt = ['PT', 'BR', 'AO', 'MZ'].includes(String(p.destino_pais || '').toUpperCase());\nif (!r || !r.id) {\n  return [{ json: { confirmou: false, http: 200, html: moldura(pt ? 'Encomenda já confirmada' : 'Order already confirmed', '<p>' + esc(pt ? 'A proposta ' + p.codigo + ' já foi confirmada. Obrigado.' : 'Proposal ' + p.codigo + ' has already been confirmed. Thank you.') + '</p>') } }];\n}\nconst teste = !!cfg.destinatario_teste;\nconst html = moldura(pt ? 'Encomenda confirmada' : 'Order confirmed', '<p>' + esc(pt ? 'Obrigado. A proposta ' + p.codigo + ' foi confirmada. A nossa equipa vai planear a expedição e enviar-lhe o plano final.' : 'Thank you. Proposal ' + p.codigo + ' has been confirmed. Our team will plan the shipment and send you the final plan.') + '</p>');\n// O link do plano leva o código secreto da proposta (token_plano, migração 0011): sem ele o WF11 recusa o formulário.\nconst link = cfg.url_form + '?codigo=' + encodeURIComponent(p.codigo) + '&t=' + encodeURIComponent(p.token_plano || '');\nconst linha = (k, v) => '<tr><td style=\"padding:4px 16px 4px 0\"><b>' + k + '</b></td><td>' + esc(v) + '</td></tr>';\nconst assunto = (teste ? '[TESTE] ' : '') + '[' + p.codigo + '] Encomenda confirmada pelo cliente';\nconst corpo = (teste ? '<p><i>Email de teste.</i></p>' : '') + '<p>O cliente confirmou a proposta <b>' + esc(p.codigo) + '</b>. Falta planear a expedição.</p><table>' + linha('Cliente', p.cliente) + linha('Produto', p.produto) + linha('Quantidade', p.quantidade + ' ' + (p.unidade || 'kg')) + linha('Embalagem', p.embalagem) + linha('Incoterm', p.incoterm) + linha('Destino', p.destino_pais) + '</table><!--PLANO--><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\nconst slack = '✅ Proposta *' + p.codigo + '* confirmada pelo cliente · ' + p.produto + ' · destino ' + p.destino_pais + ' · expedição por planear' + (teste ? ' · (teste)' : '');\nreturn [{ json: { confirmou: true, http: 200, html, codigo: p.codigo, proposta_id: p.id, link_plano: link, assunto, corpo_html: corpo, para: teste ? cfg.destinatario_teste : cfg.email_madalena, cc: teste ? cfg.destinatario_teste : cfg.email_barbara, slack_texto: slack } }];"
       }
     },
     {
+      "id": "9c3438af-673c-4332-8e07-e7616cb9bfed",
       "name": "Confirmou agora?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -276,6 +260,7 @@
       }
     },
     {
+      "id": "b7bedd62-ff5b-45b0-b99d-fa6caefe4e60",
       "name": "Criar linha de expedição",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
@@ -304,6 +289,7 @@
       }
     },
     {
+      "id": "5c3c747f-1145-4b37-b980-90cb164063c1",
       "name": "Responder confirmação",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
@@ -328,6 +314,7 @@
       }
     },
     {
+      "id": "71e6a9ca-0a2e-4616-b0a8-144a58d77ca7",
       "name": "Avisar expedição por email",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
@@ -353,6 +340,7 @@
       }
     },
     {
+      "id": "e49a5a69-dd78-4399-81d6-c45a1cff7e1c",
       "name": "Avisar Slack: proposta confirmada",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -401,8 +389,33 @@
           "waitForSubWorkflow": false
         }
       },
-      "executeOnce": true,
-      "notes": "Aviso curto no Slack (#novas-propostas). Não espera."
+      "notes": "Aviso curto no Slack (#novas-propostas). Não espera.",
+      "executeOnce": true
+    },
+    {
+      "id": "0aebc55c-4760-466f-8eec-2a8fc5655f15",
+      "name": "Responder página",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1888,
+        0
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": "={{ $json.http ?? 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "263ddb00-f6a0-4a5d-a895-cd29d53c0ae7",
@@ -433,13 +446,13 @@
         "operation": "getAll",
         "tableId": "cotacoes_frete"
       },
+      "notes": "Vê se a reserva do frete já foi confirmada no WF13. Se sim, o email à Madalena traz o link do plano (WF11); se não, o WF13 envia o link quando a reserva for confirmada.",
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "notes": "Vê se a reserva do frete já foi confirmada no WF13. Se sim, o email à Madalena traz o link do plano (WF11); se não, o WF13 envia o link quando a reserva for confirmada.",
-      "alwaysOutputData": true
+      }
     },
     {
       "id": "c976f781-fe32-4241-9de5-5708a5a399e6",
@@ -465,12 +478,12 @@
         "operation": "getAll",
         "tableId": "transportadoras"
       },
+      "notes": "Nome da transportadora da reserva confirmada, para o email à Madalena.",
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "notes": "Nome da transportadora da reserva confirmada, para o email à Madalena."
+      }
     }
   ],
   "connections": {
@@ -587,22 +600,22 @@
         ]
       ]
     },
-    "Responder confirmação": {
+    "Avisar expedição por email": {
       "main": [
         [
           {
-            "node": "Ler reserva confirmada",
+            "node": "Avisar Slack: proposta confirmada",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Avisar expedição por email": {
+    "Responder confirmação": {
       "main": [
         [
           {
-            "node": "Avisar Slack: proposta confirmada",
+            "node": "Ler reserva confirmada",
             "type": "main",
             "index": 0
           }
@@ -641,15 +654,15 @@
   },
   "tags": [
     {
+      "id": "SXu3g2OjNALjODL1",
       "name": "propostas"
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "30Z4Nnge3BRZbU8G",
-    "sourceVersionId": "ac41b92f-b4b2-475d-892e-4bab2c33d574",
-    "exportedAt": "2026-10-27",
+    "sourceVersionId": "8efba754-53cd-4447-a532-49573a2095bf",
+    "exportedAt": "2026-10-29",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
-  },
-  "nodeGroups": []
+  }
 }
