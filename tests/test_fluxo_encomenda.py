@@ -125,7 +125,7 @@ class Wf10(unittest.TestCase):
     CFG = {'chave': 'a' * 64, 'chave_ok': True, 'confirmar': True, 'destinatario_teste': '', 'email_madalena': 'm@exemplo.invalid',
            'email_barbara': 'b@exemplo.invalid', 'url_base': 'https://x/webhook/confirmar-proposta', 'url_form': 'https://x/form/plano-expedicao'}
     P = {'id': 'p1', 'codigo': 'PRP-2026-0099', 'cliente': 'Cliente', 'produto': 'Granulado', 'quantidade': 100, 'unidade': 'kg', 'embalagem': 'Big bag',
-         'incoterm': 'FOB', 'destino_pais': 'ES'}
+         'incoterm': 'FOB', 'destino_pais': 'ES', 'token_plano': 'b' * 64}
 
     def test_cadeia_da_reserva(self):
         for a, b in [('Responder confirmação', 'Ler reserva confirmada'), ('Ler reserva confirmada', 'Ler transportadora da reserva'),
@@ -138,7 +138,7 @@ class Wf10(unittest.TestCase):
         self.assertTrue(r['confirmou'])
         self.assertEqual(r['para'], 'm@exemplo.invalid')
         self.assertEqual(r['cc'], 'b@exemplo.invalid')
-        self.assertTrue(r['link_plano'].endswith('?codigo=PRP-2026-0099'))
+        self.assertTrue(r['link_plano'].endswith('?codigo=PRP-2026-0099&t=' + 'b' * 64), 'o link do plano leva o código secreto (token_plano)')
         self.assertIn('<!--PLANO-->', r['corpo_html'])
         self.assertIn('Encomenda confirmada pelo cliente', r['assunto'])
 
@@ -167,7 +167,7 @@ class Wf11(unittest.TestCase):
     def validar(self, form):
         return correr(self.w, 'Validar plano', {}, [form])
 
-    FORM = {'codigo': 'prp-2026-0099', 'O seu nome': 'Madalena', 'Os dados da reserva estão corretos?': 'Sim', 'Tempo de produção (dias)': 5,
+    FORM = {'codigo': 'prp-2026-0099', 't': 'b' * 64, 'O seu nome': 'Madalena', 'Os dados da reserva estão corretos?': 'Sim', 'Tempo de produção (dias)': 5,
             'Stock disponível': 'Sim', 'Data de recolha': '2099-03-10', 'Notas': ''}
 
     def test_cadeia(self):
@@ -204,6 +204,28 @@ class Wf11(unittest.TestCase):
         self.assertIn('__erro', self.validar({**self.FORM, 'codigo': 'xx'}))
         self.assertTrue(self.validar(self.FORM)[0]['reserva_ok'])
 
+    def test_link_exige_codigo_secreto(self):
+        # Sem o t do link (token_plano, 64 hex) o formulário é recusado logo na validação, mesmo com «Não».
+        for t in (None, '', 'curto', 'g' * 64):
+            form = {k: v for k, v in self.FORM.items() if k != 't'} if t is None else {**self.FORM, 't': t}
+            self.assertIn('__erro', self.validar(form), t)
+        self.assertIn('__erro', self.validar({**self.FORM, 't': None, 'Os dados da reserva estão corretos?': 'Não'}))
+        self.assertEqual(self.validar(self.FORM)[0]['token'], 'b' * 64)
+        campos = [f.get('fieldName') for f in no(self.w, 'Madalena preenche o plano de expedição')['parameters']['formFields']['values']]
+        self.assertIn('t', campos)
+
+    def verificar(self, plano, proposta):
+        return correr(self.w, 'Verificar proposta', {'Validar plano': [plano]}, [proposta])
+
+    def test_verificar_compara_com_token_da_proposta(self):
+        plano = {'codigo': 'PRP-2026-0099', 'token': 'b' * 64, 'reserva_ok': True}
+        prop = {'id': 'p1', 'codigo': 'PRP-2026-0099', 'estado': 'aceite', 'cliente': 'C', 'token_plano': 'b' * 64}
+        r = self.verificar(plano, prop)[0]
+        self.assertEqual(r['proposta_id'], 'p1')
+        self.assertNotIn('token', r, 'o código não segue no fluxo depois de verificado')
+        self.assertIn('__erro', self.verificar({**plano, 'token': 'c' * 64}, prop))  # link de outra proposta
+        self.assertIn('__erro', self.verificar(plano, {**prop, 'token_plano': None}))
+
     def test_sim_grava_com_modo_da_cotacao_e_chegada(self):
         r = self.decidir()[0]
         self.assertTrue(r['seguir'])
@@ -234,7 +256,7 @@ class Wf11(unittest.TestCase):
 # ---------- WF13 -> Madalena
 class Wf13(unittest.TestCase):
     w = wf('wf13-confirmacao-reserva.json')
-    P = {'id': 'p1', 'codigo': 'PRP-2026-0099', 'cliente': 'Cliente', 'produto': 'Granulado', 'quantidade': 100, 'unidade': 'kg', 'embalagem': 'Big bag', 'incoterm': 'FOB', 'destino_pais': 'ES', 'estado': 'aceite'}
+    P = {'id': 'p1', 'codigo': 'PRP-2026-0099', 'cliente': 'Cliente', 'produto': 'Granulado', 'quantidade': 100, 'unidade': 'kg', 'embalagem': 'Big bag', 'incoterm': 'FOB', 'destino_pais': 'ES', 'estado': 'aceite', 'token_plano': 'b' * 64}
     D = {'acao': 'confirmada', 'cotacao_id': 'c1', 'transportadora': 'Transp A'}
 
     def madalena(self, d=None, p=None, teste=''):
@@ -244,7 +266,7 @@ class Wf13(unittest.TestCase):
 
     def test_envia_link_so_quando_confirmada_e_cliente_ja_aceitou(self):
         r = self.madalena()[0]
-        self.assertIn('/form/plano-expedicao?codigo=PRP-2026-0099', r['corpo_html'])
+        self.assertIn('/form/plano-expedicao?codigo=PRP-2026-0099&t=' + 'b' * 64, r['corpo_html'])
         for s in ('Encomenda', 'Reserva de frete', 'Transp A', 'Q-1', '1850 EUR (total)', 'Não'):
             self.assertIn(s, r['corpo_html'])
         self.assertEqual(self.madalena(d={'acao': 'rascunho'}), [])
@@ -267,3 +289,27 @@ class Wf13(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# ---------- Formulários internos protegidos (AI Act S6)
+class Formularios(unittest.TestCase):
+    def test_formularios_internos_com_basic_auth(self):
+        # WF2 (pedido de proposta), WF3 (pedido manual de cotações) e WF13 (reserva de frete) só abrem com utilizador e palavra-passe.
+        for ficheiro, nome in (('wf2-pedido-proposta.json', 'Formulário de pedido de proposta'),
+                               ('wf3-pedido-cotacao-frete.json', 'Pedir cotações manualmente'),
+                               ('wf13-confirmacao-reserva.json', 'Confirmar reserva de frete')):
+            with self.subTest(ficheiro):
+                n = no(wf(ficheiro), nome)
+                self.assertEqual(n['parameters'].get('authentication'), 'basicAuth')
+                self.assertIn('httpBasicAuth', n.get('credentials', {}))
+                self.assertNotIn('id', n['credentials']['httpBasicAuth'], 'o export não leva ids de credenciais')
+
+    def test_wf13_caminho_do_formulario(self):
+        # nesta versão do Form Trigger o caminho tem de estar em options.path (o link documentado é /form/confirmar-reserva)
+        n = no(wf('wf13-confirmacao-reserva.json'), 'Confirmar reserva de frete')
+        self.assertEqual(n['parameters']['options'].get('path'), 'confirmar-reserva')
+
+    def test_wf11_sem_palavra_passe_mas_com_codigo_no_link(self):
+        # a Madalena abre o WF11 pelo link do email: sem Basic Auth, protegido pelo código secreto da proposta (ver Wf11)
+        n = no(wf('wf11-plano-expedicao.json'), 'Madalena preenche o plano de expedição')
+        self.assertIn(n['parameters'].get('authentication', 'none'), ('none',))
