@@ -140,7 +140,9 @@ class T(unittest.TestCase):
             wf2 = m.by_name("WF2 - Pedido de proposta")
             called = {n["parameters"]["workflowId"]["value"] for n in wf2["nodes"] if n["type"] == "n8n-nodes-base.executeWorkflow"}
             self.assertEqual(called, {ids["WF3 - Pedido de cotação de frete"], ids["WF4 - Enriquecimento de proposta"], ids["Notificar Slack"]})
-            self.assertEqual(wf2["settings"]["errorWorkflow"], ids["Mail Error Flow"])
+            # O WF2 tem um error flow próprio (diz se a proposta chegou a ser gravada); os outros usam o Mail Error Flow.
+            self.assertEqual(wf2["settings"]["errorWorkflow"], ids["WF2 Error Flow - Pedido de proposta"])
+            self.assertEqual(m.by_name("WF3 - Pedido de cotação de frete")["settings"]["errorWorkflow"], ids["Mail Error Flow"])
             txt = json.dumps(list(m.store.values()), ensure_ascii=False)
             for bad in ("{{WF:", "REDACTED@example.invalid", "<ID do", "C0C7T8J8D54", "C0C7V2PU4PL", "C0C7SN9MKQE"):
                 self.assertNotIn(bad, txt)

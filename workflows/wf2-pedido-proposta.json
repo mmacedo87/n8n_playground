@@ -1,6 +1,6 @@
 {
   "name": "WF2 - Pedido de proposta",
-  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, destino (ISO). Devolve ok, codigo, proposta_id, estado. Listas do formulário PROVISÓRIAS até a Bárbara fechar as definitivas. Depois de gravar, confirmar e devolver, arranca o WF3 (pedido de cotações de frete) sem esperar por ele; se o WF2 falhar antes, o WF3 não é chamado e o WF2 Error Flow avisa.",
+  "description": "Regista um pedido de proposta no Supabase (tabela propostas, ID PRP gerado pela BD) e envia email de confirmação. Entradas: formulário n8n ou chamada por outro workflow com cliente, produto, densidade, granulometria, quantidade (kg), embalagem, incoterm, ",
   "nodes": [
     {
       "id": "3b60d028-511f-47b4-a364-82b1948c7c30",
@@ -19,17 +19,15 @@
         "formFields": {
           "values": [
             {
-              "fieldName": "cliente",
               "fieldLabel": "Cliente",
+              "fieldName": "cliente",
               "fieldType": "text",
               "placeholder": "Nome da empresa",
               "requiredField": true
             },
             {
-              "fieldName": "produto",
               "fieldLabel": "Produto",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "produto",
               "fieldOptions": {
                 "values": [
                   {
@@ -42,13 +40,13 @@
                     "option": "Aglomerado de cortiça"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "densidade",
               "fieldLabel": "Densidade",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "densidade",
               "fieldOptions": {
                 "values": [
                   {
@@ -64,13 +62,13 @@
                     "option": "120-150 kg/m3"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "granulometria",
               "fieldLabel": "Granulometria",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "granulometria",
               "fieldOptions": {
                 "values": [
                   {
@@ -89,20 +87,20 @@
                     "option": "8-15 mm"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "quantidade",
               "fieldLabel": "Quantidade (kg)",
+              "fieldName": "quantidade",
               "fieldType": "number",
               "placeholder": "ex. 1000",
               "requiredField": true
             },
             {
-              "fieldName": "embalagem",
               "fieldLabel": "Embalagem",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "embalagem",
               "fieldOptions": {
                 "values": [
                   {
@@ -115,13 +113,13 @@
                     "option": "A granel"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "incoterm",
               "fieldLabel": "Incoterm",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "incoterm",
               "fieldOptions": {
                 "values": [
                   {
@@ -158,13 +156,13 @@
                     "option": "DDP"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "destino",
               "fieldLabel": "Destino (país)",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldName": "destino",
               "fieldOptions": {
                 "values": [
                   {
@@ -204,13 +202,13 @@
                     "option": "MA - Marrocos"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
-              "fieldName": "tipo_carga",
               "fieldLabel": "Tipo de carga",
-              "fieldType": "dropdown",
-              "requiredField": false,
+              "fieldName": "tipo_carga",
               "fieldOptions": {
                 "values": [
                   {
@@ -220,67 +218,69 @@
                     "option": "Grupagem"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": false
             },
             {
-              "fieldName": "n_camioes",
               "fieldLabel": "Nº de camiões",
+              "fieldName": "n_camioes",
               "fieldType": "number",
               "placeholder": "ex. 1",
               "requiredField": false
             },
             {
-              "fieldName": "n_paletes",
               "fieldLabel": "Nº de paletes",
+              "fieldName": "n_paletes",
               "fieldType": "number",
               "placeholder": "ex. 24",
               "requiredField": false
             },
             {
-              "fieldName": "peso_palete_kg",
               "fieldLabel": "Peso por palete (kg)",
+              "fieldName": "peso_palete_kg",
               "fieldType": "number",
               "placeholder": "ex. 600",
               "requiredField": false
             },
             {
-              "fieldName": "palete_c_m",
               "fieldLabel": "Palete: comprimento (m)",
+              "fieldName": "palete_c_m",
               "fieldType": "number",
               "placeholder": "ex. 1.2",
               "requiredField": false
             },
             {
-              "fieldName": "palete_l_m",
               "fieldLabel": "Palete: largura (m)",
+              "fieldName": "palete_l_m",
               "fieldType": "number",
               "placeholder": "ex. 0.8",
               "requiredField": false
             },
             {
-              "fieldName": "palete_a_m",
               "fieldLabel": "Palete: altura (m)",
+              "fieldName": "palete_a_m",
               "fieldType": "number",
               "placeholder": "ex. 1.5",
               "requiredField": false
             },
             {
-              "fieldName": "morada_carga",
               "fieldLabel": "Morada de carga",
+              "fieldName": "morada_carga",
               "fieldType": "text",
               "placeholder": "Local e código postal",
               "requiredField": false
             },
             {
-              "fieldName": "morada_descarga",
               "fieldLabel": "Morada de descarga",
+              "fieldName": "morada_descarga",
               "fieldType": "text",
               "placeholder": "Local e código postal",
               "requiredField": false
             },
             {
-              "fieldName": "cp_descarga",
               "fieldLabel": "Código postal de descarga",
+              "fieldName": "cp_descarga",
               "fieldType": "text",
               "placeholder": "ex. 28100",
               "requiredField": false
@@ -479,9 +479,6 @@
         0
       ],
       "parameters": {
-        "resource": "row",
-        "operation": "create",
-        "tableId": "propostas",
         "dataToSend": "defineBelow",
         "fieldsUi": {
           "fieldValues": [
@@ -560,9 +557,16 @@
             {
               "fieldId": "contacto_email",
               "fieldValue": "={{ (() => { try { const e = String($('Chamado pelo workflow principal').item.json.contacto_email || '').trim().toLowerCase(); return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e) ? e : null; } catch (x) { return null; } })() }}"
+            },
+            {
+              "fieldId": "lead_id",
+              "fieldValue": "={{ (() => { try { const v = String($('Chamado pelo workflow principal').item.json.lead_id || '').trim().toLowerCase(); return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v) ? v : null; } catch (x) { return null; } })() }}"
             }
           ]
-        }
+        },
+        "operation": "create",
+        "resource": "row",
+        "tableId": "propostas"
       },
       "retryOnFail": false,
       "maxTries": 3,
@@ -746,6 +750,10 @@
             {
               "name": "contacto_email",
               "type": "string"
+            },
+            {
+              "name": "lead_id",
+              "type": "string"
             }
           ]
         }
@@ -809,7 +817,7 @@
       "notes": "Só corre quando tudo o resto do WF2 correu bem. Não espera pelo WF3: o resultado do WF2 não depende dele e os erros do WF3 têm o seu próprio aviso."
     },
     {
-      "id": "c8a4f7e2-6d1b-4a35-9f0e-3b7d2a1c5e90",
+      "id": "cefe2a0b-7884-4ab7-8f00-12b2f0a3635f",
       "name": "Enriquecer proposta (WF4)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -1009,20 +1017,26 @@
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": true,
-    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "errorWorkflow": "{{WF:WF2 Error Flow - Pedido de proposta}}",
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none",
-    "saveDataErrorExecution": "all"
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
   },
   "tags": [
-    "subworkflow",
-    "propostas"
+    {
+      "id": "AZ9PZCNJ9SptxXlK",
+      "name": "subworkflow"
+    },
+    {
+      "id": "SXu3g2OjNALjODL1",
+      "name": "propostas"
+    }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "ecee1f63-924b-4d3a-a8f8-025b4a62e1f9",
-    "exportedAt": "2026-10-27",
+    "sourceVersionId": "d89f09a6-c451-4122-8072-8d260ff88eee",
+    "exportedAt": "2026-10-29",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
 }
