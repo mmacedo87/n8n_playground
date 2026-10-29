@@ -43,7 +43,33 @@ class ReadOutlook(unittest.TestCase):
     w = wf('read-outlook-messages.json')
 
     def prep(self, **alt):
-        return correr(self.w, 'Preparar pedido para WF2', {'Extrair pedido (WF1)': [{**WF1_OK, **alt}]}, item=True)
+        return correr(self.w, 'Preparar pedido para WF2', {'Extrair pedido (WF1)': [{**WF1_OK, **alt}]}, [{}])
+
+    def test_codigo_igual_ao_script(self):
+        js = (RAIZ / 'scripts' / 'read_outlook_code' / 'preparar.js').read_text(encoding='utf-8')
+        self.assertEqual(no(self.w, 'Preparar pedido para WF2')['parameters']['jsCode'].strip(), js.strip())
+
+    def test_um_item_por_email_com_lead(self):
+        # Vários emails na mesma execução: um item por email, cada um com o lead certo (procura por origem_email_id).
+        wf1 = [{**WF1_OK, 'email_id': 'm1'}, {**WF1_OK, 'email_id': 'm2', 'incoterm': 'XYZ'}, {**WF1_OK, 'email_id': 'm3'}]
+        leads = [{'id': 'lead-3', 'origem_email_id': 'm3'}, {'id': 'lead-1', 'origem_email_id': 'm1'}, {'error': 'duplicado'}]
+        r = correr(self.w, 'Preparar pedido para WF2', {'Extrair pedido (WF1)': wf1, 'Gravar lead (rascunho)': leads}, [{}, {}, {}])
+        self.assertEqual([x['email_id'] for x in r], ['m1', 'm2', 'm3'])
+        self.assertEqual([x['lead_id'] for x in r], ['lead-1', '', 'lead-3'])
+        self.assertEqual([x['pronto'] for x in r], [True, False, True])
+
+    def test_sem_lead_gravado_lead_id_vazio(self):
+        # «Gravar lead» não correu (nenhum pedido) ou falhou: o WF2 recebe lead_id vazio e grava null.
+        self.assertEqual(self.prep()[0]['lead_id'], '')
+
+    def test_rascunho_so_para_pedidos(self):
+        self.assertFalse(ligado(self.w, 'Extrair pedido (WF1)', 'Criar draft de resposta'))
+        self.assertTrue(ligado(self.w, 'Extrair pedido (WF1)', 'Responder com rascunho?'))
+        self.assertTrue(ligado(self.w, 'Responder com rascunho?', 'Criar draft de resposta', 0))
+        self.assertTrue(ligado(self.w, 'Responder com rascunho?', 'Marcar original como lido', 1), 'o que não é pedido fica lido, sem rascunho')
+        cond = no(self.w, 'Responder com rascunho?')['parameters']['conditions']['conditions'][0]['leftValue']
+        self.assertIn('e_pedido === true', cond)
+        self.assertIn('falhou_llm === true', cond)  # se o LLM falhou não se sabe: fica o rascunho genérico para uma pessoa ver
 
     def test_encadeamento(self):
         self.assertTrue(ligado(self.w, 'Marcar original como lido', 'Preparar pedido para WF2'))
@@ -54,6 +80,7 @@ class ReadOutlook(unittest.TestCase):
         self.assertFalse(c.get('disabled'))
         self.assertTrue(c['parameters']['options']['waitForSubWorkflow'])
         self.assertEqual(c['parameters']['workflowInputs']['value']['contacto_email'], '={{ $json.contacto_email }}')
+        self.assertEqual(c['parameters']['workflowInputs']['value']['lead_id'], '={{ $json.lead_id }}')
 
     def test_pedido_completo_fica_pronto(self):
         r = self.prep()[0]
@@ -82,6 +109,14 @@ class Wf2(unittest.TestCase):
         self.assertIn('contacto_email', campos)
         self.assertIn('Chamado pelo workflow principal', campos['contacto_email'])
         self.assertIn('try', campos['contacto_email'])  # o formulário não tem este campo: não pode falhar
+
+    def test_lead_id_chega_a_proposta(self):
+        w = wf('wf2-pedido-proposta.json')
+        self.assertIn('lead_id', [v['name'] for v in no(w, 'Chamado pelo workflow principal')['parameters']['workflowInputs']['values']])
+        campos = {v['fieldId']: v['fieldValue'] for v in no(w, 'Criar proposta no Supabase')['parameters']['fieldsUi']['fieldValues']}
+        self.assertIn('lead_id', campos)
+        self.assertIn('try', campos['lead_id'])  # vindo do formulário não existe: grava null
+        self.assertIn('[0-9a-f]{8}-', campos['lead_id'])  # só aceita um UUID; qualquer outra coisa vira null
 
 
 # ---------- WF10

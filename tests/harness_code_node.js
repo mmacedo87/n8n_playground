@@ -6,7 +6,8 @@ const dados = JSON.parse(fs.readFileSync(entrada, 'utf8'));
 const items = (arr) => (arr || []).map(j => ({ json: j }));
 const $ = (nome) => {
   if (!(dados.nodes || {})[nome]) throw new Error('Nó não simulado: ' + nome);
-  return { all: () => items(dados.nodes[nome]), first: () => items(dados.nodes[nome])[0] };
+  // itemMatching(i): no n8n segue o pairedItem; aqui o item i do nó simulado corresponde ao item i da entrada.
+  return { all: () => items(dados.nodes[nome]), first: () => items(dados.nodes[nome])[0], itemMatching: (i) => items(dados.nodes[nome])[i] };
 };
 const $input = { all: () => items(dados.input), first: () => items(dados.input)[0] };
 const $json = (dados.input || [{}])[0] || {};

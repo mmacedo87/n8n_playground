@@ -1,6 +1,6 @@
 {
   "name": "Read Outlook Messages",
-  "description": "Lê os emails não lidos da Folder 1, pede ao WF1 (LLM + validação em código) para extrair o pedido, grava-o como lead rascunho no Supabase, avisa no Slack e cria um draft de resposta (nunca envia) em To Check. Não cria propostas.",
+  "description": "Lê os emails não lidos da Folder 1, extrai o pedido (WF1), grava o lead e, só para pedidos, cria um rascunho de resposta em To Check (nunca envia). Se o pedido mapeia com confiança ≥ 0,8, chama o WF2 e liga a proposta ao lead. Gatilho manual.",
   "nodes": [
     {
       "parameters": {},
@@ -23,14 +23,7 @@
           "cachedResultName": "Inbox/Folder 1"
         },
         "returnAll": true,
-        "filtersUI": {
-          "values": {
-            "filters": {
-              "readStatus": "unread"
-            }
-          }
-        },
-        "options": {},
+        "output": "fields",
         "fields": [
           "subject",
           "from",
@@ -39,7 +32,14 @@
           "hasAttachments",
           "receivedDateTime"
         ],
-        "output": "fields"
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "readStatus": "unread"
+            }
+          }
+        },
+        "options": {}
       },
       "id": "4460ec8c-75ec-4584-8e34-dc2f617262c1",
       "name": "Ler emails da Folder 1",
@@ -86,32 +86,6 @@
     },
     {
       "parameters": {
-        "operation": "update",
-        "messageId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "={{ $json.id }}"
-        },
-        "updateFields": {
-          "isRead": false
-        }
-      },
-      "id": "e4b30fc1-2b67-4e8b-9a0f-4ad7e1a47d91",
-      "name": "Marcar draft como não lido",
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        160,
-        -304
-      ],
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "name": "Microsoft Outlook account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "move",
         "messageId": {
           "__rl": true,
@@ -140,21 +114,36 @@
       }
     },
     {
-      "id": "d0c8a256-e4bc-4e57-b972-a82b3e68101c",
-      "name": "Chamar WF2 - Pedido de proposta",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.4,
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "updateFields": {
+          "isRead": false
+        }
+      },
+      "id": "e4b30fc1-2b67-4e8b-9a0f-4ad7e1a47d91",
+      "name": "Marcar draft como não lido",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
       "position": [
-        1008,
-        -128
+        160,
+        -304
       ],
-      "disabled": false,
-      "notes": "DESATIVADO: ainda não existe passo de extração (WF1) que preencha estes campos a partir do email. Valores abaixo são marcadores; ativar só quando vierem da extração.",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
       "parameters": {
         "options": {
           "waitForSubWorkflow": true
         },
-        "source": "database",
         "workflowId": {
           "__rl": true,
           "mode": "id",
@@ -246,6 +235,15 @@
               "id": "contacto_email",
               "required": false,
               "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "lead_id",
+              "id": "lead_id",
+              "required": false,
+              "type": "string"
             }
           ],
           "value": {
@@ -256,13 +254,35 @@
             "embalagem": "={{ $json.embalagem }}",
             "granulometria": "={{ $json.granulometria }}",
             "incoterm": "={{ $json.incoterm }}",
+            "lead_id": "={{ $json.lead_id }}",
             "produto": "={{ $json.produto }}",
             "quantidade": "={{ $json.quantidade }}"
           }
         }
-      }
+      },
+      "id": "d0c8a256-e4bc-4e57-b972-a82b3e68101c",
+      "name": "Chamar WF2 - Pedido de proposta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1008,
+        -128
+      ],
+      "disabled": false,
+      "notes": "DESATIVADO: ainda não existe passo de extração (WF1) que preencha estes campos a partir do email. Valores abaixo são marcadores; ativar só quando vierem da extração."
     },
     {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Extrair pedido (WF1)\").item.json.email_id }}"
+        },
+        "updateFields": {
+          "isRead": true
+        }
+      },
       "id": "1b477f81-9ea2-4505-863f-0c10f90a83c4",
       "name": "Marcar original como lido",
       "type": "n8n-nodes-base.microsoftOutlook",
@@ -271,17 +291,6 @@
         448,
         -128
       ],
-      "parameters": {
-        "messageId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "={{ $(\"Extrair pedido (WF1)\").item.json.email_id }}"
-        },
-        "operation": "update",
-        "updateFields": {
-          "isRead": true
-        }
-      },
       "notes": "Evita que a próxima execução volte a criar drafts do mesmo email. Fica no fim, para que uma falha a meio não perca o email.",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -290,6 +299,10 @@
       }
     },
     {
+      "parameters": {
+        "jsCode": "return $input.all().map(i => {\n  const m = i.json;\n  const html = String((m.body && m.body.content) || m.bodyPreview || '');\n  const texto = html.replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<br\\s*\\/?>|<\\/p>|<\\/div>/gi, '\\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim().slice(0, 6000);\n  const de = (m.from && m.from.emailAddress) || {};\n  return { json: { email_id: m.id, assunto: String(m.subject || '').slice(0, 200), remetente_email: String(de.address || '').toLowerCase(), remetente_nome: String(de.name || '').slice(0, 120), texto } };\n});"
+      },
+      "id": "b7b2d965-da78-4026-844f-e772a871b38e",
       "name": "Preparar texto do email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -297,33 +310,16 @@
         -560,
         -400
       ],
-      "notes": "Limpa o HTML do email e limita o texto a 6000 caracteres antes de o enviar ao WF1.",
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "return $input.all().map(i => {\n  const m = i.json;\n  const html = String((m.body && m.body.content) || m.bodyPreview || '');\n  const texto = html.replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<br\\s*\\/?>|<\\/p>|<\\/div>/gi, '\\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim().slice(0, 6000);\n  const de = (m.from && m.from.emailAddress) || {};\n  return { json: { email_id: m.id, assunto: String(m.subject || '').slice(0, 200), remetente_email: String(de.address || '').toLowerCase(), remetente_nome: String(de.name || '').slice(0, 120), texto } };\n});"
-      },
-      "id": "b7b2d965-da78-4026-844f-e772a871b38e"
+      "notes": "Limpa o HTML do email e limita o texto a 6000 caracteres antes de o enviar ao WF1."
     },
     {
-      "name": "Extrair pedido (WF1)",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -300,
-        -400
-      ],
-      "notes": "Sub-workflow WF1: o LLM extrai o pedido e o código valida. Espera pelo resultado.",
       "parameters": {
-        "mode": "each",
-        "options": {
-          "waitForSubWorkflow": true
-        },
-        "source": "database",
         "workflowId": {
           "__rl": true,
-          "mode": "id",
-          "value": "{{WF:WF1 - Extrair pedido do email}}"
+          "value": "{{WF:WF1 - Extrair pedido do email}}",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/t7cjKbq4VKfx44Fv",
+          "cachedResultName": "WF1 - Extrair pedido do email"
         },
         "workflowInputs": {
           "attemptToConvertTypes": false,
@@ -378,30 +374,29 @@
             }
           ],
           "value": {
-            "email_id": "={{ $json.email_id }}",
             "assunto": "={{ $json.assunto }}",
+            "email_id": "={{ $json.email_id }}",
             "remetente_email": "={{ $json.remetente_email }}",
             "remetente_nome": "={{ $json.remetente_nome }}",
             "texto": "={{ $json.texto }}"
           }
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
         }
       },
-      "id": "bc7c5a94-ab43-4b7e-85a3-3f41ebe384e2"
+      "id": "bc7c5a94-ab43-4b7e-85a3-3f41ebe384e2",
+      "name": "Extrair pedido (WF1)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -400
+      ],
+      "notes": "Sub-workflow WF1: o LLM extrai o pedido e o código valida. Espera pelo resultado."
     },
     {
-      "name": "Registar uso de IA",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -40,
-        -560
-      ],
-      "notes": "Regista o uso do LLM em ai_log (sem conteúdo do email: só o domínio do remetente).",
-      "credentials": {
-        "supabaseApi": {
-          "name": "Supabase account"
-        }
-      },
       "parameters": {
         "tableId": "ai_log",
         "fieldsUi": {
@@ -428,21 +423,27 @@
             },
             {
               "fieldId": "output_resumo",
-              "fieldValue": "={{ \"pedido: \" + $('Extrair pedido (WF1)').item.json.e_pedido + \", campos em falta: \" + $('Extrair pedido (WF1)').item.json.campos_em_falta.length + \", confiança \" + $('Extrair pedido (WF1)').item.json.confianca }}"
+              "fieldValue": "={{ $('Extrair pedido (WF1)').item.json.falhou_llm ? \"falhou_llm\" : \"pedido: \" + $('Extrair pedido (WF1)').item.json.e_pedido + \", campos em falta: \" + $('Extrair pedido (WF1)').item.json.campos_em_falta.length + \", confiança \" + $('Extrair pedido (WF1)').item.json.confianca }}"
             }
           ]
         }
       },
-      "id": "f1bc52e3-a87c-459c-a180-38e77076854f"
-    },
-    {
-      "name": "É um pedido?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "id": "f1bc52e3-a87c-459c-a180-38e77076854f",
+      "name": "Registar uso de IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [
-        180,
+        -48,
         -560
       ],
+      "notes": "Regista o uso do LLM em ai_log (sem conteúdo do email: só o domínio do remetente).",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
       "parameters": {
         "conditions": {
           "combinator": "and",
@@ -459,27 +460,22 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           }
-        }
+        },
+        "options": {}
       },
-      "id": "9e2df08f-39a9-49d5-b1c8-c54485d800c5"
+      "id": "9e2df08f-39a9-49d5-b1c8-c54485d800c5",
+      "name": "É um pedido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        -560
+      ]
     },
     {
-      "name": "Gravar lead (rascunho)",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        400,
-        -640
-      ],
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "supabaseApi": {
-          "name": "Supabase account"
-        }
-      },
-      "notes": "Grava o pedido como lead 'novo' (rascunho a rever). Nunca cria a proposta. Se falhar (por exemplo email já registado), o fluxo segue e o aviso do Slack di-lo.",
       "parameters": {
         "tableId": "leads",
         "fieldsUi": {
@@ -531,22 +527,24 @@
           ]
         }
       },
-      "id": "124627e6-e916-4f5a-87c1-1c0a9b2f985b"
-    },
-    {
-      "name": "Avisar Slack: pedido por email",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
+      "id": "124627e6-e916-4f5a-87c1-1c0a9b2f985b",
+      "name": "Gravar lead (rascunho)",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [
-        620,
+        400,
         -640
       ],
-      "notes": "Aviso no Slack (#novas-propostas). Não espera.",
+      "onError": "continueRegularOutput",
+      "notes": "Grava o pedido como lead 'novo' (rascunho a rever). Nunca cria a proposta. Se falhar (por exemplo email já registado), o fluxo segue e o aviso do Slack diá-lo.",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
       "parameters": {
-        "options": {
-          "waitForSubWorkflow": false
-        },
-        "source": "database",
         "workflowId": {
           "__rl": true,
           "mode": "id",
@@ -581,9 +579,20 @@
             "canal": "propostas",
             "texto": "={{ $('Extrair pedido (WF1)').item.json.resumo_slack + ($json.id ? '' : ' · ⚠️ NÃO gravado em leads') }}"
           }
+        },
+        "options": {
+          "waitForSubWorkflow": false
         }
       },
-      "id": "8046eab7-187f-499f-b917-7fe602246d09"
+      "id": "8046eab7-187f-499f-b917-7fe602246d09",
+      "name": "Avisar Slack: pedido por email",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        -640
+      ],
+      "notes": "Aviso no Slack (#novas-propostas). Não espera."
     },
     {
       "id": "2fd82d32-509f-4851-8868-c0d28e80fea5",
@@ -595,7 +604,7 @@
         -128
       ],
       "parameters": {
-        "jsCode": "const w = $('Extrair pedido (WF1)').item.json;\nconst txt = (v) => String(v ?? '').toLowerCase();\nconst motivos = [];\n\nconst p = txt(w.produto);\nlet produto = '';\nif (/p[óo]\\b|powder|dust/.test(p)) produto = 'Pó de cortiça';\nelse if (/aglom|agglom|block|board/.test(p)) produto = 'Aglomerado de cortiça';\nelse if (/granul|infill|grit/.test(p)) produto = 'Granulado de cortiça';\nif (!produto) motivos.push('produto');\n\nconst dn = parseFloat(String(w.densidade ?? '').replace(',', '.').match(/\\d+(?:\\.\\d+)?/)?.[0]);\nlet densidade = '';\nif (Number.isFinite(dn)) {\n  if (dn >= 60 && dn < 80) densidade = '60-80 kg/m3';\n  else if (dn >= 80 && dn < 100) densidade = '80-100 kg/m3';\n  else if (dn >= 100 && dn < 120) densidade = '100-120 kg/m3';\n  else if (dn >= 120 && dn <= 150) densidade = '120-150 kg/m3';\n}\nif (!densidade) motivos.push('densidade');\n\nconst gm = String(w.granulometria ?? '').replace(/,/g, '.').match(/(\\d+(?:\\.\\d+)?)\\s*(?:-|–|\\/|a|to)\\s*(\\d+(?:\\.\\d+)?)/i);\nconst gran = gm ? `${parseFloat(gm[1])}-${parseFloat(gm[2])} mm` : '';\nconst granulometria = ['0-1 mm', '1-2 mm', '2-4 mm', '4-8 mm', '8-15 mm'].includes(gran) ? gran : '';\nif (!granulometria) motivos.push('granulometria');\n\nconst e = txt(w.embalagem);\nlet embalagem = '';\nif (/big\\s*-?\\s*bag/.test(e)) embalagem = 'Big bag 1 m3';\nelse if (/granel|bulk/.test(e)) embalagem = 'A granel';\nelse if (/saco|sack|bag|palet|pallet/.test(e)) embalagem = 'Sacos 25 kg em palete';\nif (!embalagem) motivos.push('embalagem');\n\nconst incoterm = String(w.incoterm ?? '').trim().toUpperCase();\nif (!['EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP'].includes(incoterm)) motivos.push('incoterm');\n\nconst destino = String(w.destino_pais ?? '').trim().toUpperCase();\nif (!['ES','FR','DE','IT','NL','BE','GB','US','BR','CN','JP','MA'].includes(destino)) motivos.push('destino');\n\nlet quantidade = Number(w.quantidade);\nconst un = txt(w.unidade);\nif (/^(t|ton|tons|tonne|tonnes|tonelada|toneladas)$/.test(un.trim())) quantidade *= 1000;\nif (!(quantidade > 0)) motivos.push('quantidade');\n\nconst cliente = String(w.empresa || w.remetente_nome || '').trim();\nif (!cliente) motivos.push('cliente');\n\nif (w.falhou_llm) motivos.push('falhou_llm');\nif (!w.e_pedido) motivos.push('nao_e_pedido');\nif (Number(w.confianca) < 0.8) motivos.push('confianca_baixa');\nif (Array.isArray(w.campos_em_falta) && w.campos_em_falta.length) motivos.push('campos_em_falta');\n\nconst contacto_email = String(w.contacto_email || w.remetente_email || '').trim().toLowerCase();\n\nreturn [{ json: { pronto: motivos.length === 0, motivos: motivos.join(','), cliente, produto, densidade, granulometria, quantidade, embalagem, incoterm, destino, contacto_email, email_id: w.email_id } }];"
+        "jsCode": "// Read Outlook · \"Preparar pedido para WF2\"\n// Converte o texto livre do WF1 nos valores exatos que o WF2 aceita, um item por email.\n// Só marca pronto=true se o WF1 tem confiança >= 0.8, não falta nenhum campo e todos os valores mapeiam.\n// lead_id: o lead gravado para este email (procura por origem_email_id), para a proposta ficar ligada ao lead.\nconst txt = (v) => String(v ?? '').toLowerCase();\nlet leads = [];\ntry { leads = $('Gravar lead (rascunho)').all().map(i => i.json).filter(l => l && l.id && l.origem_email_id); } catch (e) { leads = []; }\n\nreturn $input.all().map((_, idx) => {\n  const w = $('Extrair pedido (WF1)').itemMatching(idx).json;\n  const motivos = [];\n\n  const p = txt(w.produto);\n  let produto = '';\n  if (/p[óo]\\b|powder|dust/.test(p)) produto = 'Pó de cortiça';\n  else if (/aglom|agglom|block|board/.test(p)) produto = 'Aglomerado de cortiça';\n  else if (/granul|infill|grit/.test(p)) produto = 'Granulado de cortiça';\n  if (!produto) motivos.push('produto');\n\n  const dn = parseFloat(String(w.densidade ?? '').replace(',', '.').match(/\\d+(?:\\.\\d+)?/)?.[0]);\n  let densidade = '';\n  if (Number.isFinite(dn)) {\n    if (dn >= 60 && dn < 80) densidade = '60-80 kg/m3';\n    else if (dn >= 80 && dn < 100) densidade = '80-100 kg/m3';\n    else if (dn >= 100 && dn < 120) densidade = '100-120 kg/m3';\n    else if (dn >= 120 && dn <= 150) densidade = '120-150 kg/m3';\n  }\n  if (!densidade) motivos.push('densidade');\n\n  const gm = String(w.granulometria ?? '').replace(/,/g, '.').match(/(\\d+(?:\\.\\d+)?)\\s*(?:-|–|\\/|a|to)\\s*(\\d+(?:\\.\\d+)?)/i);\n  const gran = gm ? `${parseFloat(gm[1])}-${parseFloat(gm[2])} mm` : '';\n  const granulometria = ['0-1 mm', '1-2 mm', '2-4 mm', '4-8 mm', '8-15 mm'].includes(gran) ? gran : '';\n  if (!granulometria) motivos.push('granulometria');\n\n  const e = txt(w.embalagem);\n  let embalagem = '';\n  if (/big\\s*-?\\s*bag/.test(e)) embalagem = 'Big bag 1 m3';\n  else if (/granel|bulk/.test(e)) embalagem = 'A granel';\n  else if (/saco|sack|bag|palet|pallet/.test(e)) embalagem = 'Sacos 25 kg em palete';\n  if (!embalagem) motivos.push('embalagem');\n\n  const incoterm = String(w.incoterm ?? '').trim().toUpperCase();\n  if (!['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'].includes(incoterm)) motivos.push('incoterm');\n\n  const destino = String(w.destino_pais ?? '').trim().toUpperCase();\n  if (!['ES', 'FR', 'DE', 'IT', 'NL', 'BE', 'GB', 'US', 'BR', 'CN', 'JP', 'MA'].includes(destino)) motivos.push('destino');\n\n  let quantidade = Number(w.quantidade);\n  const un = txt(w.unidade);\n  if (/^(t|ton|tons|tonne|tonnes|tonelada|toneladas)$/.test(un.trim())) quantidade *= 1000;\n  if (!(quantidade > 0)) motivos.push('quantidade');\n\n  const cliente = String(w.empresa || w.remetente_nome || '').trim();\n  if (!cliente) motivos.push('cliente');\n\n  if (w.falhou_llm) motivos.push('falhou_llm');\n  if (!w.e_pedido) motivos.push('nao_e_pedido');\n  if (Number(w.confianca) < 0.8) motivos.push('confianca_baixa');\n  if (Array.isArray(w.campos_em_falta) && w.campos_em_falta.length) motivos.push('campos_em_falta');\n\n  const contacto_email = String(w.contacto_email || w.remetente_email || '').trim().toLowerCase();\n  const lead = leads.find(l => l.origem_email_id === w.email_id);\n\n  return { json: { pronto: motivos.length === 0, motivos: motivos.join(','), cliente, produto, densidade, granulometria, quantidade, embalagem, incoterm, destino, contacto_email, email_id: w.email_id, lead_id: lead ? lead.id : '' } };\n});\n"
       },
       "notes": "Converte o texto livre do WF1 nos valores exatos que o WF2 aceita. Só marca pronto=true se o WF1 tem confiança >= 0.8, não falta nenhum campo e todos os valores mapeiam; senão o pedido fica só como lead para rever."
     },
@@ -630,6 +639,39 @@
         },
         "options": {}
       }
+    },
+    {
+      "id": "93a5a7d5-1bee-4b72-817b-e7c15929edb3",
+      "name": "Responder com rascunho?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        -128
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.e_pedido === true || $json.falhou_llm === true }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              }
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "notes": "Só cria rascunho de resposta para pedidos (ou quando o LLM falhou e não se sabe). Emails que não são pedidos (newsletters, avisos) só ficam marcados como lidos."
     }
   ],
   "connections": {
@@ -638,17 +680,6 @@
         [
           {
             "node": "Ler emails da Folder 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ler emails da Folder 1": {
-      "main": [
-        [
-          {
-            "node": "Preparar texto do email",
             "type": "main",
             "index": 0
           }
@@ -688,11 +719,11 @@
         ]
       ]
     },
-    "Marcar original como lido": {
+    "Ler emails da Folder 1": {
       "main": [
         [
           {
-            "node": "Preparar pedido para WF2",
+            "node": "Preparar texto do email",
             "type": "main",
             "index": 0
           }
@@ -719,7 +750,7 @@
             "index": 0
           },
           {
-            "node": "Criar draft de resposta",
+            "node": "Responder com rascunho?",
             "type": "main",
             "index": 0
           }
@@ -759,6 +790,17 @@
         ]
       ]
     },
+    "Marcar original como lido": {
+      "main": [
+        [
+          {
+            "node": "Preparar pedido para WF2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Preparar pedido para WF2": {
       "main": [
         [
@@ -780,6 +822,24 @@
           }
         ]
       ]
+    },
+    "Responder com rascunho?": {
+      "main": [
+        [
+          {
+            "node": "Criar draft de resposta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar original como lido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -789,46 +849,15 @@
     "timeSavedMode": "fixed",
     "errorWorkflow": "{{WF:Mail Error Flow}}",
     "callerPolicy": "workflowsFromSameOwner",
-    "saveDataSuccessExecution": "none",
-    "saveDataErrorExecution": "all"
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
   },
   "tags": [],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "39zlpRbdQvI7dHGe",
-    "sourceVersionId": "3372dd95-bab3-483f-b1f2-77b1f9921c48",
-    "exportedAt": "2026-10-27",
+    "sourceVersionId": "78d6485a-d306-4c6a-9b17-3fe526797c8e",
+    "exportedAt": "2026-10-29",
     "sanitized": "ids de pastas do Outlook, ids de credenciais, ids de workflows e webhookIds substituídos por marcadores ou removidos"
-  },
-  "nodeGroups": [
-    {
-      "name": "Ler e extrair o pedido",
-      "nodeNames": [
-        "Ler emails da Folder 1",
-        "Preparar texto do email",
-        "Extrair pedido (WF1)"
-      ],
-      "description": "Lê os emails não lidos e pede ao WF1 para extrair o pedido."
-    },
-    {
-      "name": "Guardar o rascunho do pedido",
-      "nodeNames": [
-        "Registar uso de IA",
-        "É um pedido?",
-        "Gravar lead (rascunho)",
-        "Avisar Slack: pedido por email"
-      ],
-      "description": "Regista o uso de IA, grava o lead como rascunho a rever e avisa no Slack."
-    },
-    {
-      "name": "Rascunho de resposta",
-      "nodeNames": [
-        "Criar draft de resposta",
-        "Marcar draft como não lido",
-        "Mover draft para To Check",
-        "Marcar original como lido"
-      ],
-      "description": "Cria o rascunho de resposta (não envia), move-o para To Check e marca o original como lido."
-    }
-  ]
+  }
 }
