@@ -52,13 +52,16 @@ class Estrutura(unittest.TestCase):
 
     def test_ramo_de_revisao_nunca_envia(self):
         ramo = a_jusante('Criar rascunho para revisão') | {'Criar rascunho para revisão'}
+        # O n8n omite no export os valores por omissão: recurso 'message' (operação 'send') e, em 'draft', operação 'create'.
+        def recurso_operacao(p):
+            recurso = p.get('resource', 'message')
+            return recurso, p.get('operation', 'create' if recurso == 'draft' else 'send')
         for nome in ramo:
             n = N[nome]
             if n['type'] == 'n8n-nodes-base.microsoftOutlook':
-                self.assertNotEqual(n['parameters'].get('operation', 'send'), 'send', nome)
+                self.assertNotEqual(recurso_operacao(n['parameters']), ('message', 'send'), nome)
         self.assertNotIn('Enviar email único às transportadoras', ramo)
-        p = N['Criar rascunho para revisão']['parameters']
-        self.assertEqual((p['resource'], p['operation']), ('draft', 'create'))
+        self.assertEqual(recurso_operacao(N['Criar rascunho para revisão']['parameters']), ('draft', 'create'))
 
     def test_ramo_de_revisao_marca_rascunho_e_avisa(self):
         self.assertEqual(destinos('Criar rascunho para revisão'), ['Procurar pasta To Check'])
