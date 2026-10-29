@@ -1,4 +1,4 @@
--- Bateria Supabase (A1-A43 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
+-- Bateria Supabase (A1-A45 e B1-B8). Corre numa única instrução e TERMINA SEMPRE com uma exceção que traz o relatório:
 -- por isso a transação é revertida e não fica nenhum dado nem se apaga nenhum. A9 (trigger) verifica-se pelo catálogo,
 -- porque dentro de uma transação now() é constante.
 create or replace function pg_temp.falha(q text) returns boolean language plpgsql as $f$
@@ -13,6 +13,7 @@ do $t$
 declare
   r text := '';
   n int;
+  n0 int;
   p1 uuid; p2 uuid; t1 uuid; c1 text; c2 text; v1 uuid; v2 uuid; cf uuid;
   base text := $b$insert into propostas (cliente,produto,densidade,granulometria,quantidade,embalagem,incoterm,destino_pais) values ('T','p','d','g',%s,'e','%s','ES')$b$;
   tabelas text[] := array['contadores_proposta','leads','transportadoras','propostas','cotacoes_frete','requisitos_pais','ai_log','pedidos_cotacao','produtos','proposta_compliance','expedicoes','configuracao'];
@@ -47,9 +48,11 @@ begin
   r := r || format('A12 %s' || E'\n', case when pg_temp.falha(format($q$insert into cotacoes_frete (proposta_id,modo) values (%L,'foguetao')$q$, p1)) then 'OK' else 'FALHA' end);
 
   -- A13
+  -- conta em relação aos leads que já existem (a base de desenvolvimento tem leads de teste recentes)
+  select count(*) into n0 from leads where criado_em >= now() - interval '12 months' or estado = 'convertido';
   insert into leads (empresa, estado, criado_em) values ('velho','novo', now() - interval '13 months'), ('velho conv','convertido', now() - interval '13 months'), ('novo','novo', now());
   select purgar_leads_antigos(12) into n;
-  r := r || format('A13 %s apagados=%s (esperado 1), restantes=%s' || E'\n', case when n=1 and (select count(*) from leads)=2 then 'OK' else 'FALHA' end, n, (select count(*) from leads));
+  r := r || format('A13 %s apagados=%s (esperado 1), restantes=%s (esperado %s)' || E'\n', case when n=1 and (select count(*) from leads)=n0+2 then 'OK' else 'FALHA' end, n, (select count(*) from leads), n0+2);
 
   -- A14 (anon)
   ok := true;
@@ -163,6 +166,14 @@ begin
   r := r || format('A41 %s rejeita modo_envio inválido; aceita automatico e revisao' || E'\n', case when pg_temp.falha($q$update configuracao set valor='talvez' where chave='modo_envio'$q$) and not pg_temp.falha($q$update configuracao set valor='revisao' where chave='modo_envio'$q$) and not pg_temp.falha($q$update configuracao set valor='automatico' where chave='modo_envio'$q$) then 'OK' else 'FALHA' end);
   r := r || format('A42 %s trigger atualizado_em presente em configuracao' || E'\n', case when exists (select 1 from pg_trigger where tgrelid='public.configuracao'::regclass and tgname='configuracao_atualizado_em') then 'OK' else 'FALHA' end);
   r := r || format('A43 %s pedidos_cotacao aceita estado rascunho e rejeita estado inválido' || E'\n', case when not pg_temp.falha(format($q$insert into pedidos_cotacao (proposta_id, transportadora_id, assunto, corpo_html, estado, versao) values (%L, %L, 'a', 'b', 'rascunho', 98)$q$, p1, t1)) and pg_temp.falha(format($q$insert into pedidos_cotacao (proposta_id, transportadora_id, assunto, corpo_html, estado, versao) values (%L, %L, 'a', 'b', 'quase', 97)$q$, p1, t1)) then 'OK' else 'FALHA' end);
+
+  -- A44-A45 (migração 0010: lead convertido quando fica ligado a uma proposta)
+  insert into leads (empresa, origem_email_id) values ('Lead teste A44', 'bateria-a44') returning id into v1;
+  insert into propostas (cliente,produto,densidade,granulometria,quantidade,embalagem,incoterm,destino_pais,lead_id) values ('T44','p','d','g',10,'e','FOB','ES',v1) returning id into v2;
+  r := r || format('A44 %s proposta criada com lead_id marca o lead como convertido' || E'\n', case when (select estado from leads where id=v1)='convertido' then 'OK' else 'FALHA' end);
+  insert into leads (empresa, origem_email_id) values ('Lead teste A45', 'bateria-a45') returning id into cf;
+  update propostas set lead_id=cf where id=p1;
+  r := r || format('A45 %s ligar uma proposta existente a um lead também o converte; anon sem execução da função' || E'\n', case when (select estado from leads where id=cf)='convertido' and not has_function_privilege('anon','public.marcar_lead_convertido()','execute') then 'OK' else 'FALHA' end);
 
   raise exception E'BATERIA SUPABASE (revertida)\n%\nFALHAS: %', r, (length(r) - length(replace(r,'FALHA','')))/5;
 end $t$;

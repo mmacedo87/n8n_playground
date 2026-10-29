@@ -398,6 +398,26 @@ insert into configuracao (chave, valor, descricao, atualizado_por) values
    'WF3: automatico = envia o pedido de cotação às transportadoras; revisao = cria rascunho no Outlook (pasta To Check) para uma pessoa enviar',
    'schema');
 
+-- Lead convertido (migração 0010): proposta ligada a um lead marca o lead como 'convertido'
+-- (assim purgar_leads_antigos() não o apaga e a ligação ao email de origem fica).
+create or replace function marcar_lead_convertido()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.lead_id is not null then
+    update leads set estado = 'convertido'
+     where id = new.lead_id and estado <> 'convertido';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function marcar_lead_convertido() from public, anon, authenticated;
+create trigger propostas_lead_convertido
+  after insert or update of lead_id on propostas
+  for each row execute function marcar_lead_convertido();
+
 -- ============================================================
 -- OPCIONAL: dados de teste (descomentar para usar).
 -- Nomes e emails são fictícios; trocar pelas transportadoras reais.
