@@ -12,7 +12,7 @@
         0
       ],
       "parameters": {
-        "authentication": "none",
+        "authentication": "basicAuth",
         "formTitle": "Pedido de proposta",
         "formDescription": "Preencha os dados do pedido. Os dados da carga e as moradas são opcionais, mas são precisos para pedir cotações de frete às transportadoras.",
         "responseMode": "onReceived",
@@ -296,6 +296,11 @@
               "formSubmittedText": "Pedido registado. Vai receber um email de confirmação com o número da proposta."
             }
           }
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "name": "Unnamed credential"
         }
       }
     },
@@ -1035,7 +1040,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8pRJJuN094Mp9iuu",
-    "sourceVersionId": "d89f09a6-c451-4122-8072-8d260ff88eee",
+    "sourceVersionId": "b9ecbe09-2db2-4a49-8207-a47f39eb7938",
     "exportedAt": "2026-10-29",
     "sanitized": "destinatario_confirmacao, ids de credenciais, errorWorkflow e webhookIds removidos (o webhookId do formulário é o caminho do URL público)"
   }
