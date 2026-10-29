@@ -63,6 +63,22 @@ class Exportacao(unittest.TestCase):
         for no, ficheiro in (('Casar email com proposta e transportadora', 'casar.js'), ('Validar extração', 'validar.js')):
             self.assertEqual(norm(nos[no]['parameters']['jsCode']), norm((RAIZ / 'scripts' / 'wf6_code' / ficheiro).read_text(encoding='utf-8')), no)
 
+    def test_registo_de_uso_de_ia(self):
+        """Cada extração do LLM fica em ai_log, sem conteúdo do email, e uma falha do registo não pára o fluxo."""
+        wf = json.load(open(RAIZ / 'workflows' / 'wf6-ler-cotacoes.json', encoding='utf-8'))
+        nos = {n['name']: n for n in wf['nodes']}
+        reg = nos['Registar uso de IA']
+        self.assertEqual(reg['parameters']['tableId'], 'ai_log')
+        self.assertEqual(reg.get('onError'), 'continueRegularOutput')
+        destinos = [x['node'] for x in wf['connections']['Extrair cotação (LLM)']['main'][0]]
+        self.assertIn('Registar uso de IA', destinos)
+        self.assertIn('Validar extração', destinos)
+        campos = {f['fieldId']: str(f['fieldValue']) for f in reg['parameters']['fieldsUi']['fieldValues']}
+        self.assertTrue({'workflow', 'execucao_n8n_id', 'proposta_id', 'modelo', 'versao_prompt', 'input_resumo', 'output_resumo'} <= set(campos))
+        for v in campos.values():  # minimização de dados: nunca o texto do email nem o remetente
+            self.assertNotIn('.texto', v)
+            self.assertNotIn('remetente', v)
+
     def test_ligacoes(self):
         wf = json.load(open(RAIZ / 'workflows' / 'wf6-ler-cotacoes.json', encoding='utf-8'))
         c = wf['connections']
