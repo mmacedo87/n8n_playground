@@ -45,6 +45,8 @@ BINDINGS = [
     ("WF10 - Confirmação da encomenda", "Configuração", "email_barbara", "emails.barbara"),
     ("WF10 - Confirmação da encomenda", "Configuração", "url_base", "@url:/webhook/confirmar-proposta"),
     ("WF10 - Confirmação da encomenda", "Configuração", "url_form", "@url:/form/plano-expedicao"),
+    ("WF5 - Resumo para validação", "Normalizar código", "url_preco", "@url:/webhook/definir-preco"),
+    ("WF7 - Definir o preço final (formulário)", "Configuração", "url_pagina", "@url:/webhook/definir-preco"),
 ]
 
 # (nome do workflow, nome do nó Code, constante JS com o email, caminho no config)

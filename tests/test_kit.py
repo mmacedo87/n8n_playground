@@ -31,7 +31,7 @@ class T(unittest.TestCase):
         for f in ["LEIA-ME-PRIMEIRO.html", "Iniciar-Windows.bat", "Iniciar-Mac.command", "app/deploy_app.py", "app/index.html",
                   "scripts/deploy_workflows.py", "scripts/github_setup.py", "scripts/repo_files.py", "scripts/atualizar_config.py", "supabase/schema.sql", "supabase/migrations/0009_configuracao_modo_envio.sql", "deploy/config.example.json", "workflows/manifest.json"]:
             self.assertTrue((self.dir / f).exists(), f)
-        self.assertEqual(len(list((self.dir / "workflows").glob("*.json"))), 17)
+        self.assertEqual(len(list((self.dir / "workflows").glob("*.json"))), 18)
         self.assertFalse((self.dir / "deploy" / "config.json").exists())
 
     def test_K5_repositorio_dentro_do_kit_passa_os_testes(self):
