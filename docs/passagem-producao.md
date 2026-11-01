@@ -45,7 +45,7 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 ## 5b. Preço por formulário (WF7, migração 0012)
 - [ ] Aplicar a migração 0012 no Supabase de produção.
 - [ ] Criar em `utilizadores` a Bárbara real com `pode_definir_preco = true` (e mais pessoas quando for preciso; retirar = `false`, fica no histórico).
-- [ ] Trocar o URL do Supabase de DEV no WF7 («Configuração» → `supabase_url`) e no WF5 (nó «Preparar ligação do preço (BD)»): o deploy ainda não o faz.
+- [x] O deploy troca o URL do Supabase de DEV no WF5 («Normalizar código» → `supabase_url`) e no WF7 («Configuração» → `supabase_url`) pelo `supabase_url` do `deploy/config.json`, que o assistente pede no passo 1 (Project URL, validado `https://xxxx.supabase.co`; o deploy recusa outro formato).
 - [ ] Confirmar com a contabilidade as menções de isenção de IVA (art. 14.º RITI e art. 14.º CIVA) e os limites em `configuracao` (`preco.max_eur_kg`, `preco.max_desconto_pct`, `preco.validade_dias`).
 
 ## 6. Moloni

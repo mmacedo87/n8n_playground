@@ -27,6 +27,7 @@ INDEX = Path(__file__).resolve().parent / "index.html"
 
 LABELS = {
     "n8n_url": "o endereço do n8n",
+    "supabase_url": "o endereço do projeto Supabase (Project URL)",
     "emails.erros": "o email dos avisos de erro",
     "emails.confirmacao_pedido": "o email que recebe a confirmação de cada pedido",
     "emails.cotacoes": "o email da empresa para os pedidos de cotação",

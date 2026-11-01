@@ -48,6 +48,12 @@
               "name": "url_preco",
               "type": "string",
               "value": "https://mmacedo87.app.n8n.cloud/webhook/definir-preco"
+            },
+            {
+              "id": "c5",
+              "name": "supabase_url",
+              "type": "string",
+              "value": "https://ahisuvnooplmiczjytfp.supabase.co"
             }
           ]
         },
@@ -317,7 +323,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://ahisuvnooplmiczjytfp.supabase.co/rest/v1/rpc/preparar_acessos_preco",
+        "url": "={{ $('Normalizar código').first().json.supabase_url }}/rest/v1/rpc/preparar_acessos_preco",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,
@@ -328,7 +334,7 @@
           "timeout": 15000
         }
       },
-      "notes": "preparar_acessos_preco (migração 0012): cria ou reutiliza a ligação pessoal de cada utilizador com pode_definir_preco para esta proposta. O resumo usa a de quem recebe o email. URL do Supabase de DEV: trocar no deploy para produção.",
+      "notes": "preparar_acessos_preco (migração 0012): cria ou reutiliza a ligação pessoal de cada utilizador com pode_definir_preco para esta proposta. O resumo usa a de quem recebe o email. O URL do Supabase vem do «Normalizar código» (o deploy troca-o).",
       "alwaysOutputData": true,
       "executeOnce": true,
       "retryOnFail": true,
@@ -475,7 +481,7 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "8xj41URokjCimmon",
-    "sourceVersionId": "ec33a943-851a-43f5-9cc4-48d30a50d0ba",
+    "sourceVersionId": "d47c2344-9540-4d52-b25d-da6e947bc146",
     "exportedAt": "2026-11-01",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }

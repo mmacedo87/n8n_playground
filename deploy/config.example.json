@@ -1,5 +1,6 @@
 {
   "n8n_url": "https://NOME-DA-EMPRESA.app.n8n.cloud",
+  "supabase_url": "Project URL do Supabase (Project Settings → API), ex. https://xxxx.supabase.co",
   "emails": {
     "erros": "quem recebe os avisos de erro",
     "confirmacao_pedido": "quem recebe a confirmação de cada pedido (WF2)",

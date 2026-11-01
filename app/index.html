@@ -90,7 +90,9 @@ function render(){bar();const m=$("#main");
  <li>Clique aqui: <button class="sec" id="cp" onclick="copySql()">Copiar o texto da base de dados</button><br>Depois clique na caixa grande do Supabase e cole (<b>Ctrl+V</b>; no Mac <b>Cmd+V</b>).<div id="cpm"></div></li>
  <li>Clique no botão verde <b>Run</b>.<br><span class="see">Deve aparecer "Success. No rows returned".</span></li>
  <li>Fique com estes dois dados à mão (no menu <b>Project Settings → API</b>): o <b>Project URL</b> e a chave <b>service_role</b>. Vai precisar deles no passo 3. <div class="tip">A chave service_role é secreta: não a envie por email.</div></li></ol>
- <label class="chk"><input type="checkbox" id="db" ${dbDone?"checked":""} onchange="dbDone=this.checked;render()"> Já fiz tudo isto</label></div>${nav(dbDone)}`;return}
+ <label>Project URL do Supabase<small>Em <i>Project Settings → API</i>. Por exemplo https://xxxx.supabase.co</small></label>
+ <input type="text" id="sburl1" value="${esc(cfg.supabase_url||"")}" oninput="cfg.supabase_url=this.value.trim().replace(/\\/+$/,'');save();render1()"><div id="sbm1">${sbUrlOk()||!cfg.supabase_url?"":'<div class="msg bad">Use o Project URL completo, por exemplo https://xxxx.supabase.co</div>'}</div>
+ <label class="chk"><input type="checkbox" id="db" ${dbDone?"checked":""} onchange="dbDone=this.checked;render()"> Já fiz tudo isto</label></div>${nav(dbDone&&sbUrlOk())}`;return}
  if(step===2){m.innerHTML=`<div class="card">${head()}<p>Agora vamos ligar esta página ao n8n da empresa.</p><ol class="steps">
  <li>Abra o n8n da empresa no browser e entre.</li>
  <li>Clique no seu nome (canto inferior esquerdo), <b>Settings</b>, depois <b>n8n API</b>, e <b>Create an API key</b>. Dê um nome (ex.: <i>instalação</i>) e confirme.</li>
@@ -212,6 +214,8 @@ function setCred(k,v){cfg.credenciais[k]=credId(v)||v.trim();save();const d=cred
  const n=document.querySelector(".nav:last-child button:last-child");if(n)n.disabled=!["microsoftOutlookOAuth2Api","slackApi","supabaseApi","openRouterApi","httpBasicAuth"].every(x=>credId(cfg.credenciais[x]))}
 async function copySql(){const r=await api("/api/schema");try{await navigator.clipboard.writeText(r.sql);$("#cpm").innerHTML='<div class="msg ok">Copiado! Agora cole no Supabase.</div>'}catch(e){$("#cpm").innerHTML='<div class="msg bad">Não consegui copiar sozinho. Abra o ficheiro supabase/schema.sql, selecione tudo e copie.</div>'}}
 async function testConn(){const r=await api("/api/connect",{url:cfg.n8n_url,key:$("#key").value.trim()});connected=r.ok;$("#cm").innerHTML=`<div class="msg ${r.ok?"ok":"bad"}">${esc(r.msg)}</div>`;render2()}
+function sbUrlOk(){return /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(cfg.supabase_url||"")}
+function render1(){const n=document.querySelector(".nav:last-child button:last-child");if(n)n.disabled=!(dbDone&&sbUrlOk());const m=$("#sbm1");if(m)m.innerHTML=sbUrlOk()||!cfg.supabase_url?"":'<div class="msg bad">Use o Project URL completo, por exemplo https://xxxx.supabase.co</div>'}
 function render2(){const n=document.querySelector(".nav:last-child button:last-child");if(n)n.disabled=!connected}
 async function doCheck(){$("#ck").innerHTML="A verificar…";await flush();const r=await api("/api/check",{});checked=!!r.ok;$("#ck").innerHTML=r.ok?`<div class="msg ok">Tudo certo: ${r.total} workflows prontos a instalar.</div>`:`<div class="msg bad">${esc(r.error)}<br><small>Volte ao passo anterior e corrija.</small></div>`;nav5()}
 async function doDeploy(){$("#ib").disabled=true;await flush();const r=await api("/api/deploy",{});if(!r.ok){$("#fin").innerHTML=`<div class="msg bad">${esc(r.error)}</div>`;$("#ib").disabled=false;return}poll()}

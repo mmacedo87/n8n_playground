@@ -1,5 +1,6 @@
 """Teste de ecrã do assistente com um browser real (Playwright) e uma API n8n simulada.
 Correr: python3 tests/e2e_app.py [pasta-para-capturas]   (precisa de playwright e chromium)"""
+import os
 import json
 import sys
 import threading
@@ -32,7 +33,7 @@ def shot(pg, n):
 
 try:
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(channel=os.environ.get("PLAYWRIGHT_CHANNEL") or None)  # ex. PLAYWRIGHT_CHANNEL=chrome em macOS 12
         pg = b.new_page(viewport={"width": 430, "height": 900})
         pg.on("pageerror", lambda e: errors.append(str(e)))
         pg.goto(url)
@@ -47,6 +48,11 @@ try:
         # passo 1 bloqueado até confirmar
         assert pg.is_disabled(".nav button:last-child")
         pg.check("#db")
+        assert pg.is_disabled(".nav button:last-child"), "sem o Project URL do Supabase não avança"
+        pg.fill("#sburl1", "https://prodabc123.supabase.co.evil.example")
+        assert "Project URL completo" in pg.inner_text("#sbm1") and pg.is_disabled(".nav button:last-child")
+        pg.fill("#sburl1", "https://prodabc123.supabase.co/")
+        assert pg.inner_text("#sbm1") == "" and not pg.is_disabled(".nav button:last-child")
         shot(pg, 1)
         pg.click(".nav button:last-child")
         # passo 2
@@ -90,14 +96,14 @@ try:
         pg.click("button:has-text(\"Instalar agora\")")
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
         shot(pg, 6)
-        assert len(mock.store) == 16
+        assert len(mock.store) == 17
         cfg = json.loads(A.CONFIG.read_text())
         assert cfg["credenciais"]["slackApi"] == "Abc123451"
         assert cfg["slack_canais"]["estado"] == "C0AB12CD32"
         assert cfg["emails"]["aprovadores"] == ["b@x.pt", "c@x.pt"]
         b.close()
     assert not errors, errors
-    print("E2E OK: 7 passos percorridos, 16 workflows instalados na API simulada")
+    print("E2E OK: 7 passos percorridos, 17 workflows instalados na API simulada")
 finally:
     srv.shutdown()
     mock.close()

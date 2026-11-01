@@ -47,6 +47,8 @@ BINDINGS = [
     ("WF10 - Confirmação da encomenda", "Configuração", "url_form", "@url:/form/plano-expedicao"),
     ("WF5 - Resumo para validação", "Normalizar código", "url_preco", "@url:/webhook/definir-preco"),
     ("WF7 - Definir o preço final (formulário)", "Configuração", "url_pagina", "@url:/webhook/definir-preco"),
+    ("WF5 - Resumo para validação", "Normalizar código", "supabase_url", "supabase_url"),
+    ("WF7 - Definir o preço final (formulário)", "Configuração", "supabase_url", "supabase_url"),
 ]
 
 # (nome do workflow, nome do nó Code, constante JS com o email, caminho no config)
@@ -128,6 +130,8 @@ def check_config(cfg, wfs):
             get_path(cfg, path)
     for (_, _, _, path) in CODE_BINDINGS:
         get_path(cfg, path)
+    if not re.fullmatch(r"https://[a-z0-9-]+\.supabase\.co", str(cfg.get("supabase_url", "")).strip().rstrip("/")):
+        raise DeployError("config inválida: supabase_url tem de ser o Project URL do Supabase (https://xxxx.supabase.co)")
 
 
 def apply_config(d, cfg):

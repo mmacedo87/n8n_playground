@@ -127,7 +127,8 @@ Limite conhecido: o nó "Gravar compliance" e o trigger só correm a sério na p
 | P29 | WF5 offline (R6-R8): secção Preço, botão pessoal, sem código de aprovação sem preço, sem utilizador com permissão | Passa |
 | P30 | WF13 offline (K10-K12): reserva tem de usar a cotação do preço aprovado; cancelar não apaga `frete_escolhido_id` | Passa |
 | P31 | Real: GET/POST do WF7, WF5 reenviado, WF8 com e sem preço, WF9, WF13 (ver «Última execução») | Passa |
-| P32 | Navegador: abrir a ligação do email, ver o cálculo em direto e gravar pelo botão (formulário HTML real) | **Por fazer (Bárbara)** |
+| P32 | Navegador real (Chrome 150 pelo Playwright, identificação de navegador normal): abrir a ligação pessoal, ver o cálculo em direto e gravar pelo botão (PRP-2026-0021: 20 000 kg × 1,60 €/kg − 2 % + frete 1 250 = 32 610,00 €, igual ao servidor; sem erros de JavaScript). Nota: o Chrome sem janela (HeadlessChrome) recebe 403 por causa de «ignorar bots», como o WF10 | Passa |
+| P33 | Deploy: `supabase_url` substituído no WF5 e no WF7, nenhum resto do Supabase de DEV no destino, formato inválido recusado (`tests/test_deploy.py` D4/D5); assistente: passo 1 só avança com um Project URL válido (`tests/e2e_app.py`) | Passa |
 
 ## R. Testes reais (comedidos)
 Regra: no máximo 1 execução real do encadeamento completo por alteração relevante (WF2 → WF3 + WF4, destino ES, modo de teste: 1 email para o destinatário de teste, 1 chamada ao LLM de redação). Não repetir em cada bateria; os restantes testes usam dados fixados. Apagar a proposta de teste depois.

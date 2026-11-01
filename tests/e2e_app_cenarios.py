@@ -59,6 +59,7 @@ def page(b, env, w=430, h=900, **kw):
 
 def to_step2(pg):
     pg.click('button:has-text("Começar")')
+    pg.fill("#sburl1", "https://prodabc123.supabase.co")
     pg.check("#db")
     pg.click(NEXT)
 
@@ -203,6 +204,7 @@ def S06_persistencia_apos_recarregar(b):
         pg.reload()
         assert "Bem-vindo" in pg.inner_text("#main")
         pg.click('button:has-text("Começar")')
+        assert pg.input_value("#sburl1") == "https://prodabc123.supabase.co"
         pg.check("#db")
         pg.click(NEXT)
         assert pg.input_value("#url") == e.mock.url
@@ -229,7 +231,7 @@ def S07_falha_a_meio_e_repetir(b):
         assert 0 < antes < 15
         pg.click('button:has-text("Instalar agora")')
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
-        assert len(e.mock.store) == 16, len(e.mock.store)
+        assert len(e.mock.store) == 17, len(e.mock.store)
 
 
 def S08_duplo_clique_em_instalar(b):
@@ -238,8 +240,8 @@ def S08_duplo_clique_em_instalar(b):
         to_step6(pg, e)
         pg.dblclick('button:has-text("Instalar agora")')
         pg.wait_for_selector("#fin .msg.ok", timeout=30000)
-        assert len(e.mock.store) == 16
-        assert sum(1 for x in e.mock.log if x[0] == "POST" and not x[1].endswith("/activate")) == 16
+        assert len(e.mock.store) == 17
+        assert sum(1 for x in e.mock.log if x[0] == "POST" and not x[1].endswith("/activate")) == 17
 
 
 def S09_teclado(b):
@@ -318,8 +320,8 @@ def S12_copiar_sql(b):
         assert "create table" in txt.lower() and "expedicoes" in txt and len(txt) > 5000
         # sem permissão: mensagem de recurso
         pg2 = page(b, e)
-        pg2.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:()=>Promise.reject(new Error('x'))}})")
-        pg2.goto(e.url + "#instalar")
+        pg2.add_init_script("(() => { const f = () => Promise.reject(new Error('x')); if (window.Clipboard) Clipboard.prototype.writeText = f; try { Object.defineProperty(navigator,'clipboard',{value:{writeText:f}}) } catch (e) {} })()")
+        pg2.reload()  # o page() já abriu a página: sem recarregar, o init script não corre
         pg2.click('button:has-text("Começar")')
         pg2.click("#cp")
         pg2.wait_for_selector("#cpm .msg.bad")
@@ -484,7 +486,7 @@ SC = [v for k, v in sorted(globals().items()) if k.startswith("S") and k[1:3].is
 if __name__ == "__main__":
     ok, bad = [], []
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(channel=os.environ.get("PLAYWRIGHT_CHANNEL") or None)  # ex. PLAYWRIGHT_CHANNEL=chrome em macOS 12
         for f in SC:
             try:
                 f(b)

@@ -13,6 +13,7 @@ import sanitize_workflow as S  # noqa: E402
 
 CFG = {
     "n8n_url": "https://prod.example.invalid",
+    "supabase_url": "https://prodabc123.supabase.co",
     "emails": {"erros": "erros@x.pt", "confirmacao_pedido": "conf@x.pt", "cotacoes": "cot@x.pt",
                "validacao_barbara": "b@x.pt", "cc_barbara": "b@x.pt", "madalena": "m@x.pt",
                "barbara": "b@x.pt", "aprovadores": ["B@X.pt", "c@x.pt"]},
@@ -127,6 +128,10 @@ class T(unittest.TestCase):
             del cfg["credenciais"]["slackApi"]
             with self.assertRaises(D.DeployError):
                 D.run(cfg, api=D.Api(m.url, "k"))
+            for mau in ("", "https://ahisuvnooplmiczjytfp.supabase.co.evil.example", "http://x.supabase.co"):
+                cfg = json.loads(json.dumps(CFG)); cfg["supabase_url"] = mau
+                with self.assertRaises(D.DeployError):
+                    D.run(cfg, api=D.Api(m.url, "k"))
             self.assertEqual(m.log, [])
         finally:
             m.close()
@@ -164,6 +169,12 @@ class T(unittest.TestCase):
             wf7 = m.by_name("WF7 - Definir o preço final (formulário)")
             v7 = {a["name"]: a["value"] for n in wf7["nodes"] if n["name"] == "Configuração" for a in n["parameters"]["assignments"]["assignments"]}
             self.assertEqual(v7["url_pagina"], "https://prod.example.invalid/webhook/definir-preco")
+            self.assertEqual(v7["supabase_url"], "https://prodabc123.supabase.co")
+            wf5 = m.by_name("WF5 - Resumo para validação")
+            v5 = {a["name"]: a["value"] for n in wf5["nodes"] if n["name"] == "Normalizar código" for a in n["parameters"]["assignments"]["assignments"]}
+            self.assertEqual(v5["supabase_url"], "https://prodabc123.supabase.co")
+            self.assertEqual(v5["url_preco"], "https://prod.example.invalid/webhook/definir-preco")
+            self.assertNotIn("ahisuvnooplmiczjytfp", json.dumps(wf5) + json.dumps(wf7), "o Supabase de DEV não pode ir para produção")
             self.assertEqual({n["parameters"]["workflowId"]["value"] for n in wf7["nodes"] if n["type"] == "n8n-nodes-base.executeWorkflow"},
                              {ids["WF5 - Resumo para validação"], ids["Notificar Slack"]})
             self.assertNotIn("WF8 - Aprovação da Bárbara por email", ativos)
