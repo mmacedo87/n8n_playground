@@ -3,129 +3,129 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Automação de propostas Maclipe</title>
+<title>Automação de propostas comerciais</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/reveal.min.css">
 <style>
-/* Plano: um só tema escuro de alto contraste, azul-noite com acento âmbar (cortiça).
-   Texto principal ~17:1 e secundário ~10:1 sobre o fundo; acento ~9:1.
-   Layout: slides 1280x720, título à esquerda, conteúdo em grelhas; o percurso da proposta é a espinha da apresentação. */
+/* Plano: tema único escuro «casca de sobreiro», texto creme de alto contraste, acento cor de cortiça e verde de sobreiro.
+   Textura de granulado de cortiça desenhada em canvas (faixa no topo e blocos da capa).
+   Layout: slides 1280x720, títulos à esquerda; o percurso da proposta é a espinha da apresentação. */
 :root {
-  --ink: #0d141c;        /* fundo */
-  --panel: #17212c;      /* cartões */
-  --line: #34475a;       /* linhas e contornos */
-  --paper: #f5f7fa;      /* texto principal */
-  --muted: #bfcad6;      /* texto secundário */
-  --cork: #f0b46a;       /* acento: cortiça/âmbar */
-  --ok: #86dba8;
-  --warn: #f5c95c;
-  --crit: #f59588;
-  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --bark: #17110c;       /* fundo: casca */
+  --panel: #241a12;      /* cartões */
+  --line: #4a3626;       /* linhas e contornos */
+  --cream: #f7efe2;      /* texto principal */
+  --muted: #d3c2ab;      /* texto secundário */
+  --cork: #e2ae72;       /* acento: cortiça */
+  --oak: #9cc49a;        /* verde de sobreiro: estado bom */
+  --warn: #f2c75c;
+  --crit: #f39a8a;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
   --body: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: dark;
 }
-html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); color: var(--paper); }
-.reveal { font-family: var(--body); font-size: 30px; color: var(--paper); }
+html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--bark); color: var(--cream); }
+.reveal { font-family: var(--body); font-size: 30px; color: var(--cream); }
 .reveal .slides { text-align: left; }
 .reveal .slides section { padding: 0 8px; box-sizing: border-box; }
-.reveal h1, .reveal h2, .reveal h3 { font-family: var(--display); color: var(--paper); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
-.reveal h1 { font-size: 78px; line-height: 1.02; font-weight: 700; }
-.reveal h2 { font-size: 50px; line-height: 1.1; font-weight: 700; margin-bottom: 28px; }
-.reveal h3 { font-size: 30px; font-weight: 700; margin-bottom: 10px; }
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--display); color: var(--cream); text-wrap: balance; margin: 0; letter-spacing: -0.005em; }
+.reveal h1 { font-size: 74px; line-height: 1.04; font-weight: 700; }
+.reveal h2 { font-size: 48px; line-height: 1.1; font-weight: 700; margin-bottom: 26px; }
+.reveal h3 { font-size: 28px; font-weight: 600; margin-bottom: 10px; }
 .reveal p { margin: 0 0 14px; line-height: 1.4; max-width: 34em; }
 .reveal ul { margin: 0; padding-left: 1.1em; }
 .reveal li { margin-bottom: 10px; line-height: 1.35; }
 .reveal li::marker { color: var(--cork); }
-.reveal strong { color: var(--paper); font-weight: 600; }
-.reveal a { color: var(--cork); }
-.eyebrow { font-family: var(--mono); font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cork); margin-bottom: 14px; display: block; }
+.reveal strong { color: var(--cream); font-weight: 600; }
+.eyebrow { font-family: var(--mono); font-size: 17px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cork); margin-bottom: 14px; display: block; }
 .muted { color: var(--muted); }
 .small { font-size: 22px; }
 .code { font-family: var(--mono); font-size: 0.82em; color: var(--cork); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* faixa de cortiça fixa no topo */
+#cork-strip { position: fixed; top: 0; left: 0; width: 100%; height: 10px; z-index: 5; display: block; pointer-events: none; }
 
 .grid { display: grid; gap: 22px; }
 .g2 { grid-template-columns: 1fr 1fr; }
 .g3 { grid-template-columns: repeat(3, 1fr); }
-.g4 { grid-template-columns: repeat(4, 1fr); }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; }
 .card p { font-size: 24px; color: var(--muted); margin: 0; }
 .card h3 { font-size: 27px; }
-.card.accent { border-top: 4px solid var(--cork); }
+.card.accent { border-top: 5px solid var(--cork); }
 
 /* capa */
-.cover { display: flex; flex-direction: column; justify-content: space-between; height: 640px; }
-.cover .sub { font-size: 32px; color: var(--muted); max-width: 26em; margin-top: 22px; }
-.cover .meta { font-family: var(--mono); font-size: 18px; color: var(--muted); display: flex; gap: 28px; }
-.granules { display: flex; gap: 8px; margin-bottom: 26px; }
-.granules span { width: 14px; height: 14px; border-radius: 50%; background: var(--cork); opacity: .9; }
-.granules span:nth-child(2) { width: 9px; height: 9px; opacity: .6; align-self: center; }
-.granules span:nth-child(3) { width: 18px; height: 18px; opacity: .75; }
-.granules span:nth-child(4) { width: 7px; height: 7px; opacity: .5; align-self: end; }
+.cover { display: grid; grid-template-columns: 1.35fr 1fr; gap: 48px; align-items: center; height: 620px; }
+.cover .sub { font-size: 30px; color: var(--muted); max-width: 24em; margin-top: 22px; }
+.cover .meta { font-family: var(--mono); font-size: 17px; color: var(--muted); display: flex; gap: 28px; margin-top: 40px; }
+.cork-block { position: relative; height: 560px; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); }
+.cork-block canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cork-block .label { position: absolute; left: 22px; bottom: 22px; right: 22px; background: rgba(23,17,12,.88); color: var(--cream); border-radius: 10px; padding: 14px 18px; font-family: var(--mono); font-size: 16px; letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 10px; }
 
 /* percurso */
 .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 8px; }
-.phase { border-top: 3px solid var(--line); padding-top: 12px; }
-.phase.on { border-top-color: var(--cork); }
-.phase .name { font-family: var(--mono); font-size: 16px; text-transform: uppercase; letter-spacing: .08em; color: var(--cork); margin-bottom: 12px; }
+.phase { border-top: 4px solid var(--cork); padding-top: 12px; }
+.phase .name { font-family: var(--mono); font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: var(--cork); margin-bottom: 12px; }
 .step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; font-size: 22px; line-height: 1.25; }
-.step b { font-family: var(--mono); font-weight: 500; color: var(--muted); font-size: 16px; display: block; margin-bottom: 3px; }
-.step.human { border-left: 4px solid var(--cork); }
-.step.todo { border-style: dashed; border-color: var(--warn); }
+.step b { font-family: var(--mono); font-weight: 500; color: var(--muted); font-size: 15px; display: block; margin-bottom: 3px; }
+.step.human { border-left: 5px solid var(--oak); }
 .legend { display: flex; gap: 28px; font-size: 19px; color: var(--muted); margin-top: 14px; }
 .legend i { display: inline-block; width: 18px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; background: var(--panel); border: 1px solid var(--line); }
-.legend i.h { border-left: 4px solid var(--cork); }
-.legend i.t { border: 1px dashed var(--warn); }
+.legend i.h { border-left: 5px solid var(--oak); }
 
 /* detalhe por fase */
 .split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 44px; align-items: start; }
-.who { display: inline-block; font-family: var(--mono); font-size: 16px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--cork); color: var(--cork); margin: 0 6px 8px 0; }
+.who { display: inline-block; font-family: var(--mono); font-size: 15px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--cork); color: var(--cork); margin: 0 6px 8px 0; }
 .who.sys { border-color: var(--line); color: var(--muted); }
-.rule { border-left: 4px solid var(--cork); padding: 10px 0 10px 18px; font-size: 24px; color: var(--paper); margin-top: 18px; }
+.rule { border-left: 5px solid var(--oak); padding: 10px 0 10px 18px; font-size: 24px; color: var(--cream); margin-top: 18px; }
 
 /* tabelas */
 .reveal table { border-collapse: collapse; width: 100%; font-size: 22px; margin: 0; }
-.reveal table th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: 16px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 12px; }
+.reveal table th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 12px; }
 .reveal table td { border-bottom: 1px solid var(--line); padding: 10px 12px; vertical-align: top; line-height: 1.3; }
 .reveal table td:first-child { font-weight: 600; white-space: nowrap; }
+
+/* página do preço (exemplo) */
+.mock { background: var(--cream); color: #2a1c11; border-radius: 14px; padding: 22px 26px; font-size: 19px; box-shadow: 0 0 0 6px rgba(226,174,114,.25); }
+.mock h4 { margin: 0 0 4px; font-family: var(--display); font-size: 24px; color: #2a1c11; }
+.mock .ref { font-family: var(--mono); font-size: 14px; color: #6b5237; margin-bottom: 12px; }
+.mock .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 6px 0; border-bottom: 1px solid #e3d5bf; }
+.mock .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+.mock .field { background: #fff; border: 1px solid #c9b394; border-radius: 6px; padding: 1px 8px; }
+.mock .total { display: grid; grid-template-columns: 1fr auto; padding-top: 10px; font-size: 24px; font-weight: 700; }
+.mock .note { font-size: 15px; color: #6b5237; margin-top: 8px; }
+.mock .btn { display: inline-block; margin-top: 12px; background: #3e5b3a; color: #fff; border-radius: 6px; padding: 8px 16px; font-weight: 600; }
 
 /* estados */
 .states { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 28px; }
 .state { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 22px; }
-.state small { display: block; font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.state small { display: block; font-family: var(--mono); font-size: 13px; color: var(--muted); }
 .arrow { color: var(--cork); font-size: 22px; }
 
 /* estado do projeto */
 .pill { display: inline-block; font-family: var(--mono); font-size: 15px; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
-.pill.ok { background: rgba(134,219,168,.16); color: var(--ok); }
-.pill.wait { background: rgba(245,201,92,.16); color: var(--warn); }
-.pill.no { background: rgba(245,149,136,.16); color: var(--crit); }
-.big { font-family: var(--display); font-size: 120px; font-weight: 700; line-height: 1; color: var(--paper); font-variant-numeric: tabular-nums; }
+.pill.ok { background: rgba(156,196,154,.18); color: var(--oak); }
+.pill.wait { background: rgba(242,199,92,.16); color: var(--warn); }
+.pill.no { background: rgba(243,154,138,.16); color: var(--crit); }
+.big { font-family: var(--display); font-size: 120px; font-weight: 700; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
 .big span { color: var(--muted); font-size: 60px; }
 .bar { display: grid; grid-template-columns: repeat(14, 1fr); gap: 5px; margin: 18px 0 10px; }
-.bar i { height: 16px; border-radius: 3px; background: var(--ok); }
-.bar i.gap { background: transparent; border: 2px dashed var(--warn); }
+.bar i { height: 16px; border-radius: 3px; background: var(--oak); }
 
 /* testes */
 .tests { display: grid; grid-template-columns: 1.45fr 1fr; gap: 36px; align-items: start; }
+.tests h3 { font-family: var(--mono); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; font-size: 15px; color: var(--muted); }
 .reveal table.t-tests { font-size: 19px; }
 .reveal table.t-tests td { padding: 7px 10px; }
 .reveal table.t-tests td:last-child { white-space: normal; font-size: 17px; }
-.reveal table.t-tests .num { text-align: center; width: 70px; font-variant-numeric: tabular-nums; }
+.reveal table.t-tests .n { text-align: center; width: 70px; font-variant-numeric: tabular-nums; }
 .checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .checks li { display: flex; justify-content: space-between; gap: 14px; align-items: center; font-size: 20px; margin: 0; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.checks .pill { font-variant-numeric: tabular-nums; }
 
-/* opções */
-.opt .tag { font-family: var(--mono); font-size: 15px; color: var(--muted); display: block; margin-bottom: 8px; }
-.opt.rec { border-color: var(--cork); border-width: 2px; }
-.opt.rec .tag { color: var(--cork); }
-.opt ul { font-size: 21px; color: var(--muted); margin-top: 10px; }
-.opt li { margin-bottom: 6px; }
-
-/* numeração dos próximos passos */
+/* próximos passos */
 .steps { list-style: none; padding: 0; margin: 0; counter-reset: s; display: grid; gap: 14px; }
 .steps li { counter-increment: s; display: grid; grid-template-columns: 56px 1fr; align-items: baseline; font-size: 27px; margin: 0; }
 .steps li::before { content: counter(s); font-family: var(--display); font-weight: 700; font-size: 36px; color: var(--cork); }
@@ -139,6 +139,7 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
 </style>
 </head>
 <body>
+<canvas id="cork-strip" aria-hidden="true"></canvas>
 <div class="reveal">
 <div class="slides">
 
@@ -146,14 +147,14 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
 <section>
   <div class="cover">
     <div>
-      <div class="granules" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <span class="eyebrow">Maclipe · Propostas comerciais</span>
-      <h1>Do pedido à expedição,<br>sem perder o fio</h1>
-      <p class="sub">Como funciona o novo processo automático de propostas, quem faz o quê e o que falta para arrancar.</p>
+      <span class="eyebrow">Granulado, aglomerado e pó de cortiça</span>
+      <h1>Do pedido à expedição, sem perder o fio</h1>
+      <p class="sub">Como funciona o processo automático de propostas comerciais, quem faz o quê e o que falta para arrancar.</p>
+      <div class="meta"><span>Novembro 2026</span><span>Equipa comercial e de expedição</span></div>
     </div>
-    <div class="meta"><span>Novembro 2026</span><span>Para a equipa comercial e de expedição</span></div>
+    <div class="cork-block"><canvas class="cork" data-seed="7" aria-hidden="true"></canvas><div class="label"><span>Pedido</span><span>Preço</span><span>Expedição</span></div></div>
   </div>
-  <aside class="notes">Apresentar o objetivo: mostrar o processo de ponta a ponta, o papel de cada pessoa e a decisão que falta tomar (o preço).</aside>
+  <aside class="notes">Objetivo: mostrar o processo de ponta a ponta, incluindo o novo passo do preço, e o papel de cada pessoa.</aside>
 </section>
 
 <!-- 2. Porquê -->
@@ -161,9 +162,9 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   <span class="eyebrow">Porquê</span>
   <h2>Cada proposta passava por muitas mãos e muitas mensagens</h2>
   <div class="grid g3">
-    <div class="card"><h3>Hoje</h3><p>Ler o pedido, pedir preços de frete a várias transportadoras, juntar respostas, ver os requisitos do país, montar o resumo, enviar, confirmar e planear a expedição. Quase tudo à mão.</p></div>
-    <div class="card"><h3>O risco</h3><p>Pedidos esquecidos, cotações perdidas na caixa de correio, propostas sem registo de quem aprovou e quando.</p></div>
-    <div class="card accent"><h3>O objetivo</h3><p>O sistema faz o trabalho repetitivo. As pessoas ficam com as decisões: validar, aprovar, definir o preço e planear a produção.</p></div>
+    <div class="card"><h3>Hoje</h3><p>Ler o pedido, pedir preços de frete a várias transportadoras, juntar respostas, ver os requisitos do país, calcular o preço, montar o resumo, enviar, confirmar e planear a expedição. Quase tudo à mão.</p></div>
+    <div class="card"><h3>O risco</h3><p>Pedidos esquecidos, cotações perdidas na caixa de correio, preços calculados de formas diferentes e propostas sem registo de quem aprovou.</p></div>
+    <div class="card accent"><h3>O objetivo</h3><p>O sistema faz o trabalho repetitivo. As pessoas ficam com as decisões: definir o preço, validar, aprovar e planear a produção.</p></div>
   </div>
 </section>
 
@@ -172,9 +173,9 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   <span class="eyebrow">Três regras do processo</span>
   <h2>O sistema prepara, as pessoas decidem</h2>
   <div class="grid g3">
-    <div class="card accent"><h3>Nada vai ao cliente sem aprovação</h3><p>A proposta só segue depois de a Bárbara responder «OK». Outra resposta qualquer nunca aprova.</p></div>
+    <div class="card accent"><h3>Nada vai ao cliente sem aprovação</h3><p>A proposta só segue depois de a Bárbara definir o preço e responder «OK» com o código da proposta.</p></div>
     <div class="card accent"><h3>Rascunhos, não envios às cegas</h3><p>As respostas a pedidos incompletos e as reservas de frete ficam em rascunho para alguém rever e enviar.</p></div>
-    <div class="card accent"><h3>Tudo fica registado</h3><p>Cada proposta tem um código único (<span class="code">PRP-2026-0042</span>), um estado e um histórico. Os avisos chegam ao Slack. Se algo falhar, chega um email.</p></div>
+    <div class="card accent"><h3>Tudo fica registado</h3><p>Cada proposta tem um código único (<span class="code">PRP-2026-0042</span>), um estado e um histórico, incluindo cada alteração de preço.</p></div>
   </div>
 </section>
 
@@ -183,28 +184,28 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   <span class="eyebrow">O percurso de uma proposta</span>
   <h2>Dez passos, cinco fases</h2>
   <div class="flow">
-    <div class="phase on"><div class="name">Entrada</div>
+    <div class="phase"><div class="name">Entrada</div>
       <div class="step"><b>01</b>Pedido chega por email ou formulário</div>
       <div class="step"><b>02</b>Registo e confirmação ao cliente</div>
     </div>
-    <div class="phase on"><div class="name">Preparação</div>
+    <div class="phase"><div class="name">Preparação</div>
       <div class="step"><b>03</b>Cotações de frete às transportadoras</div>
       <div class="step"><b>04</b>Requisitos e direitos do país</div>
-      <div class="step todo"><b>05</b>Preço final</div>
+      <div class="step human"><b>05</b>Preço final (Bárbara)</div>
     </div>
-    <div class="phase on"><div class="name">Decisão</div>
+    <div class="phase"><div class="name">Decisão</div>
       <div class="step human"><b>06</b>Resumo à Bárbara</div>
       <div class="step human"><b>07</b>Aprovação com «OK»</div>
     </div>
-    <div class="phase on"><div class="name">Cliente</div>
+    <div class="phase"><div class="name">Cliente</div>
       <div class="step"><b>08</b>Envio da proposta</div>
       <div class="step"><b>09</b>Cliente confirma a encomenda</div>
     </div>
-    <div class="phase on"><div class="name">Expedição</div>
+    <div class="phase"><div class="name">Expedição</div>
       <div class="step human"><b>10</b>Plano de expedição (Madalena) e aviso final ao cliente</div>
     </div>
   </div>
-  <div class="legend"><span><i></i>Automático</span><span><i class="h"></i>Decisão de uma pessoa</span><span><i class="t"></i>Por definir</span></div>
+  <div class="legend"><span><i></i>Automático</span><span><i class="h"></i>Decisão de uma pessoa</span></div>
 </section>
 
 <!-- 5. Entrada -->
@@ -233,20 +234,62 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   <div class="split">
     <div>
       <h2>Frete, regras do país e preço</h2>
-      <span class="who sys">Sistema</span><span class="who">Transportadoras</span>
+      <span class="who sys">Sistema</span><span class="who">Transportadoras</span><span class="who">Bárbara</span>
     </div>
     <div>
       <ul>
         <li>Sai <strong>um único pedido de cotação</strong> para até 5 transportadoras, em cópia oculta, com o código da proposta no assunto.</li>
         <li>As respostas, em texto ou em PDF, são lidas e gravadas como cotações e associadas à proposta certa.</li>
         <li>O sistema junta o <strong>código pautal</strong>, os direitos aduaneiros do destino e as notas fitossanitárias.</li>
-        <li>O <strong>preço final</strong> é o único passo ainda por definir. Explicamos as opções mais à frente.</li>
+        <li>A Bárbara define o <strong>preço final</strong> numa página própria, com as cotações à vista. O sistema faz as contas.</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- 7. Decisão -->
+<!-- 7. Preço: regras -->
+<section>
+  <span class="eyebrow">Fase 2 · O preço final</span>
+  <h2>Uma pessoa decide o preço, o sistema faz as contas</h2>
+  <div class="grid g3">
+    <div class="card accent"><h3>Produto</h3><p>Preço em <strong>€/kg</strong> e desconto em %. As toneladas são convertidas para kg. O preço unitário fica guardado.</p></div>
+    <div class="card accent"><h3>Frete, conforme o Incoterm</h3><p><strong>EXW, FCA, FAS, FOB:</strong> sem frete.<br><strong>CFR, CIF, CPT, CIP, DAP, DPU, DDP:</strong> escolhe-se a cotação. O valor é proposto (total, por camião ou por palete) e pode ser corrigido.</p></div>
+    <div class="card accent"><h3>IVA sugerido pelo destino</h3><p><strong>Portugal:</strong> 23 %.<br><strong>UE, com NIF:</strong> isento.<br><strong>Fora da UE:</strong> isento (exportação).<br>Mudar o regime sugerido obriga a uma nota.</p></div>
+  </div>
+  <div class="rule">Se o preço mudar, a Bárbara recebe um resumo novo com um código de aprovação novo. Só se aprova o preço que está em vigor.</div>
+</section>
+
+<!-- 8. Preço: página (exemplo) -->
+<section>
+  <span class="eyebrow">Fase 2 · A página do preço</span>
+  <div class="split">
+    <div>
+      <h2>O que a Bárbara vê</h2>
+      <ul class="small">
+        <li>Uma ligação pessoal no email do resumo, válida 14 dias.</li>
+        <li>O pedido e as cotações de frete na mesma página.</li>
+        <li>O total vai sendo calculado à medida que escreve.</li>
+        <li>Recusa valores impossíveis: €/kg a zero, desconto acima do limite, frete em falta num Incoterm C/D, isenção UE sem NIF.</li>
+        <li>Só quem tem permissão na base de dados pode gravar. Hoje é só a Bárbara.</li>
+      </ul>
+      <p class="small muted" style="margin-top:14px">Exemplo com dados de teste.</p>
+    </div>
+    <div class="mock" role="img" aria-label="Exemplo da página de definição do preço">
+      <h4>Definir preço · PRP-2026-0025</h4>
+      <div class="ref">TurfPro Sports Surfaces · granulado 1-2 mm · 8 000 kg · DAP Roterdão (NL)</div>
+      <div class="row"><span>Preço <span class="field">1,71</span> €/kg × 8 000 kg</span><span>13 680,00 €</span></div>
+      <div class="row"><span>Desconto <span class="field">5</span> %</span><span>− 684,00 €</span></div>
+      <div class="row"><span>Frete: transportadora A, camião completo</span><span>1 850,00 €</span></div>
+      <div class="row"><span>Valor líquido</span><span>14 846,00 €</span></div>
+      <div class="row"><span>IVA: UE com NIF, isento (sugerido)</span><span>0,00 €</span></div>
+      <div class="total"><span>Total da proposta</span><span>14 846,00 €</span></div>
+      <div class="note">Validade da proposta: 30 dias · cotação de frete válida até 15/11</div>
+      <span class="btn">Gravar preço</span>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Decisão -->
 <section>
   <span class="eyebrow">Fase 3 · Decisão</span>
   <div class="split">
@@ -256,16 +299,16 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
     </div>
     <div>
       <ul>
-        <li>Recebe por email um <strong>resumo da proposta</strong>: dados do pedido, cotações de frete e requisitos do país.</li>
-        <li>Sempre que chega uma cotação nova, o resumo é atualizado na <strong>mesma conversa</strong> de email.</li>
-        <li>Para aprovar, basta responder com <strong>«OK»</strong> ou «aprovo» na primeira linha.</li>
+        <li>Recebe por email um <strong>resumo da proposta</strong>: dados do pedido, cotações de frete, requisitos do país e o <strong>preço</strong> com a decomposição.</li>
+        <li>Sempre que chega uma cotação nova ou o preço muda, o resumo é atualizado na <strong>mesma conversa</strong> de email.</li>
+        <li>Para aprovar, responde com <strong>«OK» e o código</strong> da proposta na primeira linha.</li>
       </ul>
-      <div class="rule">Qualquer outra resposta não aprova. Só gera um aviso no Slack para alguém ver.</div>
+      <div class="rule">Sem preço definido não há aprovação. Qualquer outra resposta também não aprova: só gera um aviso no Slack.</div>
     </div>
   </div>
 </section>
 
-<!-- 8. Cliente -->
+<!-- 10. Cliente -->
 <section>
   <span class="eyebrow">Fase 4 · Cliente</span>
   <div class="split">
@@ -276,16 +319,15 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
     <div>
       <ul>
         <li>A proposta segue em <strong>português ou inglês</strong>, com a Bárbara em cópia.</li>
+        <li>Mostra o preço decomposto: <strong>€/kg, quantidade, desconto, frete, IVA e total</strong>, com a menção de isenção quando se aplica.</li>
         <li>O email tem uma <strong>ligação de confirmação</strong>. O cliente vê o resumo e confirma com um botão.</li>
-        <li>A confirmação é feita em dois passos, para um clique automático, de um antivírus por exemplo, nunca contar como encomenda.</li>
-        <li>A ligação é única e tem prazo de validade.</li>
-        <li>Quando o cliente confirma, a Bárbara e a Madalena são avisadas e é criada a ficha de expedição.</li>
+        <li>A confirmação é feita em dois passos, para um clique automático (de um antivírus, por exemplo) nunca contar como encomenda.</li>
       </ul>
     </div>
   </div>
 </section>
 
-<!-- 9. Expedição -->
+<!-- 11. Expedição -->
 <section>
   <span class="eyebrow">Fase 5 · Expedição</span>
   <div class="split">
@@ -295,8 +337,8 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
     </div>
     <div>
       <ul>
-        <li>Escolhe-se a <strong>transportadora vencedora</strong>. O sistema prepara o rascunho da confirmação de reserva e liberta as outras transportadoras.</li>
-        <li>A Madalena preenche um <strong>formulário curto</strong>: dias de produção, stock disponível, data de recolha, modo e transportadora.</li>
+        <li>Confirma-se a <strong>transportadora usada no preço</strong>. O sistema prepara o rascunho da confirmação de reserva e liberta as outras transportadoras.</li>
+        <li>A Madalena preenche um <strong>formulário curto</strong>: dias de produção, stock, data de recolha, modo e transportadora.</li>
         <li>O cliente recebe o <strong>plano final</strong>: modo de expedição, data de recolha e chegada estimada.</li>
         <li>A proposta é dada como concluída.</li>
       </ul>
@@ -304,23 +346,23 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   </div>
 </section>
 
-<!-- 10. Quem faz o quê -->
+<!-- 12. Quem faz o quê -->
 <section>
   <span class="eyebrow">Papéis</span>
   <h2>Quem faz o quê</h2>
   <table>
     <thead><tr><th>Quem</th><th>O que faz</th><th>Como</th></tr></thead>
     <tbody>
-      <tr><td>Bárbara</td><td>Valida o resumo, aprova a proposta e escolhe a transportadora</td><td class="muted">Responde «OK» ao email do resumo</td></tr>
+      <tr><td>Bárbara</td><td>Define o preço, valida o resumo, aprova e escolhe a transportadora</td><td class="muted">Página do preço e resposta «OK código»</td></tr>
       <tr><td>Madalena</td><td>Planeia a produção e a recolha</td><td class="muted">Formulário enviado por email depois da encomenda</td></tr>
       <tr><td>Equipa comercial</td><td>Revê e envia os rascunhos de resposta a pedidos incompletos</td><td class="muted">Rascunhos na caixa do Outlook</td></tr>
       <tr><td>Cliente</td><td>Pede a proposta e confirma a encomenda</td><td class="muted">Email e ligação de confirmação</td></tr>
-      <tr><td>Sistema</td><td>Lê, regista, pede cotações, junta a informação, envia e avisa</td><td class="muted">Avisos no Slack e email se algo falhar</td></tr>
+      <tr><td>Sistema</td><td>Lê, regista, pede cotações, calcula, junta a informação, envia e avisa</td><td class="muted">Avisos no Slack e email se algo falhar</td></tr>
     </tbody>
   </table>
 </section>
 
-<!-- 11. Estados -->
+<!-- 13. Estados -->
 <section>
   <span class="eyebrow">Onde está cada proposta</span>
   <h2>Uma proposta, um estado de cada vez</h2>
@@ -334,20 +376,18 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
     <div class="state">Em expedição<small>em_expedicao</small></div><span class="arrow">→</span>
     <div class="state">Concluída<small>concluida</small></div>
   </div>
-  <p class="muted">Pelo código da proposta sabe-se sempre em que estado ela está, quem aprovou e quando. As mudanças importantes geram aviso no canal de propostas do Slack.</p>
+  <p class="muted">O preço pode ser definido e alterado até à aprovação. Depois de aprovada, a proposta já não muda de preço. Pelo código sabe-se sempre o estado, quem definiu o preço, quem aprovou e quando.</p>
 </section>
 
-<!-- 12. Estado do projeto -->
+<!-- 14. Estado do projeto -->
 <section>
-  <span class="eyebrow">Ponto de situação · 1 nov 2026</span>
+  <span class="eyebrow">Ponto de situação</span>
   <div class="split">
     <div>
-      <div class="big">13<span> / 14</span></div>
-      <p class="muted">passos construídos e testados com dados de teste</p>
-      <div class="bar" aria-label="13 passos prontos, 1 por definir">
-        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="gap"></i>
-      </div>
-      <p class="small muted">Ainda não correu nenhuma proposta real. Todos os testes usaram caixas de correio e destinatários de teste.</p>
+      <div class="big">14<span> / 14</span></div>
+      <p class="muted">passos construídos, do pedido à expedição</p>
+      <div class="bar" aria-label="14 passos prontos"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="small muted">Até agora, todos os testes usaram caixas de correio e destinatários de teste. O próximo passo é o ensaio completo com a equipa.</p>
     </div>
     <table>
       <thead><tr><th>Parte</th><th>Estado</th></tr></thead>
@@ -355,39 +395,39 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
         <tr><td>Entrada de pedidos</td><td><span class="pill ok">pronto</span></td></tr>
         <tr><td>Cotações de frete</td><td><span class="pill ok">pronto</span></td></tr>
         <tr><td>Requisitos do país</td><td><span class="pill ok">pronto</span></td></tr>
-        <tr><td>Preço final</td><td><span class="pill no">por definir</span></td></tr>
+        <tr><td>Preço final</td><td><span class="pill ok">pronto</span></td></tr>
         <tr><td>Validação e aprovação</td><td><span class="pill ok">pronto</span></td></tr>
-        <tr><td>Envio ao cliente</td><td><span class="pill wait">à espera do preço</span></td></tr>
+        <tr><td>Envio ao cliente</td><td><span class="pill ok">pronto</span></td></tr>
         <tr><td>Confirmação e expedição</td><td><span class="pill ok">pronto</span></td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<!-- 12b. Testes -->
+<!-- 15. Testes -->
 <section>
   <span class="eyebrow">Testes executados · outubro e novembro 2026</span>
   <h2>O que já foi posto à prova</h2>
   <div class="tests">
     <div>
-      <h3 class="small muted" style="font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:.06em;font-size:15px">Execuções de teste por passo (26 a 29 out)</h3>
+      <h3>Execuções de teste por passo (26 out a 1 nov)</h3>
       <table class="t-tests">
-        <thead><tr><th>Passo</th><th class="num">Sucesso</th><th class="num">Falha</th><th>Nota</th></tr></thead>
+        <thead><tr><th>Passo</th><th class="n">Sucesso</th><th class="n">Falha</th><th>Nota</th></tr></thead>
         <tbody>
-          <tr><td>Entrada de pedidos</td><td class="num"><span class="pill ok">10</span></td><td class="num"><span class="pill wait">1</span></td><td class="muted">Erro num rascunho de teste; corrigido</td></tr>
-          <tr><td>Cotações de frete</td><td class="num"><span class="pill ok">7</span></td><td class="num">0</td><td class="muted">Texto e PDF</td></tr>
-          <tr><td>Aprovação da Bárbara</td><td class="num"><span class="pill ok">4</span></td><td class="num">0</td><td class="muted">«OK», sem código, código errado, comentário</td></tr>
-          <tr><td>Reserva de frete</td><td class="num"><span class="pill ok">4</span></td><td class="num">0</td><td class="muted"></td></tr>
-          <tr><td>Plano de expedição</td><td class="num"><span class="pill ok">7</span></td><td class="num"><span class="pill ok">4</span></td><td class="muted">As 4 falhas são bloqueios esperados: ligação sem código, código errado, data passada, reserva por confirmar</td></tr>
-          <tr><td>Gerador de cenários</td><td class="num"><span class="pill ok">21</span></td><td class="num"><span class="pill wait">1</span></td><td class="muted">Falha de acesso ao Outlook; resolvida no próprio dia</td></tr>
-          <tr><td>Serviço de IA sem retenção (1 nov)</td><td class="num"><span class="pill ok">2</span></td><td class="num">0</td><td class="muted">Pedido lido com confiança 0,95, proposta registada e cotações pedidas, com a retenção zero obrigatória</td></tr>
+          <tr><td>Entrada de pedidos</td><td class="n"><span class="pill ok">10</span></td><td class="n"><span class="pill wait">1</span></td><td class="muted">Erro num rascunho de teste; corrigido</td></tr>
+          <tr><td>Cotações de frete</td><td class="n"><span class="pill ok">7</span></td><td class="n">0</td><td class="muted">Texto e PDF</td></tr>
+          <tr><td>Aprovação da Bárbara</td><td class="n"><span class="pill ok">4</span></td><td class="n">0</td><td class="muted">«OK», sem código, código errado, comentário</td></tr>
+          <tr><td>Reserva de frete</td><td class="n"><span class="pill ok">4</span></td><td class="n">0</td><td class="muted"></td></tr>
+          <tr><td>Plano de expedição</td><td class="n"><span class="pill ok">7</span></td><td class="n"><span class="pill ok">4</span></td><td class="muted">As 4 falhas são bloqueios esperados: ligação sem código, código errado, data passada, reserva por confirmar</td></tr>
+          <tr><td>Gerador de cenários</td><td class="n"><span class="pill ok">21</span></td><td class="n"><span class="pill wait">1</span></td><td class="muted">Falha de acesso ao Outlook; resolvida no próprio dia</td></tr>
+          <tr><td>Serviço de IA sem retenção</td><td class="n"><span class="pill ok">2</span></td><td class="n">0</td><td class="muted">Pedido lido com confiança 0,95, proposta registada e cotações pedidas</td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <h3 class="small muted" style="font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:.06em;font-size:15px">Bateria de verificações (6 e 7 out)</h3>
+      <h3>Bateria de verificações (6 e 7 out)</h3>
       <ul class="checks">
-        <li><span>Base de dados: regras, segurança, numeração PRP</span><span class="pill ok">24/24</span></li>
+        <li><span>Base de dados: regras, segurança, numeração</span><span class="pill ok">24/24</span></li>
         <li><span>Configuração e avisos de erro</span><span class="pill ok">9/9</span></li>
         <li><span>Registo do pedido (formulário)</span><span class="pill ok">8/8</span></li>
         <li><span>Leitura da caixa de correio</span><span class="pill ok">2/2</span></li>
@@ -400,46 +440,48 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   </div>
 </section>
 
-<!-- 13. Decisão do preço -->
+<!-- 15b. Testes do preço -->
 <section>
-  <span class="eyebrow">A decisão que falta</span>
-  <h2>Como se chega ao preço final?</h2>
-  <div class="grid g3">
-    <div class="card opt rec">
-      <span class="tag">Opção A · recomendada para arrancar</span>
-      <h3>Formulário de preço</h3>
-      <p>O resumo enviado à Bárbara traz uma ligação. Ela indica o €/kg, o desconto e o regime de IVA, e o sistema calcula o total.</p>
-      <ul><li>Pronto depressa</li><li>Uma pessoa decide sempre o preço</li><li>Não cria o orçamento no Moloni</li></ul>
+  <span class="eyebrow">Testes do preço final · 1 de novembro de 2026</span>
+  <h2>O passo do preço, posto à prova</h2>
+  <div class="tests">
+    <div>
+      <h3>Testes reais no sistema (proposta de teste para a Holanda)</h3>
+      <table class="t-tests">
+        <thead><tr><th>O que se testou</th><th class="n">Sucesso</th><th class="n">Bloqueio</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td>Página e gravação do preço</td><td class="n"><span class="pill ok">3</span></td><td class="n"><span class="pill ok">2</span></td><td class="muted">14 846,00 € e depois 15 150,00 €. Bloqueios esperados: ligação inválida e desconto de 80 %</td></tr>
+          <tr><td>Resumo reenviado à Bárbara</td><td class="n"><span class="pill ok">1</span></td><td class="n">0</td><td class="muted">Preço decomposto, botão pessoal e código de aprovação novo</td></tr>
+          <tr><td>Aprovação com e sem preço</td><td class="n"><span class="pill ok">1</span></td><td class="n"><span class="pill ok">1</span></td><td class="muted">«OK» sem preço é ignorado; com preço aprova</td></tr>
+          <tr><td>Envio ao cliente</td><td class="n"><span class="pill ok">1</span></td><td class="n">0</td><td class="muted">Decomposição certa; um erro de formatação foi encontrado pelos testes e corrigido</td></tr>
+          <tr><td>Reserva de frete</td><td class="n">0</td><td class="n"><span class="pill ok">1</span></td><td class="muted">Bloqueio esperado: outra transportadora que não a do preço aprovado</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="card opt">
-      <span class="tag">Opção B · integração</span>
-      <h3>Moloni</h3>
-      <p>O sistema lê o preço da tabela do cliente no Moloni e cria o orçamento em rascunho.</p>
-      <ul><li>Fica o registo contabilístico</li><li>Depende de o plano Moloni incluir acesso à API</li><li>Exige ligar cada cliente e cada produto ao Moloni</li></ul>
-    </div>
-    <div class="card opt">
-      <span class="tag">Opção C · tabela própria</span>
-      <h3>Tabela de preços</h3>
-      <p>Uma tabela com o €/kg por produto, densidade, granulometria e tipo de cliente. O preço é calculado sem intervenção.</p>
-      <ul><li>Automático</li><li>Duplica os preços que já estão no Moloni</li><li>Alguém tem de a manter atualizada</li></ul>
+    <div>
+      <h3>Verificações automáticas</h3>
+      <ul class="checks">
+        <li><span>Base de dados do preço: cálculos, recusas, permissões, históricos</span><span class="pill ok">25/25</span></li>
+        <li><span>Código dos passos (página, resumo, aprovação, envio, reserva)</span><span class="pill ok">145/145</span></li>
+        <li><span>Sem segredos nem emails reais no repositório</span><span class="pill ok">OK</span></li>
+        <li><span>Página do preço aberta no navegador pela Bárbara</span><span class="pill wait">por fazer</span></li>
+      </ul>
+      <p class="small muted" style="margin-top:12px">Nenhum destes testes enviou nada a clientes reais: só a endereços de teste.</p>
     </div>
   </div>
-  <p class="small muted" style="margin-top:18px">Proposta: arrancar com a opção A e passar para o Moloni quando o acesso à API estiver confirmado. Os dados gravados são os mesmos nas duas opções, por isso o resto do processo não muda.</p>
 </section>
 
-<!-- 14. O que precisamos -->
+<!-- 16. O que precisamos -->
 <section>
   <span class="eyebrow">O que precisamos de vocês</span>
-  <h2>Decisões e informação para arrancar</h2>
+  <h2>Para arrancar com dados reais</h2>
   <div class="grid g2">
     <div class="card">
-      <h3>Sobre o preço</h3>
+      <h3>Sobre o preço e a faturação</h3>
       <ul class="small">
-        <li>O nosso plano Moloni inclui acesso à API?</li>
-        <li>Quem define o preço: só a Bárbara, ou também a Madalena?</li>
-        <li>O preço é dado em €/kg ou como total da proposta?</li>
-        <li>O frete entra no preço final? Se sim, de que cotação?</li>
-        <li>Que regra de IVA se aplica por destino: Portugal, UE com NIF, fora da UE?</li>
+        <li>Confirmar com a contabilidade as menções de isenção de IVA (UE e exportação)</li>
+        <li>Indicar o limite máximo razoável do €/kg, como proteção contra enganos de escrita</li>
+        <li>Confirmar se o plano Moloni inclui acesso à API, para a integração seguinte</li>
       </ul>
     </div>
     <div class="card">
@@ -455,29 +497,28 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
   </div>
 </section>
 
-<!-- 15. Próximos passos -->
+<!-- 17. Próximos passos -->
 <section>
   <span class="eyebrow">Próximos passos</span>
   <h2>Do teste ao arranque</h2>
   <ol class="steps">
-    <li><div>Fechar as decisões sobre o preço<span>Com as respostas da página anterior</span></div></li>
-    <li><div>Construir e testar o passo do preço<span>Com os cenários de IVA a 23% e de isenção</span></div></li>
-    <li><div>Ensaio completo com destinatários de teste<span>Do pedido ao plano de expedição, com a Bárbara e a Madalena</span></div></li>
+    <li><div>Ensaio completo com a equipa<span>A começar pela página do preço no navegador da Bárbara, e depois do pedido ao plano de expedição, com destinatários de teste</span></div></li>
+    <li><div>Acordos de proteção de dados e caixa real<span>Antes de entrar o primeiro cliente</span></div></li>
     <li><div>Piloto com propostas reais, acompanhado<span>Poucos clientes, com revisão de cada proposta</span></div></li>
-    <li><div>Integração com o Moloni<span>Quando o acesso à API estiver confirmado</span></div></li>
+    <li><div>Integração com o Moloni<span>Orçamento criado no Moloni a partir do mesmo preço</span></div></li>
   </ol>
 </section>
 
-<!-- 16. Fecho -->
+<!-- 18. Fecho -->
 <section>
   <div class="cover">
     <div>
-      <div class="granules" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       <span class="eyebrow">Perguntas e discussão</span>
-      <h1>O sistema prepara.<br>Vocês decidem.</h1>
-      <p class="sub">Começamos pela decisão do preço.</p>
+      <h1>O sistema prepara. Vocês decidem.</h1>
+      <p class="sub">Próximo passo: o ensaio completo com a equipa.</p>
+      <div class="meta"><span>Automação de propostas comerciais</span><span>Novembro 2026</span></div>
     </div>
-    <div class="meta"><span>Maclipe · Automação de propostas</span><span>Novembro 2026</span></div>
+    <div class="cork-block"><canvas class="cork" data-seed="21" aria-hidden="true"></canvas></div>
   </div>
 </section>
 
@@ -485,12 +526,43 @@ html, body, .reveal-viewport { height: 100%; margin: 0; background: var(--ink); 
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
 <script>
+  // Textura de granulado de cortiça: grânulos irregulares em vários tons, com poros escuros.
+  function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+  function paintCork(canvas, seed) {
+    const w = canvas.offsetWidth || canvas.parentElement.offsetWidth, h = canvas.offsetHeight || canvas.parentElement.offsetHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+    const r = rng(seed);
+    ctx.fillStyle = '#a8763f'; ctx.fillRect(0, 0, w, h);
+    const tones = ['#8c5c2c', '#c38d52', '#d9a768', '#b07a41', '#9a6833', '#e2b57c', '#7a4e25'];
+    const n = Math.round(w * h / 9);
+    for (let i = 0; i < n; i++) {
+      const x = r() * w, y = r() * h, rx = 0.8 + r() * 3.2, ry = rx * (0.5 + r() * 0.7);
+      ctx.fillStyle = tones[Math.floor(r() * tones.length)];
+      ctx.globalAlpha = 0.55 + r() * 0.45;
+      ctx.beginPath(); ctx.ellipse(x, y, rx, ry, r() * Math.PI, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 0.7;
+    for (let i = 0; i < n / 14; i++) {
+      ctx.fillStyle = r() < 0.5 ? '#4a2d14' : '#5e3a1b';
+      ctx.beginPath(); ctx.ellipse(r() * w, r() * h, 0.6 + r() * 1.4, 0.4 + r() * 0.9, r() * Math.PI, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function paintAll() {
+    paintCork(document.getElementById('cork-strip'), 3);
+    document.querySelectorAll('canvas.cork').forEach(c => paintCork(c, Number(c.dataset.seed) || 1));
+  }
   Reveal.initialize({
     width: 1280, height: 720, margin: 0.06,
     hash: false, respondToHashChanges: false, history: false,
     controls: true, progress: true, slideNumber: 'c/t',
     center: true, transition: 'fade', backgroundTransition: 'none'
-  });
+  }).then(paintAll);
+  Reveal.on('slidechanged', paintAll);
+  window.addEventListener('resize', () => paintCork(document.getElementById('cork-strip'), 3));
 </script>
 </body>
 </html>
