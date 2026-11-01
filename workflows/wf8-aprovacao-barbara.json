@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const r = $('Interpretar resposta').first().json;\nconst p = $input.first().json || {};\nconst cod = r.codigo;\nif (!p.id) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Recebi uma resposta a ' + cod + ' mas a proposta não existe.' } }];\nif (r.acao === 'comentario') return [{ json: { ...r, aplicar: false, slack_texto: '💬 A Bárbara respondeu a *' + cod + '* com um comentário (a proposta continua em validação): \"' + r.comentario + '\"' } }];\nif (p.estado !== 'em_validacao') return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* está no estado ' + p.estado + ' (e não em validação).' } }];\nif (!r.codigo_enviado) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: a resposta a *' + cod + '* não traz o código de aprovação (responder «OK <código>»).' } }];\nif (!p.codigo_aprovacao || String(p.codigo_aprovacao).toUpperCase() !== r.codigo_enviado) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: o código de aprovação enviado para *' + cod + '* está incorreto.' } }];\nreturn [{ json: { ...r, aplicar: true, aprovada_por: r.remetente, aprovada_em: new Date().toISOString(), slack_texto: '✅ Proposta *' + cod + '* aprovada por ' + r.remetente + '. O envio ao cliente segue (WF9); falha se ainda não houver preço final.' } }];"
+        "jsCode": "const r = $('Interpretar resposta').first().json;\nconst p = $input.first().json || {};\nconst cod = r.codigo;\nif (!p.id) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Recebi uma resposta a ' + cod + ' mas a proposta não existe.' } }];\nif (r.acao === 'comentario') return [{ json: { ...r, aplicar: false, slack_texto: '💬 A Bárbara respondeu a *' + cod + '* com um comentário (a proposta continua em validação): \"' + r.comentario + '\"' } }];\nif (p.estado !== 'em_validacao') return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* está no estado ' + p.estado + ' (e não em validação).' } }];\n// WF7: sem preço definido não há aprovação (o código de aprovação muda sempre que o preço muda).\nif (!(Number(p.preco_final) > 0)) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: *' + cod + '* ainda não tem preço. Definir o preço pela ligação do resumo e aprovar com o código do resumo novo.' } }];\nif (!r.codigo_enviado) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: a resposta a *' + cod + '* não traz o código de aprovação (responder «OK <código>»).' } }];\nif (!p.codigo_aprovacao || String(p.codigo_aprovacao).toUpperCase() !== r.codigo_enviado) return [{ json: { ...r, aplicar: false, slack_texto: '⚠️ Aprovação ignorada: o código de aprovação enviado para *' + cod + '* está incorreto ou é de um resumo anterior (o preço pode ter mudado).' } }];\nconst total = Number(p.preco_final).toFixed(2).replace('.', ',');\nreturn [{ json: { ...r, aplicar: true, aprovada_por: r.remetente, aprovada_em: new Date().toISOString(), slack_texto: '✅ Proposta *' + cod + '* aprovada por ' + r.remetente + ' com o total de ' + total + ' ' + (p.moeda || 'EUR') + '. Segue para o cliente (WF9).' } }];"
       },
       "id": "3d97cf22-6083-4584-b8d4-3be7a28e5053",
       "name": "Decidir",
@@ -417,8 +417,8 @@
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "4dU064sO0xcxkPTc",
-    "sourceVersionId": "103dd361-2eaa-4836-97d8-59cd22bc8080",
-    "exportedAt": "2026-10-29",
-    "sanitized": "ids de credenciais, emails e errorWorkflow removidos"
+    "sourceVersionId": "2c906c7a-1c4a-48be-8a86-13614ceda1c9",
+    "exportedAt": "2026-11-01",
+    "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }
 }
