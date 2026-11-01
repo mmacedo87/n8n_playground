@@ -20,6 +20,13 @@ const c = cand[0];
 const t = transps[c.transportadora_id];
 const atual = c.estado_reserva || 'nenhuma';
 const outraConfirmada = cots.find(x => x.id !== c.id && x.estado_reserva === 'confirmada');
+// WF7: se o preço aprovado inclui frete, a reserva tem de ser feita com a cotação usada no preço.
+const precoComFrete = Number(p.valor_frete) > 0 && !!p.frete_escolhido_id;
+if (acao !== 'cancelada' && precoComFrete && p.frete_escolhido_id !== c.id) {
+  const usada = cots.find(x => x.id === p.frete_escolhido_id) || {};
+  const nomeUsada = (transps[usada.transportadora_id] || {}).nome || 'outra transportadora';
+  throw new Error('Confirmação de reserva: o preço aprovado da proposta ' + cfg.codigo + ' inclui o frete de «' + nomeUsada + '»' + (usada.ref_transportadora ? ' (ref. ' + usada.ref_transportadora + ')' : '') + '. Confirme essa cotação; se não for possível, fale com o responsável, porque o preço aprovado já não pode ser alterado.');
+}
 if (acao !== 'cancelada') {
   if (c.revisao === 'a_rever') throw new Error('Confirmação de reserva: a cotação está marcada «a rever»; valide o preço e as condições antes de a escolher.');
   if (c.preco === null || c.preco === undefined || c.preco === '') throw new Error('Confirmação de reserva: a cotação não tem preço registado.');
@@ -49,8 +56,8 @@ return [{ json: {
   acao, proposta_id: p.id, codigo: p.codigo, cotacao_id: c.id, transportadora: t.nome,
   novo_estado: acao === 'cancelada' ? 'cancelada' : acao,
   frete_escolhido_id: acao === 'cancelada' ? null : c.id,
-  limpar_frete: acao === 'cancelada' && p.frete_escolhido_id === c.id,
-  atualizar_proposta: acao !== 'cancelada' || p.frete_escolhido_id === c.id,
+  limpar_frete: !precoComFrete && acao === 'cancelada' && p.frete_escolhido_id === c.id,
+  atualizar_proposta: precoComFrete ? false : (acao !== 'cancelada' || p.frete_escolhido_id === c.id),
   criar_rascunho: acao === 'rascunho',
   para: teste ? cfg.destinatario_teste : t.email, assunto, corpo_html: corpo, libertar_ids: libertar
 } }];
