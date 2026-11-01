@@ -250,6 +250,8 @@ def S09_teclado(b):
         pg.focus('button:has-text("Começar")')
         pg.keyboard.press("Enter")
         assert "Base de dados" in pg.inner_text("#main")
+        pg.focus("#sburl1")
+        pg.keyboard.type("https://prodabc123.supabase.co")
         pg.focus("#db")
         pg.keyboard.press("Space")
         assert pg.is_checked("#db")
