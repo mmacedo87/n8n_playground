@@ -1,6 +1,8 @@
-# Estado e tarefas (2026-10-29)
+# Estado e tarefas (2026-11-01)
 
 Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 encomendas/mês, humano sempre no loop). Instância de desenvolvimento: n8n Cloud `mmacedo87.app.n8n.cloud`, Supabase `ahisuvnooplmiczjytfp`. Cópia deste ficheiro no Project: `claude/estado_do_projeto.md` (a fonte é o repositório).
+
+**2026-11-01:** sem alterações a workflows nem à BD (os 16 JSON e a migração 0011 continuam iguais ao n8n e ao Supabase). Verificação de alojamento e RGPD: n8n e Supabase na Alemanha (fica o n8n Cloud), Supabase no plano Free, OpenRouter com retenção zero obrigatória para todos os fornecedores e as opções de treino desligadas, confirmado com um teste real (PRP-2026-0025, WF1 e WF3 sem erros). Pendentes RGPD: DPA (n8n, Supabase, OpenRouter, Slack), prazos de conservação e purga agendada, registo de atividades. Fase 5 (preço): decidido avançar com o formulário manual (WF7), plano em `docs/plano-wf7-preco-manual.md`; o Moloni fica para depois (`docs/plano-moloni-fase5.md`). Apresentação para o cliente em `docs/apresentacao/`.
 
 **2026-10-29:** WF6 e Read Outlook correm sozinhos (Outlook Trigger), formulários internos com Basic Auth e link do plano com código secreto.
 
