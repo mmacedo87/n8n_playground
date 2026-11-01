@@ -13,12 +13,13 @@ import sanitize_workflow as S  # noqa: E402
 
 CFG = {
     "n8n_url": "https://prod.example.invalid",
+    "supabase_url": "https://prodabc123.supabase.co",
     "emails": {"erros": "erros@x.pt", "confirmacao_pedido": "conf@x.pt", "cotacoes": "cot@x.pt",
                "validacao_barbara": "b@x.pt", "cc_barbara": "b@x.pt", "madalena": "m@x.pt",
                "barbara": "b@x.pt", "aprovadores": ["B@X.pt", "c@x.pt"]},
     "slack_canais": {"propostas": "CPROP", "cotacoes": "CCOT", "estado": "CEST"},
     "credenciais": {"microsoftOutlookOAuth2Api": "cred-o", "slackApi": "cred-s",
-                    "supabaseApi": "cred-d", "openRouterApi": "cred-r"},
+                    "supabaseApi": "cred-d", "openRouterApi": "cred-r", "httpBasicAuth": "cred-b"},
 }
 
 
@@ -113,7 +114,7 @@ class T(unittest.TestCase):
 
     def test_D3_dry_run_sem_marcadores(self):
         rep = D.run(CFG, dry_run=True)
-        self.assertEqual(len(rep), 15)
+        self.assertEqual(len(rep), 17)
         self.assertTrue(all(r[1] == "simulado" for r in rep))
 
     def test_D4_config_incompleta_falha_sem_tocar_na_api(self):
@@ -127,6 +128,10 @@ class T(unittest.TestCase):
             del cfg["credenciais"]["slackApi"]
             with self.assertRaises(D.DeployError):
                 D.run(cfg, api=D.Api(m.url, "k"))
+            for mau in ("", "https://ahisuvnooplmiczjytfp.supabase.co.evil.example", "http://x.supabase.co"):
+                cfg = json.loads(json.dumps(CFG)); cfg["supabase_url"] = mau
+                with self.assertRaises(D.DeployError):
+                    D.run(cfg, api=D.Api(m.url, "k"))
             self.assertEqual(m.log, [])
         finally:
             m.close()
@@ -135,12 +140,14 @@ class T(unittest.TestCase):
         m = Mock()
         try:
             rep = D.run(CFG, api=D.Api(m.url, "k"))
-            self.assertEqual(len(m.store), 15)
+            self.assertEqual(len(m.store), 17)
             ids = {w["name"]: i for i, w in m.store.items()}
             wf2 = m.by_name("WF2 - Pedido de proposta")
             called = {n["parameters"]["workflowId"]["value"] for n in wf2["nodes"] if n["type"] == "n8n-nodes-base.executeWorkflow"}
             self.assertEqual(called, {ids["WF3 - Pedido de cotação de frete"], ids["WF4 - Enriquecimento de proposta"], ids["Notificar Slack"]})
-            self.assertEqual(wf2["settings"]["errorWorkflow"], ids["Mail Error Flow"])
+            # O WF2 tem um error flow próprio (diz se a proposta chegou a ser gravada); os outros usam o Mail Error Flow.
+            self.assertEqual(wf2["settings"]["errorWorkflow"], ids["WF2 Error Flow - Pedido de proposta"])
+            self.assertEqual(m.by_name("WF3 - Pedido de cotação de frete")["settings"]["errorWorkflow"], ids["Mail Error Flow"])
             txt = json.dumps(list(m.store.values()), ensure_ascii=False)
             for bad in ("{{WF:", "REDACTED@example.invalid", "<ID do", "C0C7T8J8D54", "C0C7V2PU4PL", "C0C7SN9MKQE"):
                 self.assertNotIn(bad, txt)
@@ -156,12 +163,23 @@ class T(unittest.TestCase):
             slack = m.by_name("Notificar Slack")
             self.assertIn("CPROP", json.dumps(slack))
             creds = {c["id"] for w in m.store.values() for n in w["nodes"] for c in (n.get("credentials") or {}).values()}
-            self.assertEqual(creds, {"cred-o", "cred-s", "cred-d", "cred-r"})
+            self.assertEqual(creds, {"cred-o", "cred-s", "cred-d", "cred-r", "cred-b"})
             ativos = {w["name"] for w in m.store.values() if w.get("active")}
-            self.assertEqual(len(ativos), 12)
+            self.assertEqual(len(ativos), 13)
+            wf7 = m.by_name("WF7 - Definir o preço final (formulário)")
+            v7 = {a["name"]: a["value"] for n in wf7["nodes"] if n["name"] == "Configuração" for a in n["parameters"]["assignments"]["assignments"]}
+            self.assertEqual(v7["url_pagina"], "https://prod.example.invalid/webhook/definir-preco")
+            self.assertEqual(v7["supabase_url"], "https://prodabc123.supabase.co")
+            wf5 = m.by_name("WF5 - Resumo para validação")
+            v5 = {a["name"]: a["value"] for n in wf5["nodes"] if n["name"] == "Normalizar código" for a in n["parameters"]["assignments"]["assignments"]}
+            self.assertEqual(v5["supabase_url"], "https://prodabc123.supabase.co")
+            self.assertEqual(v5["url_preco"], "https://prod.example.invalid/webhook/definir-preco")
+            self.assertNotIn("ahisuvnooplmiczjytfp", json.dumps(wf5) + json.dumps(wf7), "o Supabase de DEV não pode ir para produção")
+            self.assertEqual({n["parameters"]["workflowId"]["value"] for n in wf7["nodes"] if n["type"] == "n8n-nodes-base.executeWorkflow"},
+                             {ids["WF5 - Resumo para validação"], ids["Notificar Slack"]})
             self.assertNotIn("WF8 - Aprovação da Bárbara por email", ativos)
             self.assertNotIn("WF6 - Ler cotações das transportadoras", ativos)
-            self.assertEqual(sum(1 for r in rep if "criado" in r[1]), 15)
+            self.assertEqual(sum(1 for r in rep if "criado" in r[1]), 17)
         finally:
             m.close()
 
@@ -171,10 +189,10 @@ class T(unittest.TestCase):
             D.run(CFG, api=D.Api(m.url, "k"))
             n_posts = sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate"))
             rep = D.run(CFG, api=D.Api(m.url, "k"))
-            self.assertEqual(len(m.store), 15)
-            self.assertEqual(n_posts, 15)
+            self.assertEqual(len(m.store), 17)
+            self.assertEqual(n_posts, 17)
             self.assertTrue(all("atualizado" in r[1] for r in rep))
-            self.assertEqual(sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate")), 15)
+            self.assertEqual(sum(1 for x in m.log if x[0] == "POST" and not x[1].endswith("/activate")), 17)
         finally:
             m.close()
 

@@ -1,0 +1,653 @@
+{
+  "name": "WF7 - Definir o preço final (formulário)",
+  "description": "Fase 5 sem Moloni: a Bárbara abre a ligação pessoal do resumo (GET definir-preco?t=) e define €/kg, desconto, frete e IVA; o POST grava na BD (gravar_preco_proposta: calcula, novo código de aprovação, histórico) e reenvia o resumo (WF5).",
+  "nodes": [
+    {
+      "name": "Bárbara abre a página do preço",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        48
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "definir-preco",
+        "responseMode": "responseNode",
+        "options": {
+          "ignoreBots": true
+        }
+      }
+    },
+    {
+      "name": "Bárbara grava o preço",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        240
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "definir-preco",
+        "responseMode": "responseNode",
+        "options": {
+          "ignoreBots": true
+        }
+      }
+    },
+    {
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        144
+      ],
+      "notes": "supabase_url e url_pagina são da instância de desenvolvimento; no deploy para produção trocar pelos da instância de destino.",
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "token",
+              "type": "string",
+              "value": "={{ String($json.body?.t ?? $json.query?.t ?? \"\").trim().toLowerCase().slice(0, 64) }}"
+            },
+            {
+              "id": "c2",
+              "name": "gravar",
+              "type": "boolean",
+              "value": "={{ !!$json.body && typeof $json.body === \"object\" && Object.keys($json.body).length > 0 }}"
+            },
+            {
+              "id": "c3",
+              "name": "form",
+              "type": "object",
+              "value": "={{ $json.body && typeof $json.body === \"object\" ? $json.body : {} }}"
+            },
+            {
+              "id": "c4",
+              "name": "supabase_url",
+              "type": "string",
+              "value": "https://ahisuvnooplmiczjytfp.supabase.co"
+            },
+            {
+              "id": "c5",
+              "name": "url_pagina",
+              "type": "string",
+              "value": "https://mmacedo87.app.n8n.cloud/webhook/definir-preco"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "É para gravar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        144
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.gravar }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "name": "Ler o formulário",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        48
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst b = cfg.form || {};\n// Números: aceita vírgula ou ponto. Vazio = null. Texto inválido = valor impossível, que a função na BD recusa com mensagem clara.\nconst num = (v, invalido) => { const s = String(v == null ? '' : v).trim().replace(/\\s/g, '').replace(',', '.'); if (s === '') return null; const x = Number(s); return Number.isFinite(x) ? x : invalido; };\nconst uuid = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || '').trim()) ? String(v).trim().toLowerCase() : null;\nconst txt = (v, n) => { const s = String(v == null ? '' : v).trim().slice(0, n); return s === '' ? null : s; };\nconst dias = num(b.validade_dias, 0);\nreturn [{ json: { rpc: {\n  p_token: cfg.token,\n  p_preco_kg: num(b.preco_kg, null),\n  p_desconto_pct: num(b.desconto_pct, -1),\n  p_cotacao_id: uuid(b.cotacao_id),\n  p_valor_frete: num(b.valor_frete, -1),\n  p_iva_regime: txt(b.iva_regime, 30),\n  p_iva_pct: num(b.iva_pct, -1),\n  p_cliente_nif: txt(b.cliente_nif, 20),\n  p_validade_dias: dias === null ? null : Math.round(dias),\n  p_notas: txt(b.notas, 1000)\n} } }];"
+      }
+    },
+    {
+      "name": "Gravar o preço (BD)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        48
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Função gravar_preco_proposta (migração 0012): volta a validar a ligação e a permissão, calcula em numeric, grava, gera código de aprovação novo e regista no histórico, numa só transação. Sem repetição automática: uma escrita não se repete às cegas.",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Configuração').first().json.supabase_url }}/rest/v1/rpc/gravar_preco_proposta",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.rpc) }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "name": "Montar resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst r = $input.first().json || {};\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst fmt = (n, d = 2) => { const x = Number(n); if (n === null || n === undefined || n === '' || !isFinite(x)) return '-'; const p = Math.abs(x).toFixed(d).split('.'); return (x < 0 ? '-' : '') + p[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ' ') + (d ? ',' + p[1] : ''); };\nconst dataPt = (v) => /^\\d{4}-\\d{2}-\\d{2}/.test(String(v || '')) ? String(v).slice(8, 10) + '/' + String(v).slice(5, 7) + '/' + String(v).slice(0, 4) : '-';\nconst httpDe = (e) => /expirou/.test(e) ? 410 : /permissão/.test(e) ? 403 : /não é válida/.test(e) ? 404 : /estado/.test(e) ? 409 : 400;\nconst CSS = 'body{font-family:Arial,Helvetica,sans-serif;background:#f7efe2;color:#2a1c11;max-width:640px;margin:24px auto;padding:0 16px;line-height:1.45}h1{font-size:24px}table{border-collapse:collapse;width:100%;background:#fff;border:2px solid #3e5b3a;border-radius:10px}td{padding:6px 12px;border-bottom:1px solid #e3d5bf}td.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.total td{font-size:20px;font-weight:bold}.aviso{background:#fff3cd;border-left:4px solid #c9a227;padding:8px 12px;margin:10px 0}.erro{background:#fde8e5;border-left:4px solid #a3261b;padding:8px 12px}.ok{background:#e6f1e4;border-left:4px solid #3e5b3a;padding:8px 12px}a{color:#3e5b3a;font-weight:bold}';\nconst moldura = (titulo, corpo) => '<!doctype html><html lang=\"pt-PT\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex\"><title>' + esc(titulo) + '</title><style>' + CSS + '</style></head><body>' + corpo + '</body></html>';\nconst voltar = cfg.url_pagina + '?t=' + encodeURIComponent(cfg.token);\nif (!r.ok) {\n  const erro = String(r.erro || 'Não foi possível gravar o preço.');\n  return [{ json: { gravado: false, http: httpDe(erro), html: moldura('Preço não gravado', '<h1>O preço não foi gravado</h1><p class=\"erro\">' + esc(erro) + '</p><p><a href=\"' + esc(voltar) + '\">Voltar à página do preço</a></p>') } }];\n}\nconst REG = { pt_normal: 'IVA 23 %', ue_isento: 'Isento, UE (art. 14.º RITI)', exportacao_isento: 'Isento, exportação (art. 14.º CIVA)', outro: 'IVA ' + fmt(r.iva_pct) + ' %' };\nconst linha = (k, v, cls) => '<tr' + (cls ? ' class=\"' + cls + '\"' : '') + '><td>' + esc(k) + '</td><td class=\"v\">' + v + '</td></tr>';\nconst avisos = Array.isArray(r.avisos) ? r.avisos : [];\nconst corpo = '<h1>Preço gravado · ' + esc(r.codigo) + '</h1><p class=\"ok\">' + (r.preco_alterado ? 'O preço foi alterado (antes: ' + fmt(r.preco_anterior) + ' €).' : 'O preço ficou definido.') + '</p>'\n  + avisos.map(a => '<p class=\"aviso\">' + esc(a) + '</p>').join('')\n  + '<table>' + linha('Produto: ' + fmt(r.quantidade_kg, 0) + ' kg × ' + fmt(r.preco_kg, 4) + ' €/kg' + (Number(r.desconto_pct) ? ' − ' + fmt(r.desconto_pct) + ' %' : ''), fmt(r.valor_produto) + ' €')\n  + linha('Frete' + (r.frete_corrigido ? ' (valor corrigido à mão)' : ''), fmt(r.valor_frete) + ' €') + linha('Valor líquido', fmt(r.valor_liquido) + ' €')\n  + linha(REG[r.iva_regime] || 'IVA', fmt(r.valor_iva) + ' €') + linha('Total da proposta', fmt(r.preco_final) + ' €', 'total') + '</table>'\n  + '<p>Validade da proposta: até <b>' + dataPt(r.validade_proposta) + '</b>.</p><p>Vai receber por email o resumo atualizado, com um <b>código de aprovação novo</b>. Para aprovar, responda a esse email com OK e o código. Os códigos anteriores deixam de valer.</p><p><a href=\"' + esc(voltar) + '\">Alterar outra vez</a></p>';\nconst slack = '💶 Preço da *' + r.codigo + '* ' + (r.preco_alterado ? 'alterado' : 'definido') + ' por ' + r.utilizador + ': total ' + fmt(r.preco_final) + ' € (líquido ' + fmt(r.valor_liquido) + ' €, ' + (REG[r.iva_regime] || 'IVA') + ')' + (r.preco_alterado ? ' · antes ' + fmt(r.preco_anterior) + ' €' : '') + (avisos.length ? ' · ⚠️ ' + avisos.length + ' aviso(s)' : '');\nreturn [{ json: { gravado: true, http: 200, codigo: r.codigo, slack_texto: slack, html: moldura('Preço gravado ' + r.codigo, corpo) } }];"
+      }
+    },
+    {
+      "name": "Responder resultado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": "={{ $json.http ?? 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Referrer-Policy",
+                "value": "no-referrer"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Preço gravado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Montar resultado').first().json.gravado }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "name": "Reenviar resumo à Bárbara (WF5)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1792,
+        0
+      ],
+      "notes": "O WF5 volta a enviar o resumo, agora com o preço e o código de aprovação novo. Não espera.",
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:WF5 - Resumo para validação}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "codigo",
+              "displayName": "codigo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "codigo": "={{ $('Montar resultado').first().json.codigo }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      }
+    },
+    {
+      "name": "Avisar Slack: preço definido",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2016,
+        0
+      ],
+      "executeOnce": true,
+      "notes": "Aviso curto no Slack (#propostas). Não espera: uma falha do Slack não desfaz o preço.",
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "canal",
+              "displayName": "canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $('Montar resultado').first().json.slack_texto }}"
+          }
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      }
+    },
+    {
+      "name": "Responder erro técnico",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        192
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<!doctype html><html lang=\"pt-PT\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Erro técnico</title></head><body style=\"font-family:Arial,sans-serif;background:#f7efe2;color:#2a1c11;max-width:560px;margin:40px auto;padding:0 16px\"><h1>Erro técnico</h1><p>Não foi possível falar com a base de dados. Nada foi alterado. Tente de novo dentro de alguns minutos; o responsável técnico já foi avisado.</p></body></html>",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Referrer-Policy",
+                "value": "no-referrer"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Ler contexto do preço (BD)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        384
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Função contexto_preco (migração 0012): valida a ligação, a permissão e o estado e devolve a proposta, as cotações e os limites.",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.supabase_url }}/rest/v1/rpc/contexto_preco",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_token: $json.token }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "name": "Montar página do preço",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        384
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Configuração').first().json;\nconst r = $input.first().json || {};\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst fmt = (n, d = 2) => { const x = Number(n); if (n === null || n === undefined || n === '' || !isFinite(x)) return '-'; const p = Math.abs(x).toFixed(d).split('.'); return (x < 0 ? '-' : '') + p[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ' ') + (d ? ',' + p[1] : ''); };\nconst dataPt = (v) => /^\\d{4}-\\d{2}-\\d{2}/.test(String(v || '')) ? String(v).slice(8, 10) + '/' + String(v).slice(5, 7) + '/' + String(v).slice(0, 4) : '-';\nconst httpDe = (e) => /expirou/.test(e) ? 410 : /permissão/.test(e) ? 403 : /não é válida/.test(e) ? 404 : /estado/.test(e) ? 409 : 400;\nconst CSS = 'body{font-family:Arial,Helvetica,sans-serif;background:#f7efe2;color:#2a1c11;max-width:760px;margin:24px auto;padding:0 16px;line-height:1.45}h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:22px 0 8px;border-bottom:2px solid #d9b98f;padding-bottom:4px}.ref{color:#6b5237;font-size:14px}table{border-collapse:collapse;width:100%}td{padding:5px 8px;border-bottom:1px solid #e3d5bf;vertical-align:top}td.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}label{display:block;font-weight:bold;margin:12px 0 4px}input[type=number],input[type=text],select,textarea{font-size:16px;padding:7px 9px;border:1px solid #b89b78;border-radius:6px;background:#fff;color:#2a1c11;width:100%;box-sizing:border-box}.cot{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #d9c3a3;border-radius:8px;margin:6px 0;background:#fffaf2;font-weight:normal}.cot input{margin-top:4px}.ajuda{font-size:13px;color:#6b5237;margin-top:3px}.rever{color:#a3261b;font-weight:bold}.aviso{background:#fff3cd;border-left:4px solid #c9a227;padding:8px 12px;margin:10px 0}.erro{background:#fde8e5;border-left:4px solid #a3261b;padding:8px 12px}.ok{background:#e6f1e4;border-left:4px solid #3e5b3a;padding:8px 12px}.resumo{background:#fff;border:2px solid #3e5b3a;border-radius:10px;padding:12px 16px;margin-top:18px}.total td{font-size:20px;font-weight:bold;border-bottom:0}button{margin-top:18px;background:#3e5b3a;color:#fff;border:0;border-radius:8px;padding:12px 22px;font-size:17px;font-weight:bold;cursor:pointer}a{color:#3e5b3a}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}';\nconst moldura = (titulo, corpo, script) => '<!doctype html><html lang=\"pt-PT\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex\"><title>' + esc(titulo) + '</title><style>' + CSS + '</style></head><body>' + corpo + (script ? '<script>' + script + '</script>' : '') + '</body></html>';\nif (!r.ok) {\n  const erro = String(r.erro || 'Não foi possível abrir a página do preço.');\n  return [{ json: { http: httpDe(erro), html: moldura('Preço da proposta', '<h1>Não é possível definir o preço</h1><p class=\"erro\">' + esc(erro) + '</p><p>Se precisar de ajuda, contacte o responsável técnico.</p>') } }];\n}\nconst P = r.proposta || {};\nconst lim = r.limites || {};\nconst cots = Array.isArray(r.cotacoes) ? r.cotacoes : [];\nconst fo = !!r.frete_obrigatorio;\nconst sug = r.iva_sugerido;\nconst REG = { pt_normal: 'Portugal: IVA 23 %', ue_isento: 'UE, cliente com NIF: isento (art. 14.º RITI)', exportacao_isento: 'Fora da UE: isento, exportação (art. 14.º CIVA)', outro: 'Outro regime (indicar a taxa)' };\nconst POR = { total: 'total', camiao: 'por camião', palete: 'por palete', nao_claro: 'âmbito não claro' };\nconst unid = (v, u) => { const s = String(v == null ? '' : v).trim(); if (!s) return '-'; return /[a-z]/i.test(s) ? s : s + ' ' + u; };\nconst linha = (k, v) => '<tr><td>' + esc(k) + '</td><td>' + esc(v) + '</td></tr>';\nlet html = '<h1>Definir o preço · ' + esc(P.codigo) + '</h1><div class=\"ref\">' + esc(r.utilizador) + ' · ligação pessoal, não a reencaminhe</div>';\nif (P.preco_final != null) html += '<p class=\"aviso\">Esta proposta já tem um preço: <b>' + fmt(P.preco_final) + ' €</b>. Se gravar, o preço é substituído e recebe um resumo novo, com um código de aprovação novo.</p>';\nhtml += '<h2>Pedido</h2><table>' + linha('Cliente', P.cliente) + linha('Produto', P.produto + ' · ' + unid(P.densidade, 'kg/m³') + ' · ' + unid(P.granulometria, 'mm')) + linha('Quantidade', fmt(P.quantidade_kg, 0) + ' kg' + (P.unidade === 't' ? ' (' + fmt(P.quantidade, 2) + ' t)' : '')) + linha('Embalagem', P.embalagem) + linha('Incoterm e destino', P.incoterm + ' · ' + P.destino_pais + (P.destino_local ? ' (' + P.destino_local + ')' : '')) + '</table>';\nhtml += '<form method=\"post\" action=\"' + esc(cfg.url_pagina) + '\" id=\"f\"><input type=\"hidden\" name=\"t\" value=\"' + esc(cfg.token) + '\">';\nhtml += '<h2>Produto</h2><div class=\"grid2\"><div><label for=\"preco_kg\">Preço (€/kg)</label><input type=\"number\" id=\"preco_kg\" name=\"preco_kg\" step=\"0.0001\" min=\"0.0001\" max=\"' + esc(lim['preco.max_eur_kg'] || 50) + '\" required value=\"' + esc(P.preco_kg != null ? P.preco_kg : '') + '\"></div><div><label for=\"desconto_pct\">Desconto (%)</label><input type=\"number\" id=\"desconto_pct\" name=\"desconto_pct\" step=\"0.01\" min=\"0\" max=\"' + esc(lim['preco.max_desconto_pct'] || 50) + '\" value=\"' + esc(P.desconto_pct != null ? P.desconto_pct : 0) + '\"></div></div>';\nhtml += '<h2>Frete</h2>';\nif (!fo) {\n  html += '<p>Com o Incoterm <b>' + esc(P.incoterm) + '</b> o frete não entra no preço.</p>';\n} else if (!cots.length) {\n  html += '<p class=\"erro\">Com o Incoterm <b>' + esc(P.incoterm) + '</b> o frete entra no preço, mas ainda não há cotações de frete registadas. Volte quando chegar a primeira cotação.</p>';\n} else {\n  html += '<p>Com o Incoterm <b>' + esc(P.incoterm) + '</b> o frete entra no preço. Escolha a cotação:</p>';\n  cots.forEach((c, i) => {\n    const marcada = P.cotacao_id ? c.id === P.cotacao_id : cots.length === 1;\n    html += '<label class=\"cot\"><input type=\"radio\" name=\"cotacao_id\" value=\"' + esc(c.id) + '\" data-frete=\"' + esc(c.frete_proposto != null ? c.frete_proposto : '') + '\"' + (marcada ? ' checked' : '') + ' required><span><b>' + esc(c.transportadora) + '</b>' + (c.ref ? ' · ref. ' + esc(c.ref) : '') + ' · ' + esc(c.modo || '-') + '<br>' + (c.preco != null ? fmt(c.preco) + ' ' + esc(c.moeda || 'EUR') : 'sem preço') + ' (' + esc(POR[c.preco_por] || 'âmbito não indicado') + ') · trânsito ' + (c.transito_dias != null ? esc(c.transito_dias) + ' dias' : '-') + ' · válida até ' + dataPt(c.validade) + '<br>' + (c.frete_proposto != null ? 'Frete proposto: <b>' + fmt(c.frete_proposto) + ' €</b>' : '<span class=\"rever\">Frete por calcular: escreva o valor abaixo</span>') + (c.revisao === 'a_rever' ? ' · <span class=\"rever\">cotação a rever</span>' : '') + '</span></label>';\n  });\n  html += '<label for=\"valor_frete\">Valor do frete (€), opcional</label><input type=\"number\" id=\"valor_frete\" name=\"valor_frete\" step=\"0.01\" min=\"0\" value=\"' + esc(P.cotacao_id && P.valor_frete != null ? P.valor_frete : '') + '\"><div class=\"ajuda\">Deixe vazio para usar o frete proposto da cotação escolhida. Se escrever um valor, fica registado como corrigido.</div>';\n}\nhtml += '<h2>IVA</h2><label for=\"iva_regime\">Regime</label><select id=\"iva_regime\" name=\"iva_regime\">' + Object.keys(REG).map(k => '<option value=\"' + k + '\"' + ((P.iva_regime || sug) === k ? ' selected' : '') + '>' + esc(REG[k]) + (k === sug ? ' (sugerido)' : '') + '</option>').join('') + '</select><div class=\"ajuda\">Sugerido pelo país de destino. Se escolher outro, explique porquê nas notas.</div>';\nhtml += '<div class=\"grid2\"><div><label for=\"cliente_nif\">NIF do cliente (com o código do país)</label><input type=\"text\" id=\"cliente_nif\" name=\"cliente_nif\" maxlength=\"20\" placeholder=\"ex.: NL123456789B01\" value=\"' + esc(P.cliente_nif || '') + '\"><div class=\"ajuda\">Obrigatório para a isenção na UE.</div></div><div><label for=\"iva_pct\">Taxa de IVA (%) se «Outro regime»</label><input type=\"number\" id=\"iva_pct\" name=\"iva_pct\" step=\"0.01\" min=\"0\" max=\"30\" value=\"' + esc(P.iva_regime === 'outro' && P.iva_pct != null ? P.iva_pct : '') + '\"></div></div>';\nhtml += '<h2>Condições</h2><label for=\"validade_dias\">Validade da proposta (dias)</label><input type=\"number\" id=\"validade_dias\" name=\"validade_dias\" step=\"1\" min=\"1\" max=\"90\" value=\"' + esc(lim['preco.validade_dias'] || 30) + '\"><label for=\"notas\">Notas (opcional; obrigatórias se mudar o regime de IVA)</label><textarea id=\"notas\" name=\"notas\" maxlength=\"1000\" rows=\"3\">' + esc(P.preco_notas || '') + '</textarea>';\nhtml += '<div class=\"resumo\" id=\"resumo\" aria-live=\"polite\"></div><button type=\"submit\"' + (fo && !cots.length ? ' disabled' : '') + '>Gravar preço</button><div class=\"ajuda\">O sistema volta a calcular e a validar tudo ao gravar. Nada é enviado ao cliente: depois de gravar recebe o resumo atualizado para aprovar.</div></form>';\nconst dados = JSON.stringify({ kg: Number(P.quantidade_kg) || 0, fo: fo }).replace(/</g, '\\\\u003c');\nconst script = 'var D=' + dados + ';var F=document.getElementById(\"f\");function n(v){v=String(v||\"\").trim().replace(/\\\\s/g,\"\").replace(\",\",\".\");return v===\"\"?null:Number(v)}function f(x){if(!isFinite(x))return \"-\";var p=Math.abs(x).toFixed(2).split(\".\");return (x<0?\"-\":\"\")+p[0].replace(/\\\\B(?=(\\\\d{3})+(?!\\\\d))/g,\" \")+\",\"+p[1]+\" €\"}function c(){var p=n(F.preco_kg.value)||0,d=n(F.desconto_pct.value)||0;var prod=Math.round(D.kg*p*(1-d/100)*100)/100;var fr=0;if(D.fo){var s=F.querySelector(\"input[name=cotacao_id]:checked\");var m=F.valor_frete?n(F.valor_frete.value):null;fr=m!==null?m:(s&&s.getAttribute(\"data-frete\")!==\"\"?Number(s.getAttribute(\"data-frete\")):NaN)}var r=F.iva_regime.value;var t=r===\"pt_normal\"?23:(r===\"outro\"?(n(F.iva_pct.value)||0):0);var l=Math.round((prod+fr)*100)/100;var i=Math.round(l*t)/100;document.getElementById(\"resumo\").innerHTML=\"<table><tr><td>Produto</td><td class=v>\"+f(prod)+\"</td></tr>\"+(D.fo?\"<tr><td>Frete</td><td class=v>\"+(isFinite(fr)?f(fr):\"por indicar\")+\"</td></tr>\":\"\")+\"<tr><td>Valor líquido</td><td class=v>\"+f(l)+\"</td></tr><tr><td>IVA (\"+t+\" %)</td><td class=v>\"+f(i)+\"</td></tr><tr class=total><td>Total da proposta</td><td class=v>\"+f(l+i)+\"</td></tr></table>\"}F.addEventListener(\"input\",c);F.addEventListener(\"change\",c);c();';\nreturn [{ json: { http: 200, html: moldura('Preço da proposta ' + (P.codigo || ''), html, script) } }];"
+      }
+    },
+    {
+      "name": "Responder página do preço",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": "={{ $json.http ?? 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "Referrer-Policy",
+                "value": "no-referrer"
+              },
+              {
+                "name": "X-Robots-Tag",
+                "value": "noindex"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Falha técnica (avisar)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "={{ \"Preço (WF7): a base de dados não respondeu. \" + String($json.error?.message ?? $json.message ?? \"\").slice(0, 300) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Bárbara abre a página do preço": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bárbara grava o preço": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "É para gravar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É para gravar?": {
+      "main": [
+        [
+          {
+            "node": "Ler o formulário",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ler contexto do preço (BD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler o formulário": {
+      "main": [
+        [
+          {
+            "node": "Gravar o preço (BD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gravar o preço (BD)": {
+      "main": [
+        [
+          {
+            "node": "Montar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder erro técnico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar resultado": {
+      "main": [
+        [
+          {
+            "node": "Responder resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder resultado": {
+      "main": [
+        [
+          {
+            "node": "Preço gravado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preço gravado?": {
+      "main": [
+        [
+          {
+            "node": "Reenviar resumo à Bárbara (WF5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reenviar resumo à Bárbara (WF5)": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: preço definido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder erro técnico": {
+      "main": [
+        [
+          {
+            "node": "Falha técnica (avisar)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler contexto do preço (BD)": {
+      "main": [
+        [
+          {
+            "node": "Montar página do preço",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder erro técnico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar página do preço": {
+      "main": [
+        [
+          {
+            "node": "Responder página do preço",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "{{WF:Mail Error Flow}}",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  },
+  "tags": [
+    {
+      "id": "SXu3g2OjNALjODL1",
+      "name": "propostas"
+    },
+    {
+      "id": "DNGXyK3s3pRbw5h3",
+      "name": "preco"
+    }
+  ],
+  "meta": {
+    "exportedFrom": "n8n Cloud (DEV)",
+    "sourceWorkflowId": "i2kGNKv2vOnQ0Soc",
+    "sourceVersionId": "6b970f0b-05a9-4730-a085-140b77f7f64d",
+    "exportedAt": "2026-11-01",
+    "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
+  }
+}

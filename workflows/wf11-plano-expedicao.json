@@ -3,6 +3,7 @@
   "description": "Formulário da Madalena (ligação no email do WF10, código da proposta em campo oculto): grava tempo de produção, stock, data de recolha, modo e transportadora em expedicoes, passa a proposta a em_expedicao e chama o WF12 (follow-up ao cliente).",
   "nodes": [
     {
+      "id": "7e26dbe8-4a47-4db1-830f-ae48fd9c598a",
       "name": "Madalena preenche o plano de expedição",
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.6,
@@ -12,12 +13,16 @@
       ],
       "parameters": {
         "formTitle": "Plano de expedição",
-        "formDescription": "Preencha o plano da encomenda confirmada. Ao submeter, o cliente recebe a proposta final com o modo de expedição e a Bárbara fica em cópia.",
+        "formDescription": "Confirme primeiro os dados da reserva do frete (estão no email que recebeu: transportadora, modo, referência e trânsito). Se estiverem corretos, preencha o plano e o cliente recebe a proposta final. Se não estiverem, responda «Não»: nada é gravado e a Bárbara é avisada para corrigir a reserva.",
         "formFields": {
           "values": [
             {
-              "fieldType": "hiddenField",
-              "fieldName": "codigo"
+              "fieldName": "codigo",
+              "fieldType": "hiddenField"
+            },
+            {
+              "fieldName": "t",
+              "fieldType": "hiddenField"
             },
             {
               "fieldLabel": "Tempo de produção (dias)",
@@ -26,8 +31,6 @@
             },
             {
               "fieldLabel": "Stock disponível",
-              "fieldType": "dropdown",
-              "requiredField": true,
               "fieldOptions": {
                 "values": [
                   {
@@ -37,7 +40,9 @@
                     "option": "Não"
                   }
                 ]
-              }
+              },
+              "fieldType": "dropdown",
+              "requiredField": true
             },
             {
               "fieldLabel": "Data de recolha",
@@ -45,29 +50,18 @@
               "requiredField": true
             },
             {
-              "fieldLabel": "Modo de expedição",
-              "fieldType": "dropdown",
-              "requiredField": true,
+              "fieldLabel": "Os dados da reserva estão corretos?",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "Rodoviário"
+                    "option": "Sim"
                   },
                   {
-                    "option": "Marítimo"
-                  },
-                  {
-                    "option": "Aéreo"
-                  },
-                  {
-                    "option": "Ferroviário"
+                    "option": "Não"
                   }
                 ]
-              }
-            },
-            {
-              "fieldLabel": "Transportadora",
-              "fieldType": "text",
+              },
+              "fieldType": "dropdown",
               "requiredField": true
             },
             {
@@ -96,6 +90,7 @@
       }
     },
     {
+      "id": "883ed1b1-5c2f-44d9-a7eb-27ee2058829f",
       "name": "Validar plano",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -106,10 +101,11 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const f = $input.first().json;\nconst codigo = String(f.codigo ?? '').trim().toUpperCase();\nif (!/^PRP-\\d{4}-\\d{4}$/.test(codigo)) throw new Error('Plano de expedição: código de proposta inválido (\"' + codigo.slice(0, 30) + '\"). Use a ligação do email.');\nconst dias = Number(f['Tempo de produção (dias)']);\nif (!Number.isInteger(dias) || dias < 0 || dias > 365) throw new Error('Plano de expedição ' + codigo + ': tempo de produção inválido (0 a 365 dias).');\nconst stockTxt = String(f['Stock disponível'] ?? '');\nif (!['Sim', 'Não'].includes(stockTxt)) throw new Error('Plano de expedição ' + codigo + ': indique se há stock.');\nconst data = String(f['Data de recolha'] ?? '').slice(0, 10);\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(data) || isNaN(new Date(data + 'T00:00:00Z').getTime())) throw new Error('Plano de expedição ' + codigo + ': data de recolha inválida.');\nconst hoje = new Date().toISOString().slice(0, 10);\nif (data < hoje) throw new Error('Plano de expedição ' + codigo + ': a data de recolha (' + data + ') já passou.');\nconst modos = { 'Rodoviário': 'rodoviario', 'Marítimo': 'maritimo', 'Aéreo': 'aereo', 'Ferroviário': 'ferroviario' };\nconst modo = modos[String(f['Modo de expedição'] ?? '')];\nif (!modo) throw new Error('Plano de expedição ' + codigo + ': modo de expedição inválido.');\nconst transp = String(f['Transportadora'] ?? '').trim().slice(0, 120);\nconst nome = String(f['O seu nome'] ?? '').trim().slice(0, 80);\nif (transp.length < 2) throw new Error('Plano de expedição ' + codigo + ': indique a transportadora.');\nif (nome.length < 2) throw new Error('Plano de expedição ' + codigo + ': indique o seu nome.');\nconst notas = String(f['Notas'] ?? '').trim().slice(0, 1000);\nreturn [{ json: { codigo, tempo_producao_dias: dias, stock_ok: stockTxt === 'Sim', data_recolha: data, modo, transportadora: transp, notas, planeada_por: nome } }];"
+        "jsCode": "const f = $input.first().json;\nconst codigo = String(f.codigo ?? '').trim().toUpperCase();\nconst token = String(f.t ?? '').trim().toLowerCase();\nif (!/^[0-9a-f]{64}$/.test(token)) throw new Error('Plano de expedição: a ligação não tem o código de acesso. Use a ligação do email mais recente.');\nif (!/^PRP-\\d{4}-\\d{4}$/.test(codigo)) throw new Error('Plano de expedição: código de proposta inválido (\"' + codigo.slice(0, 30) + '\"). Use a ligação do email.');\nconst nome = String(f['O seu nome'] ?? '').trim().slice(0, 80);\nif (nome.length < 2) throw new Error('Plano de expedição ' + codigo + ': indique o seu nome.');\nconst reservaTxt = String(f['Os dados da reserva estão corretos?'] ?? '');\nif (!['Sim', 'Não'].includes(reservaTxt)) throw new Error('Plano de expedição ' + codigo + ': indique se os dados da reserva estão corretos.');\nconst notas = String(f['Notas'] ?? '').trim().slice(0, 1000);\nif (reservaTxt === 'Não') return [{ json: { codigo, token, reserva_ok: false, notas, planeada_por: nome } }];\nconst dias = Number(f['Tempo de produção (dias)']);\nif (!Number.isInteger(dias) || dias < 0 || dias > 365) throw new Error('Plano de expedição ' + codigo + ': tempo de produção inválido (0 a 365 dias).');\nconst stockTxt = String(f['Stock disponível'] ?? '');\nif (!['Sim', 'Não'].includes(stockTxt)) throw new Error('Plano de expedição ' + codigo + ': indique se há stock.');\nconst data = String(f['Data de recolha'] ?? '').slice(0, 10);\nif (!/^\\d{4}-\\d{2}-\\d{2}$/.test(data) || isNaN(new Date(data + 'T00:00:00Z').getTime())) throw new Error('Plano de expedição ' + codigo + ': data de recolha inválida.');\nconst hoje = new Date().toISOString().slice(0, 10);\nif (data < hoje) throw new Error('Plano de expedição ' + codigo + ': a data de recolha (' + data + ') já passou.');\nreturn [{ json: { codigo, token, reserva_ok: true, tempo_producao_dias: dias, stock_ok: stockTxt === 'Sim', data_recolha: data, notas, planeada_por: nome } }];"
       }
     },
     {
+      "id": "08bf4163-7fa0-48d5-873a-851e33d9218b",
       "name": "Ler proposta",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
@@ -132,14 +128,15 @@
           ]
         }
       },
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
+      "id": "652f3d45-9f4b-40e5-a8d6-d61fe80114b2",
       "name": "Verificar proposta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -150,16 +147,17 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const plano = $('Validar plano').first().json;\nconst p = $input.first().json;\nif (!p || !p.id) throw new Error('Plano de expedição: proposta ' + plano.codigo + ' não encontrada.');\nif (!['aceite', 'em_expedicao'].includes(p.estado)) throw new Error('Plano de expedição: a proposta ' + p.codigo + ' está no estado ' + p.estado + '; só se planeia a expedição de propostas confirmadas pelo cliente (aceite) e ainda sem follow-up.');\nreturn [{ json: { ...plano, proposta_id: p.id } }];"
+        "jsCode": "const plano = $('Validar plano').first().json;\nconst p = $input.first().json;\nif (!p || !p.id) throw new Error('Plano de expedição: proposta ' + plano.codigo + ' não encontrada.');\n// Código de acesso do link (token_plano): só quem recebeu o email consegue gravar o plano.\nif (!p.token_plano || p.token_plano !== plano.token) throw new Error('Plano de expedição: a ligação não é válida para a proposta ' + plano.codigo + '. Use a ligação do email mais recente.');\nif (!['aceite', 'em_expedicao'].includes(p.estado)) throw new Error('Plano de expedição: a proposta ' + p.codigo + ' está no estado ' + p.estado + '; só se planeia a expedição de propostas confirmadas pelo cliente (aceite) e ainda sem follow-up.');\nconst { token, ...semToken } = plano;\nreturn [{ json: { ...semToken, proposta_id: p.id, cliente: p.cliente, frete_escolhido_id: p.frete_escolhido_id ?? null } }];"
       }
     },
     {
+      "id": "3642286b-d146-4cdc-8d26-3efe7aeb89b2",
       "name": "Gravar plano de expedição",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        944,
-        128
+        1840,
+        0
       ],
       "parameters": {
         "resource": "row",
@@ -218,20 +216,21 @@
           ]
         }
       },
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "name": "Supabase account"
         }
-      },
-      "alwaysOutputData": true
+      }
     },
     {
+      "id": "e3e9b155-5279-4637-ab31-b7cdb54297e4",
       "name": "Conferir gravação",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1168,
-        128
+        2064,
+        0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -241,12 +240,13 @@
       "notes": "Falha com mensagem clara se a linha de expedição não existir (a linha é criada pelo WF10 na confirmação)."
     },
     {
+      "id": "323efa71-6602-470d-b83f-bc28c4c658c6",
       "name": "Marcar proposta em expedição",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1392,
-        128
+        2288,
+        0
       ],
       "parameters": {
         "resource": "row",
@@ -280,12 +280,13 @@
       }
     },
     {
+      "id": "55fa2501-5e92-4f08-bfa4-cb906a915cd1",
       "name": "Chamar WF12 (follow-up ao cliente)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1616,
-        128
+        2512,
+        -120
       ],
       "parameters": {
         "source": "database",
@@ -318,8 +319,248 @@
           "waitForSubWorkflow": false
         }
       },
-      "executeOnce": true,
-      "notes": "Não espera; o WF12 tem o seu próprio aviso de erro."
+      "notes": "Não espera; o WF12 tem o seu próprio aviso de erro.",
+      "executeOnce": true
+    },
+    {
+      "id": "01295901-3ee5-4093-962b-cad3996ca02c",
+      "name": "Ler cotação escolhida",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        944,
+        128
+      ],
+      "parameters": {
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "id",
+              "keyValue": "={{ $json.frete_escolhido_id ?? \"00000000-0000-0000-0000-000000000000\" }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "tableId": "cotacoes_frete"
+      },
+      "notes": "Cotação do frete escolhido no WF13: o modo, a transportadora e o trânsito vêm daqui, não do formulário.",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "5d1d6209-c629-41ee-b870-096c223cb0ee",
+      "name": "Ler transportadora da reserva",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        128
+      ],
+      "parameters": {
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "id",
+              "keyValue": "={{ $(\"Ler cotação escolhida\").first().json.transportadora_id ?? \"00000000-0000-0000-0000-000000000000\" }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "tableId": "transportadoras"
+      },
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "ea1431c9-d4c8-4d76-b7f9-ecfd3aa58105",
+      "name": "Decidir plano",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        128
+      ],
+      "parameters": {
+        "jsCode": "const plano = $('Verificar proposta').first().json;\nconst c = $('Ler cotação escolhida').first().json || {};\nconst t = $('Ler transportadora da reserva').first().json || {};\nconst MADALENA = 'REDACTED@example.invalid';\nconst BARBARA = 'REDACTED@example.invalid';\nconst esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst fmt = (d) => { const x = new Date(String(d).slice(0, 10) + 'T00:00:00Z'); return String(x.getUTCDate()).padStart(2, '0') + '/' + String(x.getUTCMonth() + 1).padStart(2, '0') + '/' + x.getUTCFullYear(); };\nconst codigo = plano.codigo;\nif (!plano.reserva_ok) {\n  const info = c.id ? ' (' + esc(t.nome || 'transportadora') + ', ' + esc(c.modo || '-') + (c.ref_transportadora ? ', ref. ' + esc(c.ref_transportadora) : '') + ')' : '';\n  const corpo = '<p>A ' + esc(plano.planeada_por) + ' indicou que os dados da reserva do frete da proposta <b>' + esc(codigo) + '</b>' + info + ' <b>não estão corretos</b>. O plano de expedição não foi gravado e a proposta continua aceite.</p>' + (plano.notas ? '<p>Nota: ' + esc(plano.notas) + '</p>' : '') + '<p>Para corrigir: no <a href=\"https://mmacedo87.app.n8n.cloud/form/confirmar-reserva\">formulário de confirmação de reserva</a>, cancele a reserva atual e confirme a transportadora certa. A Madalena recebe de novo o link do plano.</p><p>Cumprimentos,<br>Sistema de propostas (mensagem automática)</p>';\n  return [{ json: { seguir: false, codigo, assunto: '[' + codigo + '] Reserva de frete a corrigir antes do plano de expedição', corpo_html: corpo, para: BARBARA, cc: MADALENA, slack_texto: '⚠️ Plano da *' + codigo + '* não gravado: ' + plano.planeada_por + ' indicou que a reserva do frete está errada. Corrigir no WF13.' } }];\n}\nif (!c.id || c.estado_reserva !== 'confirmada') throw new Error('Plano de expedição ' + codigo + ': a reserva do frete ainda não está confirmada. Confirme-a no formulário de confirmação de reserva e use o link que recebe por email.');\nif (!['rodoviario', 'maritimo', 'aereo', 'ferroviario'].includes(c.modo)) throw new Error('Plano de expedição ' + codigo + ': a cotação escolhida não tem um modo de expedição válido.');\nif (!t.id) throw new Error('Plano de expedição ' + codigo + ': não encontrei a transportadora da reserva.');\nconst chegadaDt = c.transito_dias != null ? new Date(plano.data_recolha + 'T00:00:00Z') : null;\nif (chegadaDt) chegadaDt.setUTCDate(chegadaDt.getUTCDate() + Number(c.transito_dias));\nconst chegada = chegadaDt ? chegadaDt.toISOString().slice(0, 10) : null;\nconst avisoValidade = !!c.validade && plano.data_recolha > String(c.validade).slice(0, 10);\nconst slack = '📦 Plano de expedição de *' + codigo + '* guardado · ' + t.nome + ' · ' + c.modo + ' · recolha ' + fmt(plano.data_recolha) + (chegada ? ' · chegada estimada ' + fmt(chegada) : '') + (avisoValidade ? ' · ⚠️ a recolha é depois da validade da cotação (' + fmt(c.validade) + '): confirmar o preço com a transportadora' : '');\nreturn [{ json: { seguir: true, codigo, proposta_id: plano.proposta_id, tempo_producao_dias: plano.tempo_producao_dias, stock_ok: plano.stock_ok, data_recolha: plano.data_recolha, modo: c.modo, transportadora: t.nome, ref_transportadora: c.ref_transportadora ?? null, notas: plano.notas, planeada_por: plano.planeada_por, chegada_estimada: chegada, aviso_validade: avisoValidade, slack_texto: slack } }];",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "notes": "Se a Madalena respondeu «Não» aos dados da reserva: não grava e avisa a Bárbara. Se «Sim»: exige reserva confirmada, tira modo/transportadora da cotação, calcula a chegada estimada e avisa se a recolha for depois da validade da cotação (não bloqueia)."
+    },
+    {
+      "id": "1931a4d5-5d4d-4e63-a29b-30c5e701684f",
+      "name": "Reserva correta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        128
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.seguir }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              }
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0e3d31e7-d199-46b5-a087-2eb83f860239",
+      "name": "Avisar reserva a corrigir",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        320
+      ],
+      "parameters": {
+        "additionalFields": {
+          "bodyContentType": "html",
+          "ccRecipients": "={{ $json.cc }}"
+        },
+        "bodyContent": "={{ $json.corpo_html }}",
+        "operation": "send",
+        "resource": "message",
+        "subject": "={{ $json.assunto }}",
+        "toRecipients": "={{ $json.para }}"
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "id": "8c7b3fb8-e567-4a79-91ba-b659f8433c0f",
+      "name": "Avisar Slack: reserva a corrigir",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        320
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $(\"Decidir plano\").first().json.slack_texto }}"
+          }
+        }
+      }
+    },
+    {
+      "id": "387f63a9-e19d-406c-a2ad-0280d3caeb3e",
+      "name": "Avisar Slack: plano guardado",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2512,
+        0
+      ],
+      "parameters": {
+        "options": {
+          "waitForSubWorkflow": false
+        },
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "{{WF:Notificar Slack}}"
+        },
+        "workflowInputs": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "canal",
+              "id": "canal",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "texto",
+              "id": "texto",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "canal": "propostas",
+            "texto": "={{ $(\"Decidir plano\").first().json.slack_texto }}"
+          }
+        }
+      },
+      "notes": "Aviso curto no Slack com a transportadora, a recolha e a chegada estimada (e o aviso de validade, se existir)."
     }
   ],
   "connections": {
@@ -350,17 +591,6 @@
         [
           {
             "node": "Verificar proposta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Verificar proposta": {
-      "main": [
-        [
-          {
-            "node": "Gravar plano de expedição",
             "type": "main",
             "index": 0
           }
@@ -399,6 +629,90 @@
           }
         ]
       ]
+    },
+    "Verificar proposta": {
+      "main": [
+        [
+          {
+            "node": "Ler cotação escolhida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler cotação escolhida": {
+      "main": [
+        [
+          {
+            "node": "Ler transportadora da reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler transportadora da reserva": {
+      "main": [
+        [
+          {
+            "node": "Decidir plano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir plano": {
+      "main": [
+        [
+          {
+            "node": "Reserva correta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reserva correta?": {
+      "main": [
+        [
+          {
+            "node": "Gravar plano de expedição",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar reserva a corrigir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar reserva a corrigir": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: reserva a corrigir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar WF12 (follow-up ao cliente)": {
+      "main": [
+        [
+          {
+            "node": "Avisar Slack: plano guardado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -410,14 +724,15 @@
   },
   "tags": [
     {
+      "id": "SXu3g2OjNALjODL1",
       "name": "propostas"
     }
   ],
   "meta": {
     "exportedFrom": "n8n Cloud (DEV)",
     "sourceWorkflowId": "P4FDjLoaiGl3XP01",
-    "sourceVersionId": "d1783e7e-14e4-4915-a08b-018ad074efd5",
-    "exportedAt": "2026-10-09",
+    "sourceVersionId": "de52fa55-9fb4-4df9-8230-bbb2a1ec5b18",
+    "exportedAt": "2026-10-29",
     "sanitized": "destinatários, ids de credenciais e errorWorkflow removidos"
   }
 }

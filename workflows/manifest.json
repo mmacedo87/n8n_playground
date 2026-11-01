@@ -10,11 +10,13 @@
     {"file": "wf2-pedido-proposta.json", "publish": true},
     {"file": "wf5-resumo-validacao.json", "publish": true},
     {"file": "wf6-ler-cotacoes.json", "publish": false},
+    {"file": "wf7-definir-preco.json", "publish": true},
     {"file": "wf9-envio-cliente.json", "publish": true},
     {"file": "wf8-aprovacao-barbara.json", "publish": false},
     {"file": "wf10-confirmacao-encomenda.json", "publish": true},
     {"file": "wf12-followup-cliente.json", "publish": true},
     {"file": "wf11-plano-expedicao.json", "publish": true},
-    {"file": "read-outlook-messages.json", "publish": false}
+    {"file": "read-outlook-messages.json", "publish": false},
+    {"file": "wf13-confirmacao-reserva.json", "publish": false}
   ]
 }

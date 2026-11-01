@@ -1,0 +1,1233 @@
+[
+ {
+  "id": "C1",
+  "desc": "Código no assunto, email exato",
+  "expect": [
+   {
+    "associado": true,
+    "via": "codigo",
+    "proposta_id": "p1",
+    "transportadora_id": "t-exemplo",
+    "pedido_cotacao_id": "d1"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m1",
+     "subject": "RE: Cotação Portugal/1234 EXEMPLO – Espanha [PRP-2026-0101]",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "Bom dia, o valor é 1850,00 EUR.",
+      "contentType": "text"
+     },
+     "bodyPreview": "Bom dia, o valor é 1850,00 EUR.",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-x"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C2",
+  "desc": "Assunto alterado sem PRP, caixa partilhada (domínio aceite), conversa conhecida",
+  "expect": [
+   {
+    "associado": true,
+    "via": "conversa",
+    "proposta_id": "p1",
+    "transportadora_id": "t-norte"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m2",
+     "subject": "Q-1234567 | Portugal-Espanha",
+     "from": {
+      "emailAddress": {
+       "address": "ltl.export@pt.nortecargas.example"
+      }
+     },
+     "body": {
+      "content": "Valor 1850 EUR por camião.",
+      "contentType": "text"
+     },
+     "bodyPreview": "Valor 1850 EUR por camião.",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-bbb"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C3",
+  "desc": "Sem PRP nem conversa conhecida: a referência da transportadora no texto identifica o pedido",
+  "expect": [
+   {
+    "associado": true,
+    "via": "referencia",
+    "proposta_id": "p1"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m3",
+     "subject": "Resposta",
+     "from": {
+      "emailAddress": {
+       "address": "geral@nortecargas.example"
+      }
+     },
+     "body": {
+      "content": "Ref Q-1234567: 1850 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "Ref Q-1234567: 1850 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-nova"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C4",
+  "desc": "Remetente com um único pedido aberto",
+  "expect": [
+   {
+    "associado": true,
+    "via": "remetente",
+    "proposta_id": "p1",
+    "transportadora_id": "t-sul"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m4",
+     "subject": "Orçamento",
+     "from": {
+      "emailAddress": {
+       "address": "geral@sulexpress.example"
+      }
+     },
+     "body": {
+      "content": "Segue valor: 1900 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "Segue valor: 1900 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-nova"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C5",
+  "desc": "Dois pedidos abertos da mesma transportadora e nada que identifique: por associar, nunca grava",
+  "expect": [
+   {
+    "associado": false
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m5",
+     "subject": "Orçamento",
+     "from": {
+      "emailAddress": {
+       "address": "geral@nortecargas.example"
+      }
+     },
+     "body": {
+      "content": "Segue valor: 1900 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "Segue valor: 1900 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-nova"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C6",
+  "desc": "Remetente desconhecido é ignorado",
+  "expect": [],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m6",
+     "subject": "[PRP-2026-0101] cotação",
+     "from": {
+      "emailAddress": {
+       "address": "desconhecido@spam.example"
+      }
+     },
+     "body": {
+      "content": "Compre agora",
+      "contentType": "text"
+     },
+     "bodyPreview": "Compre agora",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-x"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C7",
+  "desc": "Nosso pedido ([teste]) e email já registado são ignorados",
+  "expect": [],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m7",
+     "subject": "[TESTE] Cotação Portugal/1234 EXEMPLO – Espanha [PRP-2026-0101]",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "x",
+      "contentType": "text"
+     },
+     "bodyPreview": "x",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-x"
+    },
+    {
+     "id": "m-visto",
+     "subject": "RE: [PRP-2026-0101]",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "1850 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "1850 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-x"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [
+    {
+     "email_origem_id": "m-visto"
+    }
+   ],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C8",
+  "desc": "Histórico citado com outro código PRP não decide a proposta; vale a conversa",
+  "expect": [
+   {
+    "associado": true,
+    "via": "conversa",
+    "proposta_id": "p1"
+   }
+  ],
+  "texto_nao_contem": [
+   "PRP-2026-0102",
+   "Enviado:",
+   "Bom dia, pedimos"
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m8",
+     "subject": "Re: cotação",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "Valor 1850,00 EUR.\n\nDe: Madalena <pedidos@empresa.example>\nEnviado: sexta-feira, 16 de outubro de 2026 17:00\nPara: comercial@transportes-exemplo.example\nAssunto: Cotação Portugal/1234 EXEMPLO – Espanha [PRP-2026-0102]\n\nBom dia, pedimos cotação para 1 camião completo.",
+      "contentType": "text"
+     },
+     "bodyPreview": "Valor 1850,00 EUR.\n\nDe: Madalena <pedidos@empresa.example>\nEnviado: sexta-feira, 16 de outubro de 20",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-aaa"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C9",
+  "desc": "HTML: tabela mantida em texto, assinatura e aviso legal removidos",
+  "expect": [
+   {
+    "associado": true,
+    "via": "codigo"
+   }
+  ],
+  "texto_contem": [
+   "Entrega fixa 21/10",
+   "1.850,00 EUR"
+  ],
+  "texto_nao_contem": [
+   "Ana Silva",
+   "confidencial",
+   "<td>"
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m9",
+     "subject": "RE: [PRP-2026-0101]",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "<html><body><p>Bom dia, segue a cotação pedida.</p><table><tr><td>Condição</td><td>Preço</td></tr><tr><td>Entrega fixa 21/10</td><td>1.850,00 EUR</td></tr></table><p>Com os melhores cumprimentos,<br>Ana Silva<br>Tel 000000000</p><p>Este e-mail é confidencial.</p></body></html>",
+      "contentType": "html"
+     },
+     "bodyPreview": "<html><body><p>Bom dia, segue a cotação pedida.</p><table><tr><td>Condição</td><td>Preço</td></tr><t",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-aaa"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C10",
+  "desc": "Código só em PRP fora das propostas abertas: ignorado",
+  "expect": [],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m10",
+     "subject": "RE: [PRP-2026-0999]",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "1850 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "1850 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-x"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C11",
+  "desc": "Domínio aceite partilhado por transportadora única, código no corpo novo",
+  "expect": [
+   {
+    "associado": true,
+    "via": "codigo",
+    "proposta_id": "p2",
+    "transportadora_id": "t-norte",
+    "pedido_cotacao_id": "d3"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m11",
+     "subject": "Resposta",
+     "from": {
+      "emailAddress": {
+       "address": "outro@pt.nortecargas.example"
+      }
+     },
+     "body": {
+      "content": "Ref PRP-2026-0102: 1700 EUR",
+      "contentType": "text"
+     },
+     "bodyPreview": "Ref PRP-2026-0102: 1700 EUR",
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-nova"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ },
+ {
+  "id": "C12",
+  "desc": "Resposta curta que só cita o nosso pedido (um código no histórico, conversa desconhecida)",
+  "expect": [
+   {
+    "associado": true,
+    "via": "codigo_citado",
+    "proposta_id": "p1"
+   }
+  ],
+  "nodes": {
+   "Ler emails não lidos da caixa": [
+    {
+     "id": "m12",
+     "subject": "Re: cotação",
+     "from": {
+      "emailAddress": {
+       "address": "comercial@transportes-exemplo.example"
+      }
+     },
+     "body": {
+      "content": "Valor 1850 EUR.\n\nDe: Madalena\nEnviado: ontem\nPara: x\nAssunto: Cotação [PRP-2026-0101]\n\npedido",
+      "contentType": "text"
+     },
+     "hasAttachments": false,
+     "receivedDateTime": "2026-10-17T10:00:00Z",
+     "conversationId": "conv-nova"
+    }
+   ],
+   "Ler transportadoras": [
+    {
+     "id": "t-exemplo",
+     "nome": "Transportes Exemplo",
+     "email": "comercial@transportes-exemplo.example",
+     "dominios_aceites": []
+    },
+    {
+     "id": "t-norte",
+     "nome": "Norte Cargas",
+     "email": "geral@nortecargas.example",
+     "dominios_aceites": [
+      "pt.nortecargas.example"
+     ]
+    },
+    {
+     "id": "t-sul",
+     "nome": "Sul Express",
+     "email": "geral@sulexpress.example",
+     "dominios_aceites": []
+    }
+   ],
+   "Ler propostas a cotar": [
+    {
+     "id": "p1",
+     "codigo": "PRP-2026-0101",
+     "estado": "a_cotar"
+    },
+    {
+     "id": "p2",
+     "codigo": "PRP-2026-0102",
+     "estado": "em_validacao"
+    }
+   ],
+   "Ler cotações já registadas": [],
+   "Ler pedidos já enviados": [
+    {
+     "id": "d1",
+     "proposta_id": "p1",
+     "transportadora_id": "t-exemplo",
+     "versao": 1,
+     "conversation_id": "conv-aaa",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d2",
+     "proposta_id": "p1",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-bbb",
+     "ref_transportadora": "Q-1234567"
+    },
+    {
+     "id": "d3",
+     "proposta_id": "p2",
+     "transportadora_id": "t-norte",
+     "versao": 1,
+     "conversation_id": "conv-ccc",
+     "ref_transportadora": null
+    },
+    {
+     "id": "d4",
+     "proposta_id": "p1",
+     "transportadora_id": "t-sul",
+     "versao": 1,
+     "conversation_id": null,
+     "ref_transportadora": null
+    }
+   ]
+  }
+ }
+]

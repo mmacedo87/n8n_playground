@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "properties": {
+    "moeda": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Código da moeda, ex. EUR, USD"
+    },
+    "modo": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "rodoviario, maritimo, aereo ou ferroviario; null se não indicado"
+    },
+    "transito_dias": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Prazo de trânsito em dias"
+    },
+    "validade": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Validade da cotação em AAAA-MM-DD"
+    },
+    "condicoes": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Condições e custos adicionais gerais, resumo curto"
+    },
+    "ref_transportadora": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Referência da cotação na transportadora"
+    },
+    "reserva_standby": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "true se a reserva fica em standby a aguardar a nossa confirmação"
+    },
+    "opcoes": {
+      "type": "array",
+      "description": "Uma entrada por condição com preço próprio; vazio se não há preço",
+      "items": {
+        "type": "object",
+        "properties": {
+          "preco": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Preço desta condição, só o número"
+          },
+          "tipo_entrega": {
+            "type": "string",
+            "enum": [
+              "fixa",
+              "janela",
+              "sem_data",
+              "nao_claro"
+            ]
+          },
+          "data_entrega_pedida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "AAAA-MM-DD"
+          },
+          "preco_por": {
+            "type": "string",
+            "enum": [
+              "camiao",
+              "total",
+              "palete",
+              "nao_claro"
+            ]
+          },
+          "n_camioes_incluidos": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Condição em poucas palavras"
+          }
+        },
+        "required": [
+          "preco",
+          "tipo_entrega",
+          "preco_por"
+        ]
+      }
+    },
+    "confianca": {
+      "type": "number",
+      "description": "0 a 1: confiança na extração"
+    }
+  },
+  "required": [
+    "moeda",
+    "modo",
+    "transito_dias",
+    "opcoes",
+    "confianca"
+  ]
+}

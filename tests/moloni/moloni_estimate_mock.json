@@ -1,0 +1,341 @@
+{
+  "priceClasses_getAll": [
+    {
+      "price_class_id": 1,
+      "name": "Retalho",
+      "percentage": 0
+    },
+    {
+      "price_class_id": 2,
+      "name": "Revendedor",
+      "percentage": -10
+    },
+    {
+      "price_class_id": 3,
+      "name": "Exportação",
+      "percentage": -5
+    }
+  ],
+  "products_getAll": [
+    {
+      "product_id": 1001,
+      "category_id": 10,
+      "type": 1,
+      "reference": "GRA-80-100-2-4",
+      "name": "Granulado de cortiça 80-100 kg/m3 2-4 mm",
+      "summary": "",
+      "unit_id": 501,
+      "has_stock": 1,
+      "stock": 50000,
+      "price": 1.8,
+      "taxes": [
+        {
+          "tax_id": 1,
+          "value": 23,
+          "order": 1,
+          "cumulative": 0
+        }
+      ],
+      "price_classes": [
+        {
+          "price_class_id": 1,
+          "value": 1.8
+        },
+        {
+          "price_class_id": 2,
+          "value": 1.62
+        },
+        {
+          "price_class_id": 3,
+          "value": 1.71
+        }
+      ]
+    },
+    {
+      "product_id": 1002,
+      "category_id": 10,
+      "type": 1,
+      "reference": "GRA-100-120-4-8",
+      "name": "Granulado de cortiça 100-120 kg/m3 4-8 mm",
+      "summary": "",
+      "unit_id": 501,
+      "has_stock": 1,
+      "stock": 50000,
+      "price": 2.1,
+      "taxes": [
+        {
+          "tax_id": 1,
+          "value": 23,
+          "order": 1,
+          "cumulative": 0
+        }
+      ],
+      "price_classes": [
+        {
+          "price_class_id": 1,
+          "value": 2.1
+        },
+        {
+          "price_class_id": 2,
+          "value": 1.89
+        },
+        {
+          "price_class_id": 3,
+          "value": 2.0
+        }
+      ]
+    },
+    {
+      "product_id": 1003,
+      "category_id": 10,
+      "type": 1,
+      "reference": "PO-60-80-0-1",
+      "name": "Pó de cortiça 60-80 kg/m3 0-1 mm",
+      "summary": "",
+      "unit_id": 501,
+      "has_stock": 1,
+      "stock": 50000,
+      "price": 1.2,
+      "taxes": [
+        {
+          "tax_id": 1,
+          "value": 23,
+          "order": 1,
+          "cumulative": 0
+        }
+      ],
+      "price_classes": [
+        {
+          "price_class_id": 1,
+          "value": 1.2
+        },
+        {
+          "price_class_id": 2,
+          "value": 1.08
+        },
+        {
+          "price_class_id": 3,
+          "value": 1.05
+        }
+      ]
+    },
+    {
+      "product_id": 1004,
+      "category_id": 10,
+      "type": 1,
+      "reference": "AGL-120-150-8-15",
+      "name": "Aglomerado de cortiça 120-150 kg/m3 8-15 mm",
+      "summary": "",
+      "unit_id": 501,
+      "has_stock": 1,
+      "stock": 50000,
+      "price": 2.6,
+      "taxes": [
+        {
+          "tax_id": 1,
+          "value": 23,
+          "order": 1,
+          "cumulative": 0
+        }
+      ],
+      "price_classes": [
+        {
+          "price_class_id": 1,
+          "value": 2.6
+        },
+        {
+          "price_class_id": 2,
+          "value": 2.34
+        },
+        {
+          "price_class_id": 3,
+          "value": 2.47
+        }
+      ]
+    }
+  ],
+  "estimates_getOne": {
+    "document_id": 90001,
+    "company_id": 12345,
+    "document_set_id": 701,
+    "number": 1,
+    "document_type_id": 22,
+    "status": 0,
+    "date": "2026-10-17",
+    "expiration_date": "2026-11-16",
+    "our_reference": "PRP-2026-0001",
+    "your_reference": "",
+    "customer_id": 3001,
+    "customer": {
+      "customer_id": 3001,
+      "name": "Cork Import GmbH",
+      "vat": "DE123456789",
+      "country_id": 81,
+      "price_class_id": 3
+    },
+    "currency": "EUR",
+    "net_value": 6388.75,
+    "taxes_value": 1469.41,
+    "gross_value": 7858.16,
+    "products": [
+      {
+        "product_id": 1001,
+        "reference": "GRA-80-100-2-4",
+        "name": "Granulado de cortiça 80-100 kg/m3 2-4 mm",
+        "qty": 2000,
+        "unit_id": 501,
+        "price": 1.71,
+        "base_price": 1.8,
+        "discount": 0,
+        "taxes": [
+          {
+            "tax_id": 1,
+            "value": 23,
+            "order": 1,
+            "cumulative": 0,
+            "total_value": 786.6
+          }
+        ],
+        "total_value": 3420.0
+      },
+      {
+        "product_id": 1003,
+        "reference": "PO-60-80-0-1",
+        "name": "Pó de cortiça 60-80 kg/m3 0-1 mm",
+        "qty": 500,
+        "unit_id": 501,
+        "price": 1.05,
+        "base_price": 1.2,
+        "discount": 5,
+        "taxes": [
+          {
+            "tax_id": 1,
+            "value": 23,
+            "order": 1,
+            "cumulative": 0,
+            "total_value": 114.71
+          }
+        ],
+        "total_value": 498.75
+      },
+      {
+        "product_id": 1004,
+        "reference": "AGL-120-150-8-15",
+        "name": "Aglomerado de cortiça 120-150 kg/m3 8-15 mm",
+        "qty": 1000,
+        "unit_id": 501,
+        "price": 2.47,
+        "base_price": 2.6,
+        "discount": 0,
+        "taxes": [
+          {
+            "tax_id": 1,
+            "value": 23,
+            "order": 1,
+            "cumulative": 0,
+            "total_value": 568.1
+          }
+        ],
+        "total_value": 2470.0
+      }
+    ]
+  },
+  "n8n_items": [
+    {
+      "json": {
+        "estimate": {
+          "document_id": 90001,
+          "company_id": 12345,
+          "document_set_id": 701,
+          "number": 1,
+          "document_type_id": 22,
+          "status": 0,
+          "date": "2026-10-17",
+          "expiration_date": "2026-11-16",
+          "our_reference": "PRP-2026-0001",
+          "your_reference": "",
+          "customer_id": 3001,
+          "customer": {
+            "customer_id": 3001,
+            "name": "Cork Import GmbH",
+            "vat": "DE123456789",
+            "country_id": 81,
+            "price_class_id": 3
+          },
+          "currency": "EUR",
+          "net_value": 6388.75,
+          "taxes_value": 1469.41,
+          "gross_value": 7858.16,
+          "products": [
+            {
+              "product_id": 1001,
+              "reference": "GRA-80-100-2-4",
+              "name": "Granulado de cortiça 80-100 kg/m3 2-4 mm",
+              "qty": 2000,
+              "unit_id": 501,
+              "price": 1.71,
+              "base_price": 1.8,
+              "discount": 0,
+              "taxes": [
+                {
+                  "tax_id": 1,
+                  "value": 23,
+                  "order": 1,
+                  "cumulative": 0,
+                  "total_value": 786.6
+                }
+              ],
+              "total_value": 3420.0
+            },
+            {
+              "product_id": 1003,
+              "reference": "PO-60-80-0-1",
+              "name": "Pó de cortiça 60-80 kg/m3 0-1 mm",
+              "qty": 500,
+              "unit_id": 501,
+              "price": 1.05,
+              "base_price": 1.2,
+              "discount": 5,
+              "taxes": [
+                {
+                  "tax_id": 1,
+                  "value": 23,
+                  "order": 1,
+                  "cumulative": 0,
+                  "total_value": 114.71
+                }
+              ],
+              "total_value": 498.75
+            },
+            {
+              "product_id": 1004,
+              "reference": "AGL-120-150-8-15",
+              "name": "Aglomerado de cortiça 120-150 kg/m3 8-15 mm",
+              "qty": 1000,
+              "unit_id": 501,
+              "price": 2.47,
+              "base_price": 2.6,
+              "discount": 0,
+              "taxes": [
+                {
+                  "tax_id": 1,
+                  "value": 23,
+                  "order": 1,
+                  "cumulative": 0,
+                  "total_value": 568.1
+                }
+              ],
+              "total_value": 2470.0
+            }
+          ]
+        },
+        "price_class": {
+          "price_class_id": 3,
+          "name": "Exportação",
+          "percentage": -5
+        },
+        "preco_final": 7858.16
+      }
+    }
+  ]
+}
