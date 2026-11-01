@@ -1,6 +1,6 @@
 # Plano: WF7 – Definir o preço final (opção A, formulário)
 
-Criado em 2026-11-01. Estado: **por implementar**. Nada foi criado no n8n nem no Supabase.
+Criado em 2026-11-01. Estado: **implementado a 2026-11-01** (migração 0012; WF7 `i2kGNKv2vOnQ0Soc`; WF5, WF8, WF9 e WF13 alterados). Diferenças em relação a este plano: o cálculo ficou nas funções da BD (numeric) e o código só prepara a página; o histórico de alterações de `utilizadores` também é imutável. Testes em `tests/BATERIA.md`, secção P.
 Substitui, para já, a integração Moloni descrita em `plano_workflow_moloni_fase5.md`. Os campos gravados são os mesmos, por isso o Moloni pode entrar mais tarde sem mexer no resto do processo.
 
 ## 1. Decisões tomadas

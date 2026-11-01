@@ -2,6 +2,8 @@
 
 Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 encomendas/mês, humano sempre no loop). Instância de desenvolvimento: n8n Cloud `mmacedo87.app.n8n.cloud`, Supabase `ahisuvnooplmiczjytfp`. Cópia deste ficheiro no Project: `claude/estado_do_projeto.md` (a fonte é o repositório).
 
+**2026-11-01 (noite):** fase 5 feita por formulário: migração 0012 (utilizadores com `pode_definir_preco`, ligações pessoais, histórico de preços imutável), WF7 novo e publicado, WF5/WF8/WF9/WF13 alterados; unittest 145 OK, Supabase P1-P25 OK, teste real na PRP-2026-0024 até `enviada`. Pendentes: confirmar com a contabilidade as menções de IVA e o limite de 50 €/kg; testar a página no navegador (Bárbara); no deploy para produção trocar o URL do Supabase no WF5 e no WF7 e criar a Bárbara real em `utilizadores`.
+
 **2026-11-01:** sem alterações a workflows nem à BD (os 16 JSON e a migração 0011 continuam iguais ao n8n e ao Supabase). Verificação de alojamento e RGPD: n8n e Supabase na Alemanha (fica o n8n Cloud), Supabase no plano Free, OpenRouter com retenção zero obrigatória para todos os fornecedores e as opções de treino desligadas, confirmado com um teste real (PRP-2026-0025, WF1 e WF3 sem erros). Pendentes RGPD: DPA (n8n, Supabase, OpenRouter, Slack), prazos de conservação e purga agendada, registo de atividades. Fase 5 (preço): decidido avançar com o formulário manual (WF7), plano em `docs/plano-wf7-preco-manual.md`; o Moloni fica para depois (`docs/plano-moloni-fase5.md`). Apresentação para o cliente em `docs/apresentacao/`.
 
 **2026-10-29:** WF6 e Read Outlook correm sozinhos (Outlook Trigger), formulários internos com Basic Auth e link do plano com código secreto.
@@ -14,9 +16,9 @@ Mapa das 10 fases do briefing (Sports Unified Europe, infill natural, 30 a 35 en
 | 2. Definição comercial | Feito | WF2: formulário (Basic Auth) ou chamada do Read Outlook, grava `propostas` (com `contacto_email`), confirma por email, chama WF3 + WF4 + Slack |
 | 3. Cotação de transporte | Feito, automático | WF3: um email (BCC) a até 5 transportadoras, `modo_envio` automático/revisão lido de `configuracao`, aviso de IA fixo. WF6 (Outlook Trigger na Inbox, 5 em 5 min): associa por código/conversa/referência/remetente, lê PDFs, grava várias condições, regista em `ai_log` e chama o WF5 |
 | 4. Enriquecimento | Feito, dados por validar | WF4: código pautal, taxa, notas fitossanitárias. 0 produtos validados pelo despachante |
-| 5. Proposta no Moloni | **Bloqueado** | API estudada (`docs/moloni-api.md`); faltam credenciais. O `preco_final` é posto à mão (SQL) nos testes |
+| 5. Preço final | Feito (sem Moloni) | WF7: a Bárbara define €/kg, desconto, frete (Incoterms C/D) e IVA sugerido pela ligação pessoal do resumo; a BD calcula, guarda o histórico e gera código de aprovação novo (migração 0012). Moloni adiado (`docs/plano-moloni-fase5.md`) |
 | 6. Validação (Bárbara) | Feito | WF5 (resumo com cotações, condições e código de aprovação) e WF8 publicado (só «OK <código>» de remetente autorizado aprova) |
-| 7. Envio ao cliente | Feito (preço depende do Moloni) | WF9: email PT/EN com link de confirmação, Bárbara em CC |
+| 7. Envio ao cliente | Feito | WF9: email PT/EN com link de confirmação, Bárbara em CC |
 | 8. Confirmação | Feito | WF10: link com token (30 dias), 2 passos, cria `expedicoes`, avisa a Madalena |
 | 9. Expedição | Feito | WF13 (formulário com Basic Auth; escolha e confirmação da reserva; só rascunhos para fora) e WF11 (plano; link com código secreto por proposta `token_plano`; dados da reserva lidos da BD, «reserva correta?») |
 | 10. Follow-up | Feito | WF12: proposta final com recolha e chegada estimada; `concluida` |

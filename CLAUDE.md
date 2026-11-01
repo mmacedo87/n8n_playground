@@ -17,7 +17,8 @@ Automação de propostas comerciais de uma empresa de cortiça. Stack: n8n Cloud
 | WF2 Pedido de proposta | `8pRJJuN094Mp9iuu` | formulário com Basic Auth (credencial `httpBasicAuth`); chama WF3, WF4 e Slack sem esperar; error flow próprio (WF2 Error Flow) |
 | WF3 Pedido de cotação de frete | `x9RhWxZfJ0apbhlc` | UM email (BCC), reenvio até 5 tentativas, 6.ª avisa |
 | WF4 Enriquecimento | `ya6mCmn3qi4YE3CG` | compliance, sem IA |
-| WF5 Resumo para validação | `8xj41URokjCimmon` | email à Bárbara + Slack; marca `em_validacao`; chamado pelo WF6 |
+| WF5 Resumo para validação | `8xj41URokjCimmon` | email à Bárbara + Slack; secção «Preço» com a ligação pessoal do WF7 (sem preço não mostra o código de aprovação); marca `em_validacao`; chamado pelo WF6 e pelo WF7 |
+| WF7 Definir o preço final | `i2kGNKv2vOnQ0Soc` | webhook GET/POST `definir-preco` (ligação pessoal `?t=` da tabela `acessos_preco`); a BD valida e calcula (`contexto_preco`, `gravar_preco_proposta`, migração 0012); novo código de aprovação; chama o WF5 |
 | WF6 Ler cotações | `HErViy6cNVrTIH7A` | Outlook Trigger na Inbox (5 min, não lidos) + gatilho manual; texto e PDFs; regista cada extração em `ai_log`; chama o WF5 |
 | Notificar Slack | `N7BZddGLl0WlSl9Q` | canais propostas `C0C7T8J8D54`, cotacoes `C0C7V2PU4PL`, estado `C0C7SN9MKQE` |
 | Mail Error Flow / WF2 Error Flow | `fWXNAbhbQLuYeurE` / `Xs4ZlE9DSqNifiPk` | Error Workflows |

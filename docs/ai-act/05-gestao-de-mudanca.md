@@ -27,6 +27,7 @@ Qualquer um dos seguintes exige repetir a checklist (`01-checklist-art5-e-enquad
 | Data | Mudança | Reavaliação (S/N) | Responsável | Resultado |
 | --- | --- | --- | --- | --- |
 | 2026-10-21 | Criação da documentação AI Act v1.0 | S | | |
+| 2026-11-01 | Preço final por formulário (WF7, migração 0012): sem IA; uma pessoa com permissão define o preço, a BD calcula; aprovação passa a exigir preço e o código muda a cada preço | N (nenhum LLM novo nem alterado; reforça a supervisão humana) | | Registado |
 
 ## 4. Revisões periódicas (V3, V4)
 

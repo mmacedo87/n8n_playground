@@ -42,6 +42,12 @@ Tudo o que falta fazer para sair do ambiente de desenvolvimento/testes. Marcar c
 - [ ] Fixar o modelo e a versão do prompt por workflow e registar tudo em `ai_log`.
 - [ ] Garantir que nenhuma decisão de preço ou envio ao cliente é tomada pelo modelo: valores calculados em código, envio só após aprovação humana.
 
+## 5b. Preço por formulário (WF7, migração 0012)
+- [ ] Aplicar a migração 0012 no Supabase de produção.
+- [ ] Criar em `utilizadores` a Bárbara real com `pode_definir_preco = true` (e mais pessoas quando for preciso; retirar = `false`, fica no histórico).
+- [ ] Trocar o URL do Supabase de DEV no WF7 («Configuração» → `supabase_url`) e no WF5 (nó «Preparar ligação do preço (BD)»): o deploy ainda não o faz.
+- [ ] Confirmar com a contabilidade as menções de isenção de IVA (art. 14.º RITI e art. 14.º CIVA) e os limites em `configuracao` (`preco.max_eur_kg`, `preco.max_desconto_pct`, `preco.validade_dias`).
+
 ## 6. Moloni
 - [ ] Confirmar que o plano inclui API e criar credenciais de produção.
 - [ ] Testar a criação de orçamento em rascunho antes de qualquer envio.
